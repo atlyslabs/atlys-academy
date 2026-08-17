@@ -1,0 +1,930 @@
+@import "tailwindcss";
+
+@theme {
+  /* The `--font-*` values come from next/font in layout.tsx. */
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Big numeric readouts (quiz score) print in the display serif. */
+  --font-condensed: var(--font-playfair), Georgia, serif;
+
+  /* Atlys dark palette, verified against design-system.atlys.com.
+     Contrast measured on #0B0B0B; see docs/redesign-context.md.
+     brand (#5057EA) is 3.65:1 - fills and type at 24px+ only;
+     brand-text (#969AF2) is the safe brand color for small text. */
+  --color-page: #0b0b0b;
+  --color-raised: #1a1a1a;
+  --color-wash: #00006b;
+  --color-hairline: #1c1f21;
+  --color-hairline-lit: #34393d;
+  --color-ink: #ffffff;
+  --color-ink-muted: #cccccc;
+  --color-ink-dim: #999999;
+  --color-brand: #5057ea;
+  --color-brand-hover: #7379ee;
+  --color-brand-text: #969af2;
+  --color-complete: #0c9769;
+  --color-error: #ff6b70;
+  /* Achievement ink: day-level trophies (cleared chapters, full tallies).
+     Same family as tile-yellow; completion of a single activity stays green,
+     gold is reserved for finishing a whole page. */
+  --color-gold: #eac35f;
+
+  /* Atlys radii scale: 4 / 8 / 12 / 16 / 24 / 30. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 30px;
+
+  /* -------------------------------------------------------------------------
+   * Legacy vocabulary, re-voiced for the night theme.
+   *
+   * The 23 preserved drill/quiz/ui components still speak the old token names
+   * (surface, line, accent, ticket, badge-*, board-*, tile-*). Rather than
+   * rewrite every game, the names are kept and their values are remapped onto
+   * the Atlys dark palette, so the whole preserved layer lands on the new
+   * stage in the right key. New code should prefer the Atlys tokens above.
+   * ----------------------------------------------------------------------- */
+
+  /* Paper stays LIGHT on purpose: the passport stamp sprites are cream with
+     no alpha and multiply onto their plate - see .paper-plate below. */
+  --color-paper: #f2ede4;
+  --color-paper-ink: #17171c;
+
+  --color-surface: #151517;
+  --color-surface-soft: #1e1e21;
+  --color-line: #2a2d31;
+  --color-ink-secondary: #cccccc;
+
+  --color-accent: #969af2;
+  --color-accent-hover: #aeb1f6;
+  --color-accent-bright: #7379ee;
+  --color-accent-soft: #1a1c46;
+  --color-retro-blue: #5b86c4;
+  --color-electric: #7379ee;
+
+  --color-badge-green: #4cc38a;
+  --color-badge-green-soft: #12291d;
+  --color-badge-coral: #ff8a8e;
+  --color-badge-coral-soft: #331519;
+  --color-badge-amber: #e5b054;
+  --color-badge-amber-soft: #2e2410;
+  --color-badge-teal: #57d0c1;
+  --color-badge-teal-soft: #0e2b28;
+
+  --color-board: #131316;
+  --color-board-soft: #1c1c20;
+  --color-board-line: #2d2d33;
+  --color-board-ink: #f2f2f4;
+  --color-board-muted: #9a9aa4;
+
+  --color-tile-yellow: #f5c744;
+  --color-tile-purple: #a78bfa;
+  --color-tile-coral: #f87561;
+  --color-tile-green: #34c98e;
+  --color-tile-blue: #4f8ff7;
+  --color-tile-pink: #f2a3c0;
+
+  --color-ticket: #5057ea;
+  --color-ticket-hover: #7379ee;
+  --color-ticket-soft: #191b3f;
+  --color-ticket-ink: #00006b;
+
+  --color-leather: #232327;
+  --color-leather-dark: #101013;
+  --color-leather-light: #2f2f35;
+  --color-lining: #26262c;
+  --color-brass: #c9a227;
+  --color-brass-dark: #9c7c15;
+  --color-sky: #7cc0e8;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+  }
+
+  /* Lets block-size animate to/from `auto`, which is what makes the
+     `<details>` folds below a real transition rather than a snap. */
+  :root {
+    interpolate-size: allow-keywords;
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-text);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Beams are pure motion; under reduced motion the hairline outlines stay
+     and the travelling light goes away entirely. */
+  .beam-core,
+  .beam-glow {
+    opacity: 0 !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Night stage - the shared backdrop of the hero and the sign-in page.
+ * A deep brand-blue wash over the darkest surface, a soft vignette, and a
+ * film grain kept on a non-scrolling, pointer-transparent layer.
+ * ------------------------------------------------------------------------- */
+
+.night-wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Deep brand blue above, and a whisper of brass at the foot of the stage -
+     the pre-dawn horizon under a night flight. Gold is the complement of the
+     brand blue-violet, and it is the same brass the passport stamps use. */
+  background:
+    radial-gradient(54% 62% at 50% 32%, rgb(0 0 107 / 0.55), transparent 68%),
+    radial-gradient(42% 46% at 50% 100%, rgb(0 0 107 / 0.22), transparent 72%),
+    radial-gradient(52% 30% at 50% 104%, rgb(201 162 39 / 0.1), transparent 78%);
+}
+
+.night-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    125% 95% at 50% 42%,
+    transparent 55%,
+    rgb(0 0 0 / 0.6) 100%
+  );
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Beam frames - a hairline perimeter with a white light beam tracing it.
+ *
+ * Any SVG shape with pathLength=100 can take these classes:
+ *   .beam-hairline        static outline
+ *   .beam-hairline--draw  outline that draws itself in once
+ *   .beam-glow + .beam-core  the travelling light (wide soft pass + crisp core)
+ * Tunables per element: --beam-dur, --beam-delay, --beam-len, --beam-gap,
+ * --beam-draw-delay.
+ * ------------------------------------------------------------------------- */
+
+.beam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.beam-hairline {
+  fill: none;
+  stroke: var(--color-hairline-lit);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.beam-hairline--draw {
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+  animation: beam-draw 900ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-delay: var(--beam-draw-delay, 0ms);
+}
+
+.beam-core,
+.beam-glow {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: var(--beam-len, 12) var(--beam-gap, 88);
+  opacity: 0;
+  animation:
+    beam-orbit var(--beam-dur, 7s) linear infinite,
+    beam-appear 600ms linear forwards;
+  animation-delay: var(--beam-delay, 0ms);
+}
+
+.beam-core {
+  --beam-opacity: 1;
+  stroke-width: 1.6;
+}
+
+.beam-glow {
+  --beam-opacity: 0.28;
+  stroke-width: 5;
+  filter: blur(3px);
+}
+
+@keyframes beam-orbit {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes beam-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes beam-appear {
+  to {
+    opacity: var(--beam-opacity, 1);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The academy lockup - "The / atlys / Academy". Shared by the cold open and
+ * the sign-in box; sized per use with --lockup-size.
+ * ------------------------------------------------------------------------- */
+
+.lockup {
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--lockup-size, 30px);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+
+.lockup__line {
+  display: block;
+  opacity: 0;
+  animation: lockup-fade 700ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+.lockup__line--serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.21em;
+  line-height: 1.1;
+  letter-spacing: 0;
+  margin: -0.04em 0 -0.04em 0.42em;
+  padding-bottom: 0.08em; /* descender clearance for the italic y */
+}
+
+@keyframes lockup-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The edition card - the landing's single surface, floated over the globe.
+ * Frosted night glass inside the beam frame: the ASCII world reads through it
+ * as soft points of light. `prefers-reduced-transparency` gets a solid plate.
+ * ------------------------------------------------------------------------- */
+
+.stage-card {
+  position: relative;
+  /* Near-solid night glass, tinted toward the brand navy at the top. Opaque
+     enough that type never fights the globe's bright front face; the world
+     stays legible around the card, not through it. */
+  background:
+    linear-gradient(
+      180deg,
+      rgb(30 32 58 / 0.5),
+      rgb(16 16 24 / 0.18) 240px,
+      transparent 400px
+    ),
+    rgb(13 13 18 / 0.88);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 40px 90px rgb(0 0 0 / 0.55);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .stage-card {
+    background: #101012;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* The story caption under the card. Keyed remounts fade the new line in;
+   the small blur bridges the cut so it reads as one line changing. */
+.stage-caption {
+  animation: caption-in 640ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Chapter rows: the hover plate bleeds past the text column so the row reads
+   as one object; transform/opacity only. */
+.chapter-row {
+  transition:
+    background-color 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.chapter-row:active {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chapter-row:hover {
+    background-color: rgb(255 255 255 / 0.045);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The cold open.
+ *
+ * A black stage over the app's first paint: geometric travel shapes and the
+ * lockup box resolve, each perimeter traced by a white light beam. The stage
+ * only exists while <html> carries `data-boot` - stamped before first paint
+ * by the inline script in layout.tsx, once per session, never without JS.
+ * The failsafe animation removes the stage on its own if the lifting script
+ * in src/components/fx/LoadingScreen.tsx dies. Under reduced motion the
+ * global override collapses it to a static frame and an instant lift.
+ * ------------------------------------------------------------------------- */
+
+.cold-open {
+  display: none;
+}
+
+html[data-boot] .cold-open {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #0b0b0b;
+  animation: cold-open-failsafe 1ms linear 6s forwards;
+}
+
+html[data-boot="done"] .cold-open {
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cold-open__frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(440px, 84vw);
+  padding: 46px 42px;
+}
+
+.cold-open__numerals {
+  margin-top: 28px;
+  display: flex;
+  gap: 18px;
+  color: var(--color-ink-dim);
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.cold-open__numeral {
+  opacity: 0;
+  animation: cold-open-tick 120ms linear forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+.cold-open__shape {
+  position: absolute;
+  opacity: 0;
+  animation: cold-open-shape 700ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+.cold-open__shape svg {
+  display: block;
+  overflow: visible;
+}
+
+.cold-open__float {
+  animation: cold-open-float 9s ease-in-out infinite alternate;
+  animation-delay: var(--fd, 0ms);
+}
+
+@keyframes cold-open-shape {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cold-open-float {
+  from {
+    transform: translateY(-5px);
+  }
+  to {
+    transform: translateY(7px);
+  }
+}
+
+/* The step lives in the keyframes, not a steps() easing: steps(1, end) holds
+   the *from* value after finishing under fill: forwards. */
+@keyframes cold-open-tick {
+  0%,
+  49% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cold-open-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Preserved-component motion, restored from the archived stylesheet
+ * (`git show 7b03e73:src/app/globals.css`). The drills, quiz and dialogs
+ * still reference these by name; the reduced-motion block above collapses
+ * every one of them.
+ * ------------------------------------------------------------------------- */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Pop-up windows springing open on the desk. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 240ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* `<details>` opening and closing as a fold rather than a jump. Opt out per
+   element with `data-no-fold`. */
+details:not([data-no-fold])::details-content {
+  block-size: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    block-size 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease-out,
+    content-visibility 300ms allow-discrete;
+}
+
+details[open]:not([data-no-fold])::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* Swipe-deck exits - the card flies off in the direction of the verdict. */
+@keyframes swipe-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-120%) rotate(-14deg);
+  }
+}
+
+@keyframes swipe-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(120%) rotate(14deg);
+  }
+}
+
+.animate-swipe-out-left {
+  animation: swipe-out-left 280ms ease-in both;
+}
+
+.animate-swipe-out-right {
+  animation: swipe-out-right 280ms ease-in both;
+}
+
+/* Sticker-tile wobble for collected points / correct answers. */
+@keyframes tile-pop {
+  0% {
+    transform: scale(0.4) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-tile-pop {
+  animation: tile-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* A rubber stamp landing on the page. The dip under 1.0 before the recovery
+   is the whole effect: the hand presses past the paper, then eases off. The
+   drop accelerates (ease-in) and arrives slightly blurred; the ink resolves
+   sharp at the moment of impact. Runs on the stamp FACE, whose parent box
+   holds the resting tilt - so the rotation here is the landing wobble on top
+   of that tilt, settling to identity. */
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(-9deg);
+    filter: blur(3px);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.36);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(1.2deg);
+    filter: blur(0);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  78% {
+    transform: scale(1.035) rotate(-0.4deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+.animate-stamp-press {
+  animation: stamp-press 420ms both;
+}
+
+/* ---------------------------------------------------------------------------
+ * The paper plate - the one deliberately light object on the night stage.
+ *
+ * Passport stamp sprites are cream with no alpha and drop their backdrop via
+ * `mix-blend-mode: multiply`, so they MUST sit on light paper. The plate
+ * re-scopes the ink/badge custom properties, which is what lets the preserved
+ * StampSheet/PassportStamp markup render correctly on it without edits: every
+ * `text-ink*` and `border-ink*` utility inside resolves to paper-native ink.
+ * ------------------------------------------------------------------------- */
+
+.paper-plate {
+  --color-ink: var(--color-paper-ink);
+  --color-ink-muted: #5d5c66;
+  --color-ink-secondary: #45444e;
+  --color-line: #dcd6c8;
+  --color-surface-soft: #ece6da;
+  --color-badge-green: #2c7a4b;
+  --color-badge-green-soft: #e2f0e4;
+  background:
+    radial-gradient(
+      120% 90% at 50% 0%,
+      rgb(255 255 255 / 0.5),
+      transparent 60%
+    ),
+    var(--color-paper);
+  color: var(--color-paper-ink);
+  box-shadow:
+    inset 0 0 0 1px rgb(20 20 26 / 0.08),
+    0 14px 40px rgb(0 0 0 / 0.42);
+}
+
+/* ---------------------------------------------------------------------------
+ * The day desk - the journey page's chrome.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * The chart table the day boards sit on: a quiet survey grid with a `+` tick
+ * at every fourth intersection - the same glyph the landing globe is drawn
+ * from. It replaces most of the soft blue wash as the ground, so the page
+ * reads as a plotted surface rather than a gradient. Masked so it breathes
+ * at the centre and dissolves before the edges.
+ */
+.chart-table {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='304' height='304'%3E%3Cpath d='M4 0v8M0 4h8' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1'/%3E%3C/svg%3E"),
+    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size:
+    304px 304px,
+    76px 76px,
+    76px 76px;
+  background-position:
+    -4px -4px,
+    0 0,
+    0 0;
+  mask-image: radial-gradient(
+    130% 100% at 50% 26%,
+    black 30%,
+    transparent 82%
+  );
+  -webkit-mask-image: radial-gradient(
+    130% 100% at 50% 26%,
+    black 30%,
+    transparent 82%
+  );
+}
+
+/* A quieter cousin of .stage-card for content-heavy panels: same night glass,
+   less blur (there is a whole page of it), no entrance dependency. */
+.desk-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 140px),
+    rgb(13 13 14 / 0.66);
+  backdrop-filter: blur(9px) saturate(1.1);
+  -webkit-backdrop-filter: blur(9px) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 24px 70px rgb(0 0 0 / 0.45);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .desk-card {
+    background: #101012;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* The chapter masthead's giant numeral, printed like a watermark behind the
+   title. Kept as color rather than opacity so text stays selectable-invisible
+   to nobody: it is aria-hidden decoration. */
+.chapter-numeral {
+  font-family: var(--font-display);
+  font-style: italic;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(255 255 255 / 0.14);
+  user-select: none;
+}
+
+/* Sealed chapter rows breathe very slowly so the wait reads as alive, not
+   broken. Transform-free: it is only the seal glyph's opacity. */
+@keyframes seal-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.seal-glyph {
+  animation: seal-breathe 4.5s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+ * The journey trail: pinned cards and the windows they enlarge into.
+ * ------------------------------------------------------------------------- */
+
+/* A card pinned slightly askew; hovering (or focusing) lifts it flat off the
+   board, the way a note straightens when you reach for it. */
+.trail-card {
+  /* Completion ink for the teaser row; the stamped state re-inks it. */
+  --done-ink: #57d0a3;
+  transform: rotate(var(--tilt, 0deg));
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms ease-out,
+    background-color 200ms ease-out,
+    box-shadow 260ms ease-out;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+}
+
+/**
+ * A finished stop: the note comes back from the counter stamped. The card
+ * flips to passport paper - the same cream as the stamp plates - and every
+ * ink token re-scopes to paper-native values, so the markup inside changes
+ * nothing. Green stays the completion ink; the numeral prints in the deep
+ * stamp blue real entry stamps use.
+ */
+.trail-card--stamped {
+  /* Paper-native inks, darkened for small type: the kicker and teaser sit
+     at 10-13px, so every secondary ink stays above ~6:1 on the cream. */
+  --color-ink: #141419;
+  --color-ink-muted: #38373f;
+  --color-ink-dim: #504f58;
+  --color-hairline: rgb(20 20 25 / 0.16);
+  --color-hairline-lit: rgb(20 20 25 / 0.3);
+  --color-brand-text: #383ebc;
+  --color-brand: #383ebc;
+  --done-ink: #176344;
+  background:
+    radial-gradient(
+      110% 80% at 50% 0%,
+      rgb(255 255 255 / 0.32),
+      transparent 62%
+    ),
+    #f2ede4;
+  border-color: rgb(20 20 25 / 0.2);
+  color: #141419;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.4),
+    0 14px 36px rgb(0 0 0 / 0.5);
+}
+
+.trail-card--stamped:hover,
+.trail-card--stamped:focus-visible {
+  background:
+    radial-gradient(
+      110% 80% at 50% 0%,
+      rgb(255 255 255 / 0.45),
+      transparent 62%
+    ),
+    #f5f0e7;
+  border-color: rgb(20 20 25 / 0.28);
+}
+
+/* The rubber impression in the card's corner: double-ruled, tilted, green
+   ink. Text is supplied by the markup so translators can reach it. */
+.done-imprint {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  transform: rotate(5deg);
+  border: 1.5px solid rgb(22 96 63 / 0.8);
+  border-radius: 5px;
+  padding: 3px 8px;
+  box-shadow: inset 0 0 0 3px rgb(242 237 228 / 0.9),
+    inset 0 0 0 4px rgb(22 96 63 / 0.4);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(20 88 58 / 0.95);
+}
+
+/* A cleared chapter's numeral fills with trophy gold instead of the etched
+   outline - quiet enough to stay a watermark. */
+.chapter-numeral--cleared {
+  -webkit-text-stroke: 0;
+  color: rgb(234 195 95 / 0.17);
+}
+
+.trail-card:hover,
+.trail-card:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+  border-color: var(--color-hairline-lit);
+  background-color: rgb(255 255 255 / 0.045);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.5);
+}
+
+.trail-card:focus-visible {
+  outline: 2px solid var(--color-brand-text);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail-card,
+  .trail-card:hover,
+  .trail-card:focus-visible {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* The pin holding the card to the board: a dark grommet with a lit rim and a
+   pinprick of brand light in the middle. */
+.pin-grommet {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at 38% 32%,
+      rgb(255 255 255 / 0.22),
+      transparent 55%
+    ),
+    #101013;
+  border: 1px solid var(--color-hairline-lit);
+  box-shadow:
+    0 3px 8px rgb(0 0 0 / 0.55),
+    inset 0 0 0 4px rgb(0 0 0 / 0.5);
+}
+
+.pin-grommet::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 5px auto 0;
+  border-radius: 9999px;
+  background: var(--color-brand-hover);
+  box-shadow: 0 0 8px rgb(115 121 238 / 0.8);
+}
+
+/* The enlarging window. The element is the morph target itself (TrailWindow
+   animates its transform from the card's rect), so it carries the final
+   geometry only. */
+dialog.trail-window {
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: 20px;
+  width: min(1160px, 96vw);
+  max-height: min(88dvh, 900px);
+  height: min(88dvh, 900px);
+  /* The home card's glass: translucent night over the blurred backdrop, the
+     etched border drawn by the beam frame inside rather than a CSS border. */
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.045), transparent 140px),
+    rgb(13 13 15 / 0.82);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 40px 120px rgb(0 0 0 / 0.6);
+  overflow: hidden;
+  /* The first animation frame is written by script; starting invisible stops
+     a one-frame flash of the full-size window before the morph kicks in. */
+  opacity: 0;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  dialog.trail-window {
+    background: #101013;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+dialog.trail-window[open] {
+  opacity: 1;
+}
+
+dialog.trail-window::backdrop {
+  background: rgb(3 3 5 / 0.66);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}

@@ -1,0 +1,27 @@
+# Scheduled worker: pulls the daily report from the app and posts it to Slack.
+#
+# Deliberately separate from the Next app. The app is request-driven and has no
+# timer of its own, and this keeps the Slack credential out of the public web
+# app — only this worker can post.
+
+name = "onboarding-daily-report"
+main = "src/index.ts"
+compatibility_date = "2026-08-04"
+
+# Cron triggers run in UTC, always. 13:30 UTC = 19:00 IST.
+# Change both this and the comment together, or the next reader will be misled.
+[triggers]
+crons = ["30 13 * * *"]
+
+[vars]
+# The deployed app. Not a secret. Override per environment.
+APP_URL = "http://localhost:3000"
+
+# Without this, a failed run is only visible in a live `wrangler tail` session
+# that nobody is watching at 7pm.
+[observability]
+enabled = true
+
+# Secrets are NOT set here — they would be committed. Set them once with:
+#   npx wrangler secret put REPORT_TOKEN
+#   npx wrangler secret put SLACK_WEBHOOK_URL
