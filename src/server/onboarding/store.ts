@@ -4,6 +4,7 @@ import { DAYS } from "@/content/onboarding/days";
 import type { DayId } from "@/content/onboarding/types";
 import { calculatePoints } from "@/lib/progress/points";
 import { hasPassedQuiz } from "@/lib/progress/selectors";
+import { stampTotals } from "@/lib/progress/stamps";
 import {
   type AvatarConfig,
   emptyProgress,
@@ -250,7 +251,19 @@ export interface AdminJoineeRow {
   daysCompleted: number;
   /** Best score per quiz slug, e.g. { day1: "4/5" }. */
   quizBest: Record<string, string>;
+  /** Whether that day's quiz is passed at the mark, keyed the same way. */
+  quizPassed: Record<string, boolean>;
   activitiesDone: number;
+  /**
+   * Passport stamps collected out of collectable, across all days.
+   *
+   * This is what the admin desk prints as "activities": a stamp is issued for
+   * finishing a real thing (the day's reading, its checklist, each drill, the
+   * quiz), so a full sheet and a finished day are the same statement. The
+   * `activitiesDone` count above stays for the Slack report, which counts
+   * checklist ticks rather than souvenirs.
+   */
+  stamps: { earned: number; total: number };
   /** Free-text submissions, verbatim - what the mentor actually reads. */
   exercises: { key: string; body: string; submittedAt: string }[];
   lastActivityAt: string | null;
@@ -279,6 +292,7 @@ export async function adminOverview(): Promise<AdminJoineeRow[] | null> {
           );
         if (best) quizBest[day.slug] = `${best.score}/${best.maxScore}`;
       }
+      const stamps = stampTotals(state);
       // Written work counts as activity. Without the exercises line, a joinee
       // whose only action today was filing their ODPAC report reads as inactive
       // and drops out of the daily Slack report entirely - taking the one
@@ -296,7 +310,11 @@ export async function adminOverview(): Promise<AdminJoineeRow[] | null> {
         points: calculatePoints(state).total,
         daysCompleted: DAYS.filter((d) => hasPassedQuiz(state, d.slug)).length,
         quizBest,
+        quizPassed: Object.fromEntries(
+          DAYS.map((day) => [day.slug, hasPassedQuiz(state, day.slug)]),
+        ),
         activitiesDone: Object.keys(state.completedItems).length,
+        stamps: { earned: stamps.earned, total: stamps.total },
         exercises: Object.entries(state.exercises).map(([key, sub]) => ({
           key,
           body: sub.body,

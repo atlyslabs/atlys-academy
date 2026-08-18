@@ -37,6 +37,34 @@ export function TrailWindow({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closing = useRef(false);
 
+  // Any `<details>` opened inside the window (lessons, objection cards, the
+  // ODPAC how-to) is brought to viewing height once its fold has expanded -
+  // the reader never opens a page and then has to go looking for it. Capture
+  // phase because `toggle` does not bubble; the instanceof guard skips the
+  // dialog's own toggle events.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const reveal = (event: Event) => {
+      const details = event.target;
+      if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      // The fold animates block-size for ~300ms (globals.css); measure after.
+      window.setTimeout(
+        () =>
+          details.scrollIntoView({
+            block: "nearest",
+            behavior: reduce ? "auto" : "smooth",
+          }),
+        reduce ? 0 : 320,
+      );
+    };
+    dialog.addEventListener("toggle", reveal, true);
+    return () => dialog.removeEventListener("toggle", reveal, true);
+  }, []);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || dialog.open) return;

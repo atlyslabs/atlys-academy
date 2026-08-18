@@ -1,19 +1,5 @@
 import type { Quiz, QuizSlug } from "./types";
 
-/**
- * Questions and options only - **no correct answers**. This module is imported
- * by client components, so anything in here ships to the browser. Correct
- * answers and explanations live in `answers.ts`, which imports `"server-only"`.
- *
- * Question ids are persisted in `quiz_response.question_id`. Never rename one;
- * retire it and add a new id instead.
- *
- * Every question must be answerable from the source material: Day 1 and the last
- * three Day 2 questions come from the onboarding manual (§1.1-§1.4, §2.1-§2.4),
- * the rest from `docs/source-journey.md`. Where the source is thin (Days 3 and 4
- * are mostly activity lists rather than teachable facts) the questions test the
- * framing the doc *does* state. See the TODO notes on those quizzes.
- */
 
 export const PASS_THRESHOLD = 0.7;
 
@@ -21,10 +7,6 @@ const day1: Quiz = {
   slug: "day1",
   title: "Day 1 · Welcome",
   dayId: 1,
-  // Built from the manual, §1.1-§1.4 plus the red lines in §5. `d1.q1`-`d1.q5`
-  // were retired rather than reworded - the ids are persisted in
-  // `quiz_response.question_id` and old responses must not be re-scored against
-  // different text.
   questions: [
     {
       id: "d1.q6",
@@ -50,33 +32,6 @@ const day1: Quiz = {
           id: "d",
           label:
             "Get the application filed quickly, because the waiting is what makes people anxious",
-        },
-      ],
-    },
-    {
-      id: "d1.q7",
-      prompt:
-        "Two agents convert the same number of customers this month. One's list is mostly destinations that are visa-free or near-free on an Indian passport; the other's is mostly Schengen, US and Canada. How should you read that?",
-      options: [
-        {
-          id: "a",
-          label:
-            "The second agent produced almost all the revenue. What you sell matters more than how much",
-        },
-        {
-          id: "b",
-          label:
-            "They performed the same. Conversions are the number the role is measured on, whatever the destination",
-        },
-        {
-          id: "c",
-          label:
-            "The first agent is ahead on volume, which is the honest read on effort and pipeline health",
-        },
-        {
-          id: "d",
-          label:
-            "It is a difference in fee size, and we are told never to grade customers by fee",
         },
       ],
     },
@@ -303,20 +258,6 @@ const day1: Quiz = {
         { id: "b", label: "Ops" },
         { id: "c", label: "The customer's own bank" },
         { id: "d", label: "Nobody. Work around it in the chat" },
-      ],
-    },
-    {
-      id: "d4.q4",
-      prompt: "Why does the day ask you to draw your own flowchart?",
-      options: [
-        {
-          id: "a",
-          label:
-            "So you know where a conversation goes next and who owns the decision, without asking",
-        },
-        { id: "b", label: "So it can be added to the team's documentation" },
-        { id: "c", label: "So your mentor can grade your process knowledge" },
-        { id: "d", label: "So Product can redesign the dashboard around it" },
       ],
     },
     {

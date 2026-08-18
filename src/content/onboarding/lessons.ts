@@ -1,23 +1,5 @@
 import type { DayId, ItemKey } from "./types";
 
-/**
- * Teaching content, one lesson per "What to learn" topic.
- *
- * `body === null` means the content does not exist yet - it is being written by
- * Shovan (the `ref` field is the question number in docs/shovan-questions.md).
- * The UI renders an honest placeholder for those instead of invented filler:
- * a wrong visa fact taught here gets repeated to a paying guest.
- *
- * Where `body` is filled, every sentence is traceable to a source and `ref`
- * names it: `"Manual §1.1"` is the hiring manager's onboarding manual (Days 1
- * and 2), a bare `"§5.1"` is docs/source-journey.md. `"Manager, Aug 2026"` is a
- * direct answer from the hiring manager, recorded against the numbered question
- * in docs/shovan-questions.md. Filling in a lesson is a paste-in edit to this
- * file, nothing else.
- *
- * `itemKey` is persisted in progress rows when a joinee finishes reading -
- * never rename one in place.
- */
 export interface Lesson {
   itemKey: ItemKey;
   dayId: DayId;
@@ -26,11 +8,6 @@ export interface Lesson {
   title: string;
   /** Paragraphs. `null` = pending from Shovan; UI shows a placeholder. */
   body: string[] | null;
-  /**
-   * Pending lessons only: who the missing answer sits with. Written so the
-   * placeholder names a person to chase rather than just a question number -
-   * an unowned gap is the one that never closes.
-   */
   pendingWith?: string;
   /** A real, sanitised situation where this mattered. */
   example?: string;

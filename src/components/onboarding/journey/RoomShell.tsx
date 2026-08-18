@@ -35,7 +35,13 @@ export function RoomShell({
       <div className="night-vignette" />
       <div className="grain" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1120px] px-4 pb-24 pt-8 sm:px-8 sm:pt-10">
+      {/* The manager's desk carries a wide data table, so it gets a wider
+          measure than the joinee rooms, whose content is prose and stamps. */}
+      <div
+        className={`relative z-10 mx-auto w-full px-4 pb-24 pt-8 sm:px-8 sm:pt-10 ${
+          room === "admin" ? "max-w-[1520px]" : "max-w-[1120px]"
+        }`}
+      >
         <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
           <Link
             href="/"

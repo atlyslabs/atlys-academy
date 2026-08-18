@@ -725,6 +725,155 @@ details[open]:not([data-no-fold])::details-content {
   user-select: none;
 }
 
+/* ---------------------------------------------------------------------------
+ * The paper board - the day's dossier as one broad sheet of warm paper.
+ *
+ * Same trick as .paper-plate, taken further: EVERY ink, accent and line token
+ * the journey components speak is re-scoped to a paper-native value, so the
+ * markup inside recolors wholesale. All inks are chosen against #f6f0dc:
+ * ink 15:1, muted 8:1, dim 4.6:1, brand 6.5:1, complete 5.9:1, gold 5.3:1 -
+ * nothing inside the board may keep a night-stage color.
+ * ------------------------------------------------------------------------- */
+
+.paper-board {
+  --color-paper: #f6f0dc;
+  --color-ink: #17171c;
+  --color-ink-muted: #45444c;
+  --color-ink-secondary: #45444e;
+  --color-ink-dim: #6a6858;
+  --color-hairline: rgb(23 23 28 / 0.14);
+  --color-hairline-lit: rgb(23 23 28 / 0.28);
+  --color-brand: #3a40c2;
+  --color-brand-hover: #2f35ad;
+  --color-brand-text: #3a40c2;
+  --color-complete: #146b47;
+  --color-gold: #7d600e;
+  --color-raised: #fbf7ec;
+  --color-line: #d8d1bb;
+  --color-surface-soft: #ece5d0;
+  --color-badge-green: #1e6f4b;
+  --color-badge-green-soft: #dfeadd;
+  background:
+    radial-gradient(
+      120% 70% at 50% 0%,
+      rgb(255 255 255 / 0.55),
+      transparent 58%
+    ),
+    var(--color-paper);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 0 0 1px rgb(23 23 28 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    0 18px 60px rgb(0 0 0 / 0.5);
+}
+
+/* The board's edge light: on paper the travelling beam trades its white for
+   brass, a gilded thread instead of a night glow. */
+.paper-board .beam-core,
+.paper-board .beam-glow {
+  stroke: var(--color-brass);
+}
+
+/* The watermark numeral etches in ink on paper, and fills with old gold once
+   the chapter is cleared - the same registers, paper-native. */
+.paper-board .chapter-numeral {
+  -webkit-text-stroke: 1px rgb(23 23 28 / 0.17);
+}
+
+.paper-board .chapter-numeral--cleared {
+  -webkit-text-stroke: 0;
+  color: rgb(154 122 21 / 0.22);
+}
+
+/* Cards pinned to paper: lighter presence, warmer shadow, and a hover that
+   brightens toward white instead of toward night glass. */
+.paper-board .trail-card {
+  --done-ink: #146b47;
+  background-color: rgb(255 255 255 / 0.42);
+  box-shadow: 0 5px 16px rgb(58 47 18 / 0.13);
+}
+
+.paper-board .trail-card:hover,
+.paper-board .trail-card:focus-visible {
+  background-color: #fffdf4;
+  border-color: var(--color-hairline-lit);
+  box-shadow: 0 12px 26px rgb(58 47 18 / 0.2);
+}
+
+/* A stamped note on the paper board: the cream card keeps its own re-scoped
+   inks (they already read on cream) and takes the counter's green rule. */
+.paper-board .trail-card--stamped {
+  background:
+    radial-gradient(
+      110% 80% at 50% 0%,
+      rgb(255 255 255 / 0.55),
+      transparent 62%
+    ),
+    #eef0dd;
+  border-color: rgb(20 107 71 / 0.4);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.5),
+    0 6px 18px rgb(43 66 32 / 0.16);
+}
+
+.paper-board .trail-card--stamped:hover,
+.paper-board .trail-card--stamped:focus-visible {
+  background:
+    radial-gradient(
+      110% 80% at 50% 0%,
+      rgb(255 255 255 / 0.65),
+      transparent 62%
+    ),
+    #f1f3e2;
+  border-color: rgb(20 107 71 / 0.55);
+}
+
+/* The trail grid's column ramp, in plain CSS: Tailwind v4 emits custom and
+   arbitrary min-* breakpoints BEFORE the named ones, so a 1400px tier can
+   never win the cascade as a utility. Five columns on a full desk keep even
+   the busiest day at three rows - the board stays inside one viewport. */
+.trail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 20px;
+  /* Room above row one is the pins' overhang, not dead padding. */
+  padding-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .trail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .trail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .trail-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .trail-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* The pin keeps its dark head (a physical object, not an ink), but its shadow
+   softens to what a pin actually throws on paper. */
+.paper-board .pin-grommet {
+  border-color: rgb(23 23 28 / 0.35);
+  box-shadow:
+    0 2px 5px rgb(58 47 18 / 0.35),
+    inset 0 0 0 4px rgb(0 0 0 / 0.5);
+}
+
 /* Sealed chapter rows breathe very slowly so the wait reads as alive, not
    broken. Transform-free: it is only the seal glyph's opacity. */
 @keyframes seal-breathe {

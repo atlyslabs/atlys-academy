@@ -18,9 +18,11 @@ import type { TrailStop } from "./stops";
 const PASS_PERCENT = Math.round(PASS_THRESHOLD * 100);
 
 /**
- * One day's chapter: the two-tone masthead over its pinboard trail. All of
- * the day's actual work lives behind the trail's cards - each one enlarges
- * into a window (see TrailWindow); nothing heavy mounts until it is opened.
+ * One day's chapter as a single broad sheet of paper: a compact masthead over
+ * a grid of pinned stop cards. All of the day's actual work lives behind the
+ * cards - each one enlarges into a window (see TrailWindow); nothing heavy
+ * mounts until it is opened. The whole board is sized to sit inside one
+ * viewport, so a day is read at a glance rather than scrolled through.
  */
 export function DayDossier({
   day,
@@ -32,7 +34,10 @@ export function DayDossier({
   onOpenStop: (day: Day, stop: TrailStop, origin: DOMRect) => void;
 }) {
   return (
-    <article id={`day-${day.id}`} className="desk-card scroll-mt-6">
+    <article
+      id={`day-${day.id}`}
+      className="paper-board relative overflow-hidden rounded-2xl"
+    >
       <FrameBeam active={isCurrent} />
       <Masthead day={day} />
       <JourneyTrail
@@ -58,12 +63,12 @@ function Masthead({ day }: { day: Day }) {
   const cleared = sheet.complete;
 
   return (
-    <header className="relative overflow-hidden px-6 pb-8 pt-9 sm:px-12 sm:pb-9 sm:pt-12">
-      {/* The chapter numeral: etched while the day is open, filled with
-          trophy gold once the page is cleared. */}
+    <header className="relative overflow-hidden px-6 pb-4 pt-5 sm:px-10 sm:pt-6">
+      {/* The chapter numeral: etched in ink while the day is open, filled
+          with old gold once the page is cleared. */}
       <span
         aria-hidden="true"
-        className={`chapter-numeral pointer-events-none absolute -right-2 -top-6 hidden text-[190px] md:block ${
+        className={`chapter-numeral pointer-events-none absolute -top-5 right-0 hidden text-[150px] md:block ${
           cleared ? "chapter-numeral--cleared" : ""
         }`}
       >
@@ -81,63 +86,59 @@ function Masthead({ day }: { day: Day }) {
             {leg.code}, {leg.place}
           </span>
           {passed && (
-            <span className="ml-1 rounded-full border border-complete/40 bg-complete/10 px-2 py-0.5 font-mono text-[9.5px] tracking-[0.14em] text-[#57d0a3]">
+            <span className="ml-1 rounded-full border border-complete/40 bg-complete/10 px-2 py-0.5 font-mono text-[9.5px] tracking-[0.14em] text-complete">
               Boarded
             </span>
           )}
         </p>
 
-        <h2 className="mt-4 max-w-[16ch] font-display text-[42px] italic leading-[1.04] tracking-[-0.01em] text-ink sm:text-[54px]">
-          {day.title}
-        </h2>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
+          <h2 className="max-w-[24ch] font-display text-[28px] italic leading-[1.05] tracking-[-0.01em] text-ink sm:text-[34px]">
+            {day.title}
+          </h2>
 
-        {/* The stage line, exactly as the home page stages this stop; the
-            cleared line takes over once the page is full. */}
-        <p className="mt-4 max-w-[54ch] font-display text-[17px] italic leading-snug text-ink/90">
-          {narrationOpener(leg)}
-        </p>
-
-        {cleared && (
-          <p className="mt-3 max-w-[54ch] font-display text-[15px] italic leading-snug text-gold">
-            {leg.cleared}
+          {/* The day's ledger, riding the title's baseline so the masthead
+              stays one compact block. Green inks the finished pieces; gold
+              inks the cleared page. */}
+          <p className="flex flex-wrap gap-x-5 gap-y-1.5 pb-1 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-dim tabular-nums">
+            <span
+              className={
+                checklist.total > 0 && checklist.done === checklist.total
+                  ? "text-complete"
+                  : undefined
+              }
+            >
+              {checklist.done}/{checklist.total} tasks
+            </span>
+            {readable.length > 0 && (
+              <span>{readable.length} pages of reading</span>
+            )}
+            <span>
+              {day.drills.length} {day.drills.length === 1 ? "drill" : "drills"}
+            </span>
+            <span className={cleared ? "text-gold" : undefined}>
+              {sheet.earned}/{sheet.total} stamps
+            </span>
+            <span className={passed ? "text-complete" : undefined}>
+              quiz at {PASS_PERCENT}%
+            </span>
           </p>
-        )}
+        </div>
 
-        <p className="mt-3 max-w-[52ch] text-[14.5px] leading-relaxed text-ink-muted">
-          {day.objective}
-        </p>
-
-        {/* The day's ledger. Each figure carries its own state ink: green
-            once that piece is done, gold when the whole page is. */}
-        <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-dim tabular-nums">
-          <span
-            className={
-              checklist.total > 0 && checklist.done === checklist.total
-                ? "text-[#57d0a3]"
-                : undefined
-            }
-          >
-            {checklist.done}/{checklist.total} tasks
-          </span>
-          {readable.length > 0 && (
-            <span>{readable.length} pages of reading</span>
-          )}
-          <span>
-            {day.drills.length} {day.drills.length === 1 ? "drill" : "drills"}
-          </span>
-          <span className={cleared ? "text-gold" : undefined}>
-            {sheet.earned}/{sheet.total} stamps
-          </span>
-          <span className={passed ? "text-[#57d0a3]" : undefined}>
-            quiz at {PASS_PERCENT}%
-          </span>
+        {/* The stage line as staged on the home page; the cleared line takes
+            over once the page is full. The objective rides along after it. */}
+        <p className="mt-2.5 max-w-[92ch] text-[13.5px] leading-relaxed text-ink-muted">
+          <em className="font-display text-[15.5px] italic text-ink/85">
+            {cleared ? leg.cleared : narrationOpener(leg)}
+          </em>{" "}
+          <span className="text-ink-dim">—</span> {day.objective}
         </p>
       </div>
     </header>
   );
 }
 
-/** The etched perimeter, with the travelling light only on the open day. */
+/** The etched perimeter, with the gilded light only on the open day. */
 function FrameBeam({ active }: { active: boolean }) {
   return (
     <svg className="beam" aria-hidden="true">
@@ -145,6 +146,7 @@ function FrameBeam({ active }: { active: boolean }) {
         className="beam-hairline"
         x="0"
         y="0"
+        rx="15"
         width="100%"
         height="100%"
         pathLength={100}
@@ -155,6 +157,7 @@ function FrameBeam({ active }: { active: boolean }) {
             className="beam-glow"
             x="0"
             y="0"
+            rx="15"
             width="100%"
             height="100%"
             pathLength={100}
@@ -164,6 +167,7 @@ function FrameBeam({ active }: { active: boolean }) {
             className="beam-core"
             x="0"
             y="0"
+            rx="15"
             width="100%"
             height="100%"
             pathLength={100}

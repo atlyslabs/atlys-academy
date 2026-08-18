@@ -74,36 +74,35 @@ export function SealedDay({
     <section
       id={`day-${day.id}`}
       aria-label={`Day ${day.id}, sealed`}
-      className="scroll-mt-6 rounded-2xl border border-hairline/70 bg-white/[0.012] px-5 py-5 sm:px-7"
+      // The sealed chapter is the same sheet of paper as an open one - just
+      // mostly blank, with the seal's terms written where the work would be.
+      className="paper-board relative overflow-hidden rounded-2xl px-6 py-12 sm:px-10 sm:py-16"
     >
-      <div className="flex items-center gap-4 sm:gap-6">
-        <span
-          aria-hidden="true"
-          className="w-9 shrink-0 text-center font-display text-[24px] italic leading-none text-ink-dim/45"
-        >
-          {romanNumeral(day.id)}
-        </span>
+      <span
+        aria-hidden="true"
+        className="chapter-numeral pointer-events-none absolute -top-5 right-0 hidden text-[150px] md:block"
+      >
+        {romanNumeral(day.id)}
+      </span>
 
-        <div className="min-w-0 flex-1">
+      <div className="relative flex max-w-[72ch] items-start gap-5">
+        <LockGlyph className="seal-glyph mt-1 size-5 shrink-0 text-ink-dim" />
+        <div className="min-w-0">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[15px] font-medium text-ink-dim">
+            <span className="font-display text-[24px] italic leading-tight text-ink/75">
               {day.title}
             </span>
-            <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-dim/70">
-              Day {day.id}
+            <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-dim">
+              Day {day.id} · sealed
             </span>
           </p>
-          <p className="mt-1 max-w-[64ch] text-[12.5px] leading-relaxed text-ink-dim/85">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-ink-muted">
             {note}
           </p>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <LockGlyph className="seal-glyph size-3.5 text-ink-dim" />
           {clock && (
-            <span className="font-mono text-[10px] tracking-[0.12em] text-brand-text tabular-nums">
+            <p className="mt-3 font-mono text-[11px] tracking-[0.12em] text-brand-text tabular-nums">
               {clock}
-            </span>
+            </p>
           )}
         </div>
       </div>

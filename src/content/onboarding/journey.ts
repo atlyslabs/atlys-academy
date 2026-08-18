@@ -95,14 +95,6 @@ export const JOURNEY_LEGS: readonly JourneyLeg[] = [
 export function legForDay(dayId: DayId): JourneyLeg {
   return JOURNEY_LEGS.find((leg) => leg.dayId === dayId) ?? JOURNEY_LEGS[0];
 }
-
-/**
- * The opening beat of a leg's narration - its first sentence.
- *
- * The landing page's story line and the day dossier's standfirst must read
- * identically, so the trim lives here with the prose rather than being copied
- * into each view.
- */
 export function narrationOpener(leg: JourneyLeg): string {
   const end = leg.narration.indexOf(". ");
   return end === -1 ? leg.narration : leg.narration.slice(0, end + 1);

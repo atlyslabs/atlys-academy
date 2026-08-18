@@ -1,20 +1,24 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Five-axis radar of per-day scores - one spoke per day of the journey.
+ * Radar of per-day scores - one spoke per day of the journey, however many
+ * days that is. Three days plot a triangle, five a pentagon; nothing here
+ * assumes a count.
  *
  * Presentational only: it holds no progress state and reads no context, which
  * is what lets a server-rendered page (admin, showing other people's numbers)
  * and a client desk share one plot. Whoever renders it owns the arithmetic.
  *
- * The vertices are labelled by day ("Day 1" ... "Day 5"), not by the leg's
- * airport code: the code is staging flavour, and a manager reading a weak spoke
- * needs to know which day to go and fix.
+ * The vertices are labelled by day ("Day 1", "Day 2" ...), not by the leg's
+ * airport code: the code is staging flavour, and a manager reading a short
+ * spoke needs to know which day to go and fix.
  */
 
-/** SVG user space. Square, so the trig below reads identically on both axes. */
-const SIZE = 240;
-const CENTRE = SIZE / 2;
+/**
+ * SVG user space. Isotropic, so the trig below reads identically on both axes;
+ * the rendered viewBox is cropped to the drawn shape by `viewBoxFor`.
+ */
+const CENTRE = 120;
 /**
  * Outer web radius, deliberately well short of the box edge: the vertex labels
  * live in the ring between `RADIUS` and `LABEL_RADIUS`. Both are in the same
@@ -56,7 +60,7 @@ export function radarMean(axes: RadarAxis[]): number {
 
 /**
  * Vertex `index` at `(-90 + index * 360 / count)` degrees, so axis 0 points
- * straight up - five axes give the 72 degree step of a pentagon. SVG y grows
+ * straight up - three axes step by 120 degrees, five by 72. SVG y grows
  * downward, which is why -90 lands at the top rather than the bottom.
  */
 function pointAt(index: number, radius: number, count: number) {
@@ -67,8 +71,42 @@ function pointAt(index: number, radius: number, count: number) {
   };
 }
 
-/** `points` attribute for a pentagon whose radius may vary per vertex. */
-function pentagon(radiusFor: (index: number) => number, count: number) {
+/**
+ * Padding around the outermost label point, in user units. The labels are HTML
+ * at a fixed 10/13px, so this only has to be near enough: a shade over half a
+ * label block wide, and half one tall.
+ */
+const LABEL_PAD_X = 30;
+const LABEL_PAD_Y = 20;
+
+/**
+ * The box the plot actually occupies: the web's own vertices and the label ring,
+ * padded. Not the square the circumscribed circle would need.
+ *
+ * A triangle inscribed in that square leaves its bottom third empty, which read
+ * as a layout bug in the panel. Fitting the viewBox to the drawn shape means the
+ * plot fills its column at any axis count - a pentagon comes out near square,
+ * a triangle comes out wide.
+ */
+function viewBoxFor(count: number) {
+  const points = Array.from({ length: count }, (_, index) => [
+    pointAt(index, RADIUS, count),
+    pointAt(index, LABEL_RADIUS, count),
+  ]).flat();
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const x = Math.min(...xs) - LABEL_PAD_X;
+  const y = Math.min(...ys) - LABEL_PAD_Y;
+  return {
+    x,
+    y,
+    width: Math.max(...xs) + LABEL_PAD_X - x,
+    height: Math.max(...ys) + LABEL_PAD_Y - y,
+  };
+}
+
+/** `points` attribute for a web whose radius may vary per vertex. */
+function web(radiusFor: (index: number) => number, count: number) {
   return Array.from({ length: count }, (_, index) => {
     const { x, y } = pointAt(index, radiusFor(index), count);
     return `${x.toFixed(2)},${y.toFixed(2)}`;
@@ -76,20 +114,27 @@ function pentagon(radiusFor: (index: number) => number, count: number) {
 }
 
 /**
- * Scores drawn as a pentagon web with the achieved area filled. Each vertex
- * prints its day and its own percentage, so the shape is a summary and the
- * numbers beside it are the reading.
+ * Scores drawn as a web with the achieved area filled. Each vertex prints its
+ * day and its own percentage, so the shape is a summary and the numbers beside
+ * it are the reading.
  */
 export function ProgressRadar({
   axes,
   caption,
   size = 280,
+  withTable = true,
   className,
 }: {
   axes: RadarAxis[];
   /** Caption for the readable table under the plot. Not printed on the page. */
   caption?: string;
   size?: number;
+  /**
+   * Whether to carry the readable table. Pass `false` when the caller already
+   * prints these numbers as text: two readings of one dataset is worse for a
+   * screen reader than one, and then the plot is pure decoration.
+   */
+  withTable?: boolean;
   className?: string;
 }) {
   const plotted = axes.map((axis) => {
@@ -102,6 +147,7 @@ export function ProgressRadar({
   // blot over the origin tick, so nothing is drawn until there is something to
   // draw.
   const started = plotted.some((axis) => axis.value > 0);
+  const box = viewBoxFor(count);
 
   return (
     <div className={cn("w-full", className)}>
@@ -113,17 +159,19 @@ export function ProgressRadar({
         // Capped rather than fixed, so a narrow column shrinks the plot instead
         // of overflowing it. The labels scale with the box; their 10px type
         // does not, which is why the label ring is generous.
-        style={{ maxWidth: size }}
-        className="relative mx-auto aspect-square w-full"
+        style={{ maxWidth: size, aspectRatio: `${box.width} / ${box.height}` }}
+        className="relative mx-auto w-full"
       >
         <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          viewBox={`${box.x.toFixed(2)} ${box.y.toFixed(2)} ${box.width.toFixed(
+            2,
+          )} ${box.height.toFixed(2)}`}
           className="absolute inset-0 h-full w-full"
         >
           {RINGS.map((ring) => (
             <polygon
               key={ring}
-              points={pentagon(() => RADIUS * ring, count)}
+              points={web(() => RADIUS * ring, count)}
               fill="none"
               stroke="var(--color-hairline-lit)"
               strokeOpacity={ring === 1 ? 0.95 : 0.6}
@@ -163,7 +211,7 @@ export function ProgressRadar({
           {started ? (
             <>
               <polygon
-                points={pentagon(
+                points={web(
                   (index) => RADIUS * plotted[index].value,
                   count,
                 )}
@@ -202,8 +250,8 @@ export function ProgressRadar({
             <span
               key={axis.label}
               style={{
-                left: `${((point.x / SIZE) * 100).toFixed(2)}%`,
-                top: `${((point.y / SIZE) * 100).toFixed(2)}%`,
+                left: `${(((point.x - box.x) / box.width) * 100).toFixed(2)}%`,
+                top: `${(((point.y - box.y) / box.height) * 100).toFixed(2)}%`,
               }}
               className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
             >
@@ -228,6 +276,7 @@ export function ProgressRadar({
       {/* The caption is the readable table's caption only: whoever mounts the
           plot introduces it in their own copy, and printing the line twice under
           the web just crowded it. */}
+      {withTable ? (
       <table className="sr-only">
         <caption>{caption ?? "Score by day"}</caption>
         <thead>
@@ -255,6 +304,7 @@ export function ProgressRadar({
           </tr>
         </tfoot>
       </table>
+      ) : null}
     </div>
   );
 }

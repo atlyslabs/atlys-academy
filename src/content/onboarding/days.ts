@@ -100,7 +100,7 @@ export const DAYS: readonly Day[] = [
       {
         key: "day2.read_transcripts",
         label: "Read past high-quality chat and call transcripts",
-        detail: "Freshchat / Exotel",
+        detail: "Freshchat / Walkie-Talkie",
         accessNeeded: true,
       },
       {

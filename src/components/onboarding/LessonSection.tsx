@@ -107,7 +107,7 @@ function LessonCard({
             same document rather than a nested card. */}
         <div className="border-t border-dashed border-hairline-lit p-4 pt-4 sm:px-5">
           {lesson.body === null ? (
-            <div className="max-w-[68ch] rounded-lg border border-dashed border-hairline-lit p-4 text-[15px] leading-relaxed text-ink-dim">
+            <div className="max-w-[80ch] rounded-lg border border-dashed border-hairline-lit p-4 text-[15px] leading-relaxed text-ink-dim">
               <p>
                 Being written. This page arrives with {lesson.ref} of the
                 content request to Shovan. Nothing shown here is invented in the
@@ -126,36 +126,58 @@ function LessonCard({
             </div>
           ) : (
             <>
-              {/* 68ch is the measure the paragraphs are set to. The window is
-                  76rem wide for the drills, and prose run edge to edge at that
-                  width loses the reader a line at every wrap. */}
-              <div className="max-w-[68ch] space-y-4 text-[15px] leading-[1.75] text-ink-secondary sm:text-base">
-                {lesson.body.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
+              {/* The page uses the window's full width: paragraphs run in the
+                  main column and the annotations sit in a margin rail beside
+                  them, the way a textbook keeps its notes - so a lesson is
+                  read across the window rather than scrolled down half of it.
+                  Every lesson carries at least one annotation, so the rail is
+                  never an empty gutter; below lg the rail folds back under
+                  the paragraphs. */}
+              <div
+                className={
+                  lesson.example || lesson.commonMistake
+                    ? "grid gap-x-10 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]"
+                    : ""
+                }
+              >
+                <div
+                  className={`space-y-4 text-[15px] leading-[1.75] text-ink-secondary sm:text-base ${
+                    lesson.example || lesson.commonMistake
+                      ? "max-w-none"
+                      : "max-w-[100ch]"
+                  }`}
+                >
+                  {lesson.body.map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+
+                {(lesson.example || lesson.commonMistake) && (
+                  <aside className="space-y-5 lg:pt-1">
+                    {lesson.example && (
+                      <div className="border-l-2 border-brand-text/40 pl-4">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-brand-text">
+                          In practice
+                        </p>
+                        <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
+                          {lesson.example}
+                        </p>
+                      </div>
+                    )}
+
+                    {lesson.commonMistake && (
+                      <div className="rounded-lg border border-badge-coral/30 bg-badge-coral-soft/60 p-4">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-badge-coral">
+                          What new joiners get wrong
+                        </p>
+                        <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
+                          {lesson.commonMistake}
+                        </p>
+                      </div>
+                    )}
+                  </aside>
+                )}
               </div>
-
-              {lesson.example && (
-                <div className="mt-5 max-w-[68ch] border-l-2 border-brand-text/40 pl-4">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-brand-text">
-                    In practice
-                  </p>
-                  <p className="mt-1.5 text-[15px] leading-[1.7] text-ink-secondary">
-                    {lesson.example}
-                  </p>
-                </div>
-              )}
-
-              {lesson.commonMistake && (
-                <div className="mt-5 max-w-[68ch] rounded-lg border border-badge-coral/30 bg-badge-coral-soft/60 p-4">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-badge-coral">
-                    What new joiners get wrong
-                  </p>
-                  <p className="mt-1.5 text-[15px] leading-[1.7] text-ink-secondary">
-                    {lesson.commonMistake}
-                  </p>
-                </div>
-              )}
 
               {/* aria-live so the swap between the two buttons is announced. */}
               <div aria-live="polite" className="mt-6">

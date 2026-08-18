@@ -15,23 +15,6 @@ import { emptyProgress, type ProgressState } from "@/lib/progress/types";
 import { AsciiGlobe } from "@/components/fx/AsciiGlobe";
 import { PointerDiorama } from "@/components/fx/PointerDiorama";
 
-/**
- * The edition cover: the whole landing is one centred card floating over the
- * ASCII world, in the manner of a title page. Everything a joinee can do
- * lives inside the card - every chapter, the passport, the leaderboard,
- * the admin desk, sign-in - and the globe behind it walks the route one stop
- * at a time, captioned from journey.ts.
- *
- * Hovering (or keyboard-focusing) a chapter row swings the globe to that
- * day's stop; when nobody is looking, the tour resumes on its own. The row
- * highlight, the breadcrumb, and the caption all follow the same `storyDay`.
- *
- * Every number is derived from src/content/onboarding - day count, lesson
- * count, drill count, stamp total - never typed in. Progress comes from the
- * local store (the write-through cache in remote mode), read once on mount;
- * before it loads, the derived zero-state renders, which is also exactly
- * what the server sends.
- */
 
 const DAY_COUNT = DAYS.length;
 const DRILL_COUNT = new Set(DAYS.flatMap((day) => day.drills ?? [])).size;

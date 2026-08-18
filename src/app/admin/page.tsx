@@ -78,8 +78,8 @@ export default async function AdminPage() {
         standfirst="Access is limited to the configured admin emails, and yours is not on that list."
       >
         <AdminNotice heading="Your own progress lives on the journey.">
-          Nothing is missing from your account. The five chapters, your passport
-          and the leaderboard are all where you left them.
+          Nothing is missing from your account. The chapters, your passport and
+          the leaderboard are all where you left them.
           <span className="mt-5 block">
             <Link
               href="/onboarding"
