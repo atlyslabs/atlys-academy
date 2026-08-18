@@ -1,9 +1,11 @@
 import { DAYS } from "@/content/onboarding/days";
 import type { Day, DayId, QuizSlug } from "@/content/onboarding/types";
 import { toLocalDateKey, unlockInstantAfter } from "@/lib/dates";
+import { odpacExerciseKey } from "@/content/onboarding/odpac";
 import {
   CALENDAR_GATE_ENABLED,
   DAY_GATE_ENABLED,
+  ODPAC_GATE_ENABLED,
   STAMP_GATE_ENABLED,
 } from "@/lib/dev-flags";
 import { dayStampsComplete } from "./stamps";
@@ -66,6 +68,7 @@ export function isDayUnlocked(
   const previous = DAYS.find((day) => day.id === dayId - 1);
   if (!previous || !hasPassedQuiz(state, previous.slug)) return false;
   if (STAMP_GATE_ENABLED && !dayStampsComplete(state, previous.id)) return false;
+  if (ODPAC_GATE_ENABLED && !hasFiledOdpac(state, previous.id)) return false;
   if (!CALENDAR_GATE_ENABLED || !gateKeyStr) return true;
   const passedOn = firstPassDateKey(state, previous.slug);
   return passedOn !== undefined && passedOn < gateKeyStr;
@@ -94,14 +97,20 @@ export function dayLockReason(
   state: ProgressState,
   dayId: DayId,
   gateKeyStr?: string,
-): "quiz" | "stamps" | "tomorrow" | null {
+): "quiz" | "stamps" | "odpac" | "tomorrow" | null {
   if (isDayUnlocked(state, dayId, gateKeyStr)) return null;
   const previous = DAYS.find((day) => day.id === dayId - 1);
   if (!previous || !hasPassedQuiz(state, previous.slug)) return "quiz";
   if (STAMP_GATE_ENABLED && !dayStampsComplete(state, previous.id)) {
     return "stamps";
   }
+  if (ODPAC_GATE_ENABLED && !hasFiledOdpac(state, previous.id)) return "odpac";
   return "tomorrow";
+}
+
+/** Whether a day's ODPAC shadowing report has been filed. */
+export function hasFiledOdpac(state: ProgressState, dayId: DayId): boolean {
+  return odpacExerciseKey(dayId) in state.exercises;
 }
 
 export function isItemDone(state: ProgressState, itemKey: string): boolean {
@@ -124,7 +133,7 @@ export function dayChecklistProgress(
   return { done, total: day.activities.length };
 }
 
-/** How many of the five days have had their quiz passed. */
+/** How many days have had their quiz passed. */
 export function daysCompleted(state: ProgressState): number {
   return DAYS.filter((day) => hasPassedQuiz(state, day.slug)).length;
 }

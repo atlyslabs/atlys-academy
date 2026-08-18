@@ -8,7 +8,7 @@
  */
 
 /** Days are numbered 1-5 and referenced by that number everywhere. */
-export type DayId = 1 | 2 | 3 | 4 | 5;
+export type DayId = 1 | 2 | 3;
 
 /**
  * Stable identifier for one checkable thing, e.g. `"day1.shadow_chats"`.
@@ -51,7 +51,7 @@ export interface Activity {
 
 export interface Day {
   id: DayId;
-  /** URL/quiz slug: `"day1"` … `"day5"`. */
+  /** URL/quiz slug: `"day1"` … `"day3"`. */
   slug: string;
   title: string;
   objective: string;

@@ -1,5 +1,6 @@
 "use client";
 
+import { LAST_DAY_ID } from "@/content/onboarding/days";
 import Link from "next/link";
 import type { Quiz } from "@/content/onboarding/types";
 import { Badge } from "@/components/ui/Badge";
@@ -82,7 +83,7 @@ export function ResultsSummary({
 
         <p className={cn("mt-4", result.passed ? "text-white/85" : "text-ink-secondary")}>
           {result.passed
-            ? quiz.dayId === 5
+            ? quiz.dayId === LAST_DAY_ID
               ? "Passed. That was the final gate - the journey is complete."
               : `Passed. Finish the rest of Day ${quiz.dayId}'s passport page, and Day ${quiz.dayId + 1} unseals tomorrow at 10:30.`
             : "Below 70%. Read the explanations, then take it again. Retries cost nothing."}

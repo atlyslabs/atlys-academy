@@ -1,23 +1,38 @@
 import type { Day } from "./types";
 
 /**
- * The five-day journey, transcribed from `docs/source-journey.md`.
+ * The three-day academy.
  *
- * Wording is the hiring manager's. Where a line has been lightly edited for the
- * screen (punctuation, sentence case) the meaning is unchanged. Do not add
- * training content here that does not exist in the source doc.
+ * Scoped down from five days (Aug 2026) against the Pre Sales Mastery Playbook:
+ * the academy covers Playbook Modules 1 and 2, the tools half of Module 6, and
+ * Phase A of the 90-day pipeline. Everything with real depth — the five regions
+ * in Module 3, objections and edge cases in Module 7 — is Days 8-90 work and is
+ * learnt on the job, so what is here is orientation and the non-negotiables.
+ *
+ * Each day is one theme: the role and the desk, the guest and the conversation,
+ * then visas, money and what you own. Every day ends the same way — an ODPAC
+ * report on chats you shadowed, then the quiz.
+ *
+ * Wording in `learn` and `activities` is the hiring manager's or the playbook's.
+ * Do not add training content here that exists in neither.
  */
 export const DAYS: readonly Day[] = [
   {
     id: 1,
     slug: "day1",
-    title: "Welcome",
-    objective: "Understand where Pre-checkout Sales fits.",
+    title: "The role and the desk",
+    objective:
+      "Understand what Pre Sales actually is here, the non-negotiables, and the tools you work from.",
     learn: [
       "Why we exist",
-      "What Pre-checkout Sales is",
+      "What Pre Sales is: an incremental conversion function, not a persuasion one",
+      "The four ways a guest reaches you, and what you are selling",
       "How this role impacts revenue and trust",
-      "The difference between Pre-checkout and Post-checkout support",
+      "Pre-checkout vs Post-checkout support",
+      "The five operating principles",
+      "Call standards, and what gets you flagged",
+      "Cadence and the rest of the stack",
+      "How you are measured",
     ],
     responsibilities: [
       "Handling inbound customer chats & calls",
@@ -35,9 +50,21 @@ export const DAYS: readonly Day[] = [
         accessNeeded: true,
       },
       {
+        key: "day1.request_tool_access",
+        label: "Request every tool on the travel kit",
+        detail:
+          "Cadence, Freshdesk, Freshchat, Exotel, WT, and the rest. Chase these today.",
+        accessNeeded: true,
+      },
+      {
         key: "day1.shadow_chats",
         label: "Shadow 2-3 live chats",
-        detail: "Observe only. Do not reply.",
+        detail: "Observe only. Do not reply. Your ODPAC report comes from these.",
+      },
+      {
+        key: "day1.learn_the_opening",
+        label: "Learn the standard call opening and closing by heart",
+        detail: "Recite both without notes. QA scores the opening verbatim.",
       },
       {
         key: "day1.intro_shovan",
@@ -45,41 +72,46 @@ export const DAYS: readonly Day[] = [
         detail: "1 hour",
       },
     ],
-    drills: ["tool-match", "flag-swipe"],
+    drills: ["tool-match", "flag-swipe", "connect-islands"],
   },
   {
     id: 2,
     slug: "day2",
-    title: "Product & Customer Basics",
-    objective: "Understand who the customer is and what they care about.",
+    title: "The guest and the conversation",
+    objective:
+      "Understand who the guest is, what they are actually afraid of, and how a conversation is run.",
     learn: [
       "Who our guests are: persona, geography, intent",
       "Common reasons guests reach out before checkout",
       "Typical fears & objections",
+      "Qualify before you pitch: the first 90 seconds",
       '"Shut up for 10 seconds". The guest will tell you how to sell to them if you shut up long enough',
+      "APAC: the objection framework",
+      "Language for difficult conversations",
+      "The four objections you will meet first",
     ],
     activities: [
       {
         key: "day2.review_faqs",
         label: "Review the top pre-checkout FAQs",
-        detail: "Lime Chat",
+        detail: "Freshchat",
         accessNeeded: true,
       },
       {
         key: "day2.read_transcripts",
         label: "Read past high-quality chat and call transcripts",
-        detail: "Lime Chat / Exotel",
+        detail: "Freshchat / Exotel",
         accessNeeded: true,
+      },
+      {
+        key: "day2.shadow_chats",
+        label: "Shadow 2-3 live chats",
+        detail: "Today's ODPAC report comes from these.",
       },
       {
         key: "day2.rewrite_chats",
         label: "Rewrite poor chat examples into good ones",
         detail: "Do the rewrite drill below.",
-      },
-      {
-        key: "day2.tone_guidelines",
-        label: "Read the tone guidelines",
-        detail: "Friendly, calm, confident.",
       },
       {
         key: "day2.note_patterns",
@@ -99,31 +131,26 @@ export const DAYS: readonly Day[] = [
       "reframe-deck",
       "rewrite-chat",
       "objection-library",
+      "mock-scenarios",
     ],
   },
   {
     id: 3,
     slug: "day3",
-    title: "Visa Deep Dive",
-    objective: "Understand the end-to-end visa flow.",
+    title: "Visas, money and what you own",
+    objective:
+      "Get oriented on the routes we sell, the money you may put in writing, and where your ownership ends.",
     learn: [
-      "Types of visas handled",
-      "High-level application stages",
-      "The role of Atlys in the process",
-      "Where delays typically happen",
+      "The routes at a glance: Schengen, US, UK, Canada, and the eVisa markets",
+      "The DS-160",
+      "The interview",
+      "The role of Atlys in the process, and the money you may commit to",
+      "Lead status and intent",
+      "Follow-ups and handovers",
+      "What a full day looks like",
+      "Edge cases that break the normal flow",
     ],
     activities: [
-      {
-        key: "day3.read_us_visa_doc",
-        label: "Read the US Visa process doc",
-        detail:
-          "DS-160 basics · required documents · appointment booking logic · rejections & resubmissions",
-        accessNeeded: true,
-      },
-      {
-        key: "day3.test_application",
-        label: "Complete the test application exercise",
-      },
       {
         key: "day3.ops_failure_points",
         label: "Ask the Ops team for 5 common failure points",
@@ -135,78 +162,37 @@ export const DAYS: readonly Day[] = [
         accessNeeded: true,
       },
       {
-        key: "day3.qa_ops_lead",
-        label: "Q&A session with the Ops Lead",
-        detail: "1 hour. Map customer questions against correct explanations.",
+        key: "day3.shadow_chats",
+        label: "Shadow 2-3 live chats",
+        detail: "Today's ODPAC report comes from these.",
       },
       {
-        key: "day3.qa_gd",
-        label: "Q&A session with Growth/Design",
-        detail: "1 hour. The top things customers need reassurance on.",
+        key: "day3.walk_cadence",
+        label: "Walk through Cadence with your mentor",
+        detail:
+          "Guest history, AI overview, document status, journey status. Note where each lives.",
+        accessNeeded: true,
+      },
+      {
+        key: "day3.qa_ops_lead",
+        label: "Q&A session with the Ops Lead",
+        detail: "1 hour. Map guest questions against correct explanations.",
+      },
+      {
+        key: "day3.fishbone",
+        label: "Identify your weakest bone from the fishbone self-audit",
+        detail: "Raise it with your PM before the academy ends.",
       },
     ],
     drills: ["ownership-sort", "ownership-run"],
   },
-  {
-    id: 4,
-    slug: "day4",
-    title: "Execution & Collaboration",
-    objective: "Learn how to manage active conversations.",
-    learn: [
-      "Chat/call dashboard overview",
-      "Understanding lead status & intent",
-      "Follow-ups & handovers",
-      "Product: feature clarity, bugs, roadmap",
-      "Ops: visa processing, timelines, exceptions",
-    ],
-    activities: [
-      {
-        key: "day4.monitor_pipeline",
-        label: "Monitor the live pipeline with your mentor",
-        accessNeeded: true,
-      },
-      { key: "day4.hot_vs_cold", label: "Identify hot vs cold leads" },
-      { key: "day4.escalation_paths", label: "Learn the escalation paths" },
-      { key: "day4.decision_ownership", label: "Understand decision ownership" },
-      {
-        key: "day4.own_flowchart",
-        label: "Create your own flowchart",
-        detail: "Keep it simple. One page.",
-      },
-      {
-        key: "day4.sync_santosh_shovan",
-        label: "Sync with Santosh / Shovan",
-        detail: "1 hour",
-      },
-    ],
-    drills: ["connect-islands"],
-  },
-  {
-    id: 5,
-    slug: "day5",
-    title: "Mock Chats & Calls",
-    objective: "Build confidence before going live.",
-    learn: [
-      "Price objection",
-      "Timeline anxiety",
-      "Visa rejection fear",
-      "Comparing competitors",
-    ],
-    activities: [
-      {
-        key: "day5.run_mock_scenarios",
-        label: "Work through all four mock scenarios below",
-      },
-      {
-        key: "day5.roleplay_shovan",
-        label: "Role-play with Shovan",
-        detail: "1 hour",
-      },
-      {
-        key: "day5.collect_feedback",
-        label: "Get feedback on tone, accuracy and confidence",
-      },
-    ],
-    drills: ["mock-scenarios"],
-  },
 ];
+
+/**
+ * The final day's id, derived rather than written down.
+ *
+ * Two places need "is this the last day?" for their copy, and both used to
+ * hardcode `5`. Collapsing five days to three turned those into silently dead
+ * branches - only the type change caught them - so it is derived now.
+ */
+export const LAST_DAY_ID = DAYS[DAYS.length - 1].id;

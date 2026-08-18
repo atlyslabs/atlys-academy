@@ -838,21 +838,29 @@ each is needed?** Already answered by the source doc, which we had been treating
 open: it says "Tools to get access to (Day 1, per Shovan)" and lists all six. So it
 is a Day 1 batch, and the app matches — the tool checklist renders on Day 1 only.
 Worth confirming only if that has changed in practice.
-8.2 The journey doc mentions **both Freshchat and Lime Chat** — same thing, two
-separate tools, or has one replaced the other?
+✅ **8.2 Freshchat or Lime Chat?** Answered by the Pre Sales Mastery Playbook:
+**Freshchat**, with Freshdesk for tickets. Lime Chat does not appear anywhere in
+the playbook, so the Day 2 activity pointing joinees at it is stale and should be
+repointed.
 
-✅ **8.3 What is the "chat/call dashboard" in Day 4?** Answered: WT — Walkie
-Talkie — the internal Retool tool. The Day 4 lesson now names it in full and
-separates it from the three tools joinees confuse it with (Freshchat for chat,
-Exotel for calls, Grafana for funnel numbers).
+✅ **8.3 What is the "chat/call dashboard" in Day 4?** **Corrected, Aug 2026 — the
+first answer was wrong.** It is **Cadence**: guest history, AI overview, document
+status, journey status, and the log for every interaction and lead status.
 
-Access is granted by **Devesh**, `U08TSLL1VRC` — the first real member ID we have
-for anyone but Shovan, so his DM button works rather than being disabled. He sits
-on **Day 1**, not Day 4: the source doc puts WT on the Day 1 tool list, so the
-granter belongs next to the request, and his name is now on that checklist row too.
-The Day 4 lesson says you should already have access and to chase it before the day
-rather than during it. Still open: the screen-by-screen walkthrough, which the
-lesson sends joinees to do live with their mentor.
+**Walkie Talkie (WT) is a calling tool, not a dashboard.** The app taught WT as
+"the one you open before you say anything factual about a case" for several days.
+That has been rewritten everywhere it appeared — the Day 4 lesson, the Day 1 tool
+checklist, and the tool-matching drill, which had joinees matching WT to "look up
+what state an application is in".
+
+Access: WT is granted by **Devesh**, `U08TSLL1VRC`, and he stays on **Day 1**
+because Day 1 is the access day. **Who grants Cadence is not recorded anywhere** —
+that is now the highest-priority access gap, because Day 4 cannot be done without
+it. Freshdesk has the same problem. Both have been added to the Day 1 checklist
+with no granter named.
+
+Still open: the screen-by-screen Cadence walkthrough, and the relationship between
+WT and Exotel — both are described as calling, and nothing says which to use when.
 8.4 Who adds a joinee to the **WhatsApp groups**, and which groups?
 8.5 Is there anything a joinee should **not** have access to in week one?
 8.6 Which access, if missing, actually **blocks** a day — so the app can warn them

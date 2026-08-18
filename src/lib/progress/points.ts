@@ -1,7 +1,7 @@
 import { DAYS } from "@/content/onboarding/days";
 import { LESSON_KEYS } from "@/content/onboarding/lessons";
 import type { DayId } from "@/content/onboarding/types";
-import { bestAttempt, hasPassedQuiz } from "./selectors";
+import { bestAttempt, hasFiledOdpac, hasPassedQuiz } from "./selectors";
 import type { ProgressState } from "./types";
 
 /**
@@ -25,7 +25,12 @@ export const POINT_WEIGHTS = {
   drillPerfect: 10,
   /** Each correct answer on the best attempt at a day's quiz. */
   correctAnswer: 10,
-  /** Bonus for finishing a day: every activity ticked and its quiz passed. */
+  /** Filing the day's ODPAC shadowing report. Not graded, so a flat award. */
+  odpacFiled: 15,
+  /**
+   * Bonus for finishing a day: every activity ticked, the ODPAC report filed,
+   * and the quiz passed.
+   */
   dayComplete: 25,
 } as const;
 
@@ -35,6 +40,7 @@ export interface DayPoints {
   lessons: number;
   drills: number;
   quiz: number;
+  odpac: number;
   completionBonus: number;
   total: number;
 }
@@ -77,21 +83,27 @@ export function calculatePoints(state: ProgressState): PointsSummary {
     const best = bestAttempt(state, day.slug);
     const quiz = (best?.score ?? 0) * POINT_WEIGHTS.correctAnswer;
 
+    const odpacFiled = hasFiledOdpac(state, day.id);
+    const odpac = odpacFiled ? POINT_WEIGHTS.odpacFiled : 0;
+
     const allActivitiesDone = day.activities.every(
       (a) => a.key in state.completedItems,
     );
+    // The report joins the bonus conditions rather than sitting outside them:
+    // it is a required activity, so a day without it is not a finished day.
     const completionBonus =
-      allActivitiesDone && hasPassedQuiz(state, day.slug)
+      allActivitiesDone && odpacFiled && hasPassedQuiz(state, day.slug)
         ? POINT_WEIGHTS.dayComplete
         : 0;
 
-    const total = activities + lessons + drills + quiz + completionBonus;
+    const total = activities + lessons + drills + quiz + odpac + completionBonus;
     return {
       dayId: day.id,
       activities,
       lessons,
       drills,
       quiz,
+      odpac,
       completionBonus,
       total,
     };

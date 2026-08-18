@@ -13,11 +13,11 @@ import {
 } from "@/components/onboarding/ProgressRadar";
 import { cn } from "@/lib/utils";
 
-/** The journey is five days; the segment bar, radar and sparkline all mirror it. */
+/** The segment bar, radar and sparkline all mirror the day count in `DAYS`. */
 const TOTAL_DAYS = DAYS.length;
 const DAY_IDS: readonly DayId[] = DAYS.map((day) => day.id);
 
-/** `quizBest` is keyed by quiz slug, which is the day number: `day1` … `day5`. */
+/** `quizBest` is keyed by quiz slug, which is the day number: `day1` … `day3`. */
 function slugForDay(dayId: DayId): string {
   return `day${dayId}`;
 }

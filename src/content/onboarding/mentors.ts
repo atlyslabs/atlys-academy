@@ -23,7 +23,7 @@ export const MENTORS_BY_DAY: Record<DayId, Mentor[]> = {
     {
       name: "Devesh",
       slackMemberId: "U08TSLL1VRC",
-      owns: "Access to Walkie Talkie (WT), the Retool tool on your Day 1 list. Day 4 is built on it, so this is the one request worth chasing if it goes quiet.",
+      owns: "Access to Walkie Talkie (WT), the calling tool on your Day 1 list. Ask him about Cadence too while you are there: it is the dashboard Day 4 is actually built on, and nobody has recorded who grants it.",
     },
   ],
   2: [
@@ -34,6 +34,16 @@ export const MENTORS_BY_DAY: Record<DayId, Mentor[]> = {
     },
   ],
   3: [
+    {
+      name: "Shovan",
+      slackMemberId: SHOVAN,
+      owns: "Escalation paths, decision ownership, and the money you may put in writing.",
+    },
+    {
+      name: "Santosh",
+      slackMemberId: null,
+      owns: "Pipeline monitoring in Cadence, and the 1-hour sync.",
+    },
     {
       name: "Ops Lead",
       pending: true,
@@ -68,25 +78,6 @@ export const MENTORS_BY_DAY: Record<DayId, Mentor[]> = {
       name: "Snehasish, or the US team",
       slackMemberId: "U06DP5AE63G",
       owns: "The US route in detail. What the app teaches on the DS-160 and the interview came from him, so he is who to ask when a guest raises something about the B1/B2 that the lessons do not cover.",
-    },
-  ],
-  4: [
-    {
-      name: "Santosh",
-      slackMemberId: null,
-      owns: "Pipeline monitoring and the 1-hour sync.",
-    },
-    {
-      name: "Shovan",
-      slackMemberId: SHOVAN,
-      owns: "Escalation paths and decision ownership.",
-    },
-  ],
-  5: [
-    {
-      name: "Shovan",
-      slackMemberId: SHOVAN,
-      owns: "The role-play hour, and feedback on tone, accuracy and confidence.",
     },
   ],
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { LAST_DAY_ID } from "@/content/onboarding/days";
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { Day } from "@/content/onboarding/types";
 import { useProgress } from "@/lib/progress/provider";
@@ -137,10 +138,10 @@ export function JourneyTrail({
           ✳
         </span>
         {allDone
-          ? day.id === 5
+          ? day.id === LAST_DAY_ID
             ? "Every page stamped. Go make the world smaller."
             : "Page stamped, gate open. Onwards."
-          : day.id === 5
+          : day.id === LAST_DAY_ID
             ? "Ready for the real thing."
             : "Ready to be stamped."}
       </p>

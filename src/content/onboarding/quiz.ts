@@ -238,6 +238,114 @@ const day1: Quiz = {
         },
       ],
     },
+    {
+      id: "d1.q14",
+      prompt:
+        "A guest picks up your outbound call. What are the first words out of your mouth?",
+      options: [
+        {
+          id: "a",
+          label:
+            "“Good morning / afternoon / evening, this is [Name] from Atlys Guest Delight, how may I help you with your visa request today?”",
+        },
+        {
+          id: "b",
+          label:
+            "“Hi, am I speaking with [Name]? I'm calling from Atlys about your visa enquiry.”",
+        },
+        {
+          id: "c",
+          label: "“Hello! This is [Name] from Atlys. Is now a good time?”",
+        },
+        {
+          id: "d",
+          label:
+            "Whatever matches the guest's tone, since a scripted opening sounds robotic",
+        },
+      ],
+    },
+    {
+      id: "d1.q15",
+      prompt:
+        "A guest asks something you cannot resolve without another team. Which reply meets the standard?",
+      options: [
+        {
+          id: "a",
+          label: "“I'm raising this with Ops now and I will update you by 4 PM today.”",
+        },
+        {
+          id: "b",
+          label: "“Let me check with someone and we'll get back to you.”",
+        },
+        {
+          id: "c",
+          label: "“That's not my department, but someone will call you.”",
+        },
+        { id: "d", label: "“I'll try my best to sort this out for you today.”" },
+      ],
+    },
+    {
+      id: "d4.q1",
+      prompt: "Which team owns visa processing, timelines and exceptions?",
+      options: [
+        { id: "a", label: "Ops" },
+        { id: "b", label: "Product" },
+        { id: "c", label: "Growth/Design" },
+        { id: "d", label: "Pre-checkout Sales" },
+      ],
+    },
+    {
+      id: "d4.q2",
+      prompt:
+        "You have found what looks like a bug in the checkout flow. Who do you take it to?",
+      options: [
+        { id: "a", label: "Product" },
+        { id: "b", label: "Ops" },
+        { id: "c", label: "The customer's own bank" },
+        { id: "d", label: "Nobody. Work around it in the chat" },
+      ],
+    },
+    {
+      id: "d4.q4",
+      prompt: "Why does the day ask you to draw your own flowchart?",
+      options: [
+        {
+          id: "a",
+          label:
+            "So you know where a conversation goes next and who owns the decision, without asking",
+        },
+        { id: "b", label: "So it can be added to the team's documentation" },
+        { id: "c", label: "So your mentor can grade your process knowledge" },
+        { id: "d", label: "So Product can redesign the dashboard around it" },
+      ],
+    },
+    {
+      id: "d4.q7",
+      prompt:
+        "Why is comp blended across conversion, downstream quality and QA rather than paid on conversion alone?",
+      options: [
+        {
+          id: "a",
+          label:
+            "So honesty is the winning strategy for you personally, not only the safe one for the company",
+        },
+        {
+          id: "b",
+          label:
+            "Because conversion is too hard to attribute to an individual advisor",
+        },
+        {
+          id: "c",
+          label:
+            "To keep payouts predictable month to month across the team",
+        },
+        {
+          id: "d",
+          label:
+            "Because QA scores are the metric managers can measure most easily",
+        },
+      ],
+    },
   ],
 };
 
@@ -441,6 +549,111 @@ const day2: Quiz = {
         },
       ],
     },
+    {
+      id: "d5.q1",
+      prompt:
+        'A guest says "you can\'t guarantee approval, so what am I paying for?" What is really going on?',
+      options: [
+        {
+          id: "a",
+          label:
+            "They are pricing the outcome. You cannot sell the outcome, so move them to pricing the avoidable failure",
+        },
+        { id: "b", label: "They want a discount and are opening the bargaining" },
+        { id: "c", label: "They have already decided not to buy" },
+        { id: "d", label: "They do not understand what the embassy fee is" },
+      ],
+    },
+    {
+      id: "d5.q2",
+      prompt:
+        'A guest says their local agent charges half. Why should you not attack the agent?',
+      options: [
+        {
+          id: "a",
+          label:
+            "They often know him personally. Attacking him makes his word more credible, not less",
+        },
+        { id: "b", label: "It is against company policy to name competitors" },
+        { id: "c", label: "The agent may later become a channel partner" },
+        { id: "d", label: "You cannot verify what he charges" },
+      ],
+    },
+    {
+      id: "d5.q3",
+      prompt:
+        "What is the most useful question to ask about a competing quote?",
+      options: [
+        {
+          id: "a",
+          label: "Whether the quoted amount includes the government fee",
+        },
+        { id: "b", label: "How long the agent has been in business" },
+        { id: "c", label: "Whether the agent has an office you can visit" },
+        { id: "d", label: "Whether the agent will match our price" },
+      ],
+    },
+    {
+      id: "d5.q4",
+      prompt: "How should you handle the Atlys fee when it is questioned?",
+      options: [
+        {
+          id: "a",
+          label:
+            "State plainly what it buys. Never apologise for it or soften it",
+        },
+        { id: "b", label: "Acknowledge it is high and offer to check for a discount" },
+        { id: "c", label: "Describe it as a nominal convenience charge" },
+        { id: "d", label: "Redirect to the refund policy instead" },
+      ],
+    },
+    {
+      id: "d5.q5",
+      prompt:
+        'A guest says "if I\'m rejected I lose the whole trip, not just the fee." What is the right opening move?',
+      options: [
+        {
+          id: "a",
+          label:
+            "Agree with them (do not pretend a fee refund covers a trip), then name what actually protects it",
+        },
+        { id: "b", label: "Lead with the refund policy on eligible routes" },
+        { id: "c", label: "Reassure them that rejections are rare" },
+        { id: "d", label: "Suggest they book refundable flights and move on" },
+      ],
+    },
+    {
+      id: "d5.q6",
+      prompt:
+        'A guest says they will just apply themselves on the VFS portal. What is the strongest response?',
+      options: [
+        {
+          id: "a",
+          label:
+            "Name the two things self-service cannot do (an earlier slot than the portal shows, and an outside reader on their file), then ask how far out their travel is",
+        },
+        { id: "b", label: "Explain that the portal is difficult to use correctly" },
+        { id: "c", label: "Point out that mistakes on the portal cannot be undone" },
+        { id: "d", label: "Offer a discount so the price gap closes" },
+      ],
+    },
+    {
+      id: "d5.q7",
+      prompt: "In the APAC framework, what is the Probe step for?",
+      options: [
+        {
+          id: "a",
+          label:
+            "Finding the real concern underneath the stated objection, before you answer it",
+        },
+        { id: "b", label: "Testing whether the guest is a serious buyer" },
+        {
+          id: "c",
+          label: "Collecting the qualification fields you did not get earlier",
+        },
+        { id: "d", label: "Buying time while you look up the right answer" },
+      ],
+    },
   ],
 };
 
@@ -503,17 +716,6 @@ const day3: Quiz = {
           id: "d",
           label: "File quality matters less than which appointment slot you get",
         },
-      ],
-    },
-    {
-      id: "d3.q4",
-      prompt:
-        "You are asked to gather five common failure points on Day 3. Who from?",
-      options: [
-        { id: "a", label: "The Ops team" },
-        { id: "b", label: "The Product team" },
-        { id: "c", label: "Growth/Design" },
-        { id: "d", label: "Recent customers" },
       ],
     },
     {
@@ -693,35 +895,158 @@ const day3: Quiz = {
         },
       ],
     },
-  ],
-};
-
-const day4: Quiz = {
-  slug: "day4",
-  title: "Day 4 · Execution & Collaboration",
-  dayId: 4,
-  // TODO(content): needs a walkthrough of the real dashboard and the actual
-  // escalation matrix before this can test anything concrete.
-  questions: [
     {
-      id: "d4.q1",
-      prompt: "Which team owns visa processing, timelines and exceptions?",
+      id: "d3.q12",
+      prompt:
+        "A guest is travelling to France for five nights and Spain for three. Which embassy do they apply to?",
       options: [
-        { id: "a", label: "Ops" },
-        { id: "b", label: "Product" },
-        { id: "c", label: "Growth/Design" },
-        { id: "d", label: "Pre-checkout Sales" },
+        {
+          id: "a",
+          label: "France, because that is where they spend the most nights",
+        },
+        {
+          id: "b",
+          label: "Whichever of the two has appointment slots available soonest",
+        },
+        {
+          id: "c",
+          label: "The first country they enter, so it depends on the flight route",
+        },
+        {
+          id: "d",
+          label:
+            "Either, since a Schengen visa is valid across the whole zone regardless of issuer",
+        },
       ],
     },
     {
-      id: "d4.q2",
-      prompt:
-        "You have found what looks like a bug in the checkout flow. Who do you take it to?",
+      id: "d3.q13",
+      prompt: "What must a Schengen applicant's travel insurance cover?",
       options: [
-        { id: "a", label: "Product" },
-        { id: "b", label: "Ops" },
-        { id: "c", label: "The customer's own bank" },
-        { id: "d", label: "Nobody. Work around it in the chat" },
+        {
+          id: "a",
+          label:
+            "At least €30,000, valid across the entire Schengen area for the full duration of the trip",
+        },
+        {
+          id: "b",
+          label: "At least €30,000, valid in the country whose embassy they applied to",
+        },
+        {
+          id: "c",
+          label: "There is no minimum; any policy naming the destination is accepted",
+        },
+        {
+          id: "d",
+          label: "At least €10,000, provided medical evacuation is included",
+        },
+      ],
+    },
+    {
+      id: "d3.q15",
+      prompt:
+        "A guest with a 10-year US visa asks how long they are allowed to stay. What is the correct answer?",
+      options: [
+        {
+          id: "a",
+          label:
+            "The visa lets them travel for 10 years; each entry is typically up to six months and the CBP officer at the port decides",
+        },
+        { id: "b", label: "Ten years of continuous stay" },
+        { id: "c", label: "Six months in total, spread across the ten years" },
+        { id: "d", label: "As long as the travel dates they entered on the DS-160" },
+      ],
+    },
+    {
+      id: "d3.q16",
+      prompt:
+        "A guest's US application has gone into 221(g) administrative processing. What do you tell them it means?",
+      options: [
+        {
+          id: "a",
+          label:
+            "It is not a refusal: additional processing after the interview, which needs careful follow-up",
+        },
+        { id: "b", label: "A refusal they can appeal within 30 days" },
+        { id: "c", label: "A request to complete the DS-160 again from scratch" },
+        { id: "d", label: "A 12-month bar on reapplying" },
+      ],
+    },
+    {
+      id: "d3.q17",
+      prompt:
+        "A guest needs a UK standard visitor visa and travels in eight days. What do you say?",
+      options: [
+        {
+          id: "a",
+          label:
+            "Super priority is next working day and priority is five, but check the biometrics appointment before committing to either",
+        },
+        {
+          id: "b",
+          label:
+            "Standard processing is three weeks, so they should postpone the trip",
+        },
+        {
+          id: "c",
+          label: "Priority at five working days will definitely make it in time",
+        },
+        {
+          id: "d",
+          label: "Apply on standard and request an upgrade later if it looks tight",
+        },
+      ],
+    },
+    {
+      id: "d3.q19",
+      prompt:
+        "What decides whether a guest needs an eTA or a Temporary Resident Visa for Canada?",
+      options: [
+        {
+          id: "a",
+          label:
+            "Nationality: citizens of visa-exempt countries need an eTA, everyone else needs a TRV",
+        },
+        { id: "b", label: "Trip length, with under six months qualifying for an eTA" },
+        {
+          id: "c",
+          label: "Purpose of travel, with tourism on an eTA and business on a TRV",
+        },
+        { id: "d", label: "Whether they have visited Canada before" },
+      ],
+    },
+    {
+      id: "d3.q20",
+      prompt:
+        "A guest holds an Egypt eVisa and plans to spend part of the trip in Sinai. What do you flag?",
+      options: [
+        {
+          id: "a",
+          label: "Sinai needs a separate permit; the eVisa does not cover it",
+        },
+        { id: "b", label: "Nothing, because the eVisa covers all of Egypt" },
+        { id: "c", label: "They will need the multiple-entry version of the eVisa" },
+        { id: "d", label: "Sinai requires a visa on arrival instead of an eVisa" },
+      ],
+    },
+    {
+      id: "d3.q21",
+      prompt: "A guest wants to spend 45 days in Thailand. What do you recommend?",
+      options: [
+        {
+          id: "a",
+          label:
+            "The eVisa, which covers up to 60 days, because the 30-day exemption does not cover the trip and overstay penalties are severe",
+        },
+        {
+          id: "b",
+          label: "Travel on the 30-day exemption and extend locally once there",
+        },
+        {
+          id: "c",
+          label: "The 30-day exemption, with a short trip out of the country and back",
+        },
+        { id: "d", label: "A visa on arrival, which allows 45 days" },
       ],
     },
     {
@@ -732,20 +1057,6 @@ const day4: Quiz = {
         { id: "b", label: "The size of the order" },
         { id: "c", label: "How many messages they have sent" },
         { id: "d", label: "Whether they arrived by chat or by call" },
-      ],
-    },
-    {
-      id: "d4.q4",
-      prompt: "Why does the day ask you to draw your own flowchart?",
-      options: [
-        {
-          id: "a",
-          label:
-            "So you know where a conversation goes next and who owns the decision, without asking",
-        },
-        { id: "b", label: "So it can be added to the team's documentation" },
-        { id: "c", label: "So your mentor can grade your process knowledge" },
-        { id: "d", label: "So Product can redesign the dashboard around it" },
       ],
     },
     {
@@ -791,132 +1102,36 @@ const day4: Quiz = {
       ],
     },
     {
-      id: "d4.q7",
+      id: "d5.q8",
       prompt:
-        "Why is comp blended across conversion, downstream quality and QA rather than paid on conversion alone?",
+        "A guest calls from the airport. They have been denied check-in over a visa problem. What do you do?",
       options: [
         {
           id: "a",
           label:
-            "So honesty is the winning strategy for you personally, not only the safe one for the company",
+            "Escalate to the Emergency Helpline immediately, stay on the line until handover is confirmed, and never hold them longer than 60 seconds",
         },
         {
           id: "b",
           label:
-            "Because conversion is too hard to attribute to an individual advisor",
+            "Put them on hold, check the case in Cadence, then advise them directly",
         },
         {
           id: "c",
-          label:
-            "To keep payouts predictable month to month across the team",
+          label: "Take the details and commit to calling back within two hours",
         },
         {
           id: "d",
-          label:
-            "Because QA scores are the metric managers can measure most easily",
+          label: "Refer them to the airline, since check-in is the airline's decision",
         },
       ],
     },
   ],
 };
 
-const day5: Quiz = {
-  slug: "day5",
-  title: "Day 5 · Mock Chats & Calls",
-  dayId: 5,
-  questions: [
-    {
-      id: "d5.q1",
-      prompt:
-        'A guest says "you can\'t guarantee approval, so what am I paying for?" What is really going on?',
-      options: [
-        {
-          id: "a",
-          label:
-            "They are pricing the outcome. You cannot sell the outcome, so move them to pricing the avoidable failure",
-        },
-        { id: "b", label: "They want a discount and are opening the bargaining" },
-        { id: "c", label: "They have already decided not to buy" },
-        { id: "d", label: "They do not understand what the embassy fee is" },
-      ],
-    },
-    {
-      id: "d5.q2",
-      prompt:
-        'A guest says their local agent charges half. Why should you not attack the agent?',
-      options: [
-        {
-          id: "a",
-          label:
-            "They often know him personally. Attacking him makes his word more credible, not less",
-        },
-        { id: "b", label: "It is against company policy to name competitors" },
-        { id: "c", label: "The agent may later become a channel partner" },
-        { id: "d", label: "You cannot verify what he charges" },
-      ],
-    },
-    {
-      id: "d5.q3",
-      prompt:
-        "What is the most useful question to ask about a competing quote?",
-      options: [
-        {
-          id: "a",
-          label: "Whether the quoted amount includes the government fee",
-        },
-        { id: "b", label: "How long the agent has been in business" },
-        { id: "c", label: "Whether the agent has an office you can visit" },
-        { id: "d", label: "Whether the agent will match our price" },
-      ],
-    },
-    {
-      id: "d5.q4",
-      prompt: "How should you handle the Atlys fee when it is questioned?",
-      options: [
-        {
-          id: "a",
-          label:
-            "State plainly what it buys. Never apologise for it or soften it",
-        },
-        { id: "b", label: "Acknowledge it is high and offer to check for a discount" },
-        { id: "c", label: "Describe it as a nominal convenience charge" },
-        { id: "d", label: "Redirect to the refund policy instead" },
-      ],
-    },
-    {
-      id: "d5.q5",
-      prompt:
-        'A guest says "if I\'m rejected I lose the whole trip, not just the fee." What is the right opening move?',
-      options: [
-        {
-          id: "a",
-          label:
-            "Agree with them (do not pretend a fee refund covers a trip), then name what actually protects it",
-        },
-        { id: "b", label: "Lead with the refund policy on eligible routes" },
-        { id: "c", label: "Reassure them that rejections are rare" },
-        { id: "d", label: "Suggest they book refundable flights and move on" },
-      ],
-    },
-    {
-      id: "d5.q6",
-      prompt:
-        'A guest says they will just apply themselves on the VFS portal. What is the strongest response?',
-      options: [
-        {
-          id: "a",
-          label:
-            "Name the two things self-service cannot do (an earlier slot than the portal shows, and an outside reader on their file), then ask how far out their travel is",
-        },
-        { id: "b", label: "Explain that the portal is difficult to use correctly" },
-        { id: "c", label: "Point out that mistakes on the portal cannot be undone" },
-        { id: "d", label: "Offer a discount so the price gap closes" },
-      ],
-    },
-  ],
-};
 
-export const QUIZZES: readonly Quiz[] = [day1, day2, day3, day4, day5];
+
+export const QUIZZES: readonly Quiz[] = [day1, day2, day3];
 
 export function getQuizBySlug(slug: QuizSlug): Quiz | undefined {
   return QUIZZES.find((quiz) => quiz.slug === slug);

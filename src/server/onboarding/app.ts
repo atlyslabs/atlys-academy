@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { LAST_DAY_ID } from "@/content/onboarding/days";
 import { isAdminEmail } from "@/lib/auth/config";
 import { ADMIN_ENABLED } from "@/lib/dev-flags";
 import {
@@ -64,7 +65,12 @@ const progressSchema = z.object({
     z.string(),
     z.object({ body: z.string().max(20_000), submittedAt: z.string() }),
   ),
-  lastVisitedDay: z.number().int().min(1).max(5),
+  // Deliberately permissive at the edge, clamped below. The journey was
+  // scoped from five days to three, so a browser still holding day 4 or 5
+  // would 400 on every sync if this rejected them - and a joinee whose
+  // progress silently stops uploading is worse than one who resumes a day
+  // early. Anything above the last real day is pulled back to it.
+  lastVisitedDay: z.number().int().min(1).max(365),
   // Optional - Zod strips unknown keys, so without this line an uploaded
   // avatar would silently vanish on every sync.
   avatar: z
@@ -121,11 +127,17 @@ const routes = app
     const profile = await currentProfile();
     if (!profile) return c.json({ error: "Sync unavailable" }, 503);
     const body = c.req.valid("json");
-    // Range-checked by the schema (1-5); the cast narrows the static type.
+    // Clamped to a day that actually exists, then cast: the schema bounds the
+    // input, this bounds it to the content. Without the clamp a stored day 5
+    // resolves to no day at all on read.
+    const lastVisitedDay = Math.min(
+      body.lastVisitedDay,
+      LAST_DAY_ID,
+    ) as ProgressState["lastVisitedDay"];
     const state: ProgressState = {
       ...emptyProgress(),
       ...body,
-      lastVisitedDay: body.lastVisitedDay as ProgressState["lastVisitedDay"],
+      lastVisitedDay,
     };
     await saveProgress(profile.id, state);
     return c.json({ ok: true });

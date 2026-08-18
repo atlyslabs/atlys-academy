@@ -25,9 +25,14 @@ export const TOOL_MATCH_PAIRS: readonly ToolMatchPair[] = [
     job: "Answer an inbound customer chat",
   },
   {
+    id: "cadence",
+    tool: "Cadence",
+    job: "Look up what state an application is in, and log the call afterwards",
+  },
+  {
     id: "retool",
-    tool: "Retool (WT)",
-    job: "Look up what state an application is in",
+    tool: "Walkie Talkie (WT)",
+    job: "Call a guest",
   },
   {
     id: "notion",

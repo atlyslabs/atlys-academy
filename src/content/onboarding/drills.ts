@@ -23,7 +23,7 @@ export const PAUSE_DRILL: PauseDrillContent = {
   rushedFeedback:
     "You just answered the question. You would have missed the fear. Wait for it.",
   modelAnswer:
-    "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and that if it's refused on an eligible route, your money comes back. Most refusals aren't about the person, they're about the file. Can I ask what's in your file right now?",
+    "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and that if the route is under AtlysProtect, a refusal returns your service fee — the government fee goes to the consulate and doesn't come back. Most refusals aren't about the person, they're about the file. Can I ask what's in your file right now?",
   exerciseKey: "day2.pause_drill_reply",
 };
 
@@ -156,7 +156,7 @@ export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
     objection: "You can't guarantee approval, so what am I paying for?",
     subtext:
       "They're pricing the outcome, and you can't sell the outcome. Move them to pricing the avoidable failure.",
-    say: "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and that if it's refused on an eligible route, your money comes back. Most refusals aren't about the person, they're about the file.",
+    say: "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and that if the route is under AtlysProtect, a refusal returns your service fee — the government fee goes to the consulate and doesn't come back. Most refusals aren't about the person, they're about the file.",
     then: "Can I ask what's in your file right now?",
   },
   {
@@ -164,7 +164,7 @@ export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
     objection: "My local agent charges half of this.",
     subtext:
       "Usually true, and irrelevant. Don't attack the agent. The customer often knows him personally, and attacking him makes the agent's word more credible, not less.",
-    say: "He might be great. Two questions worth asking him though: what happens to your money if it's refused, and does he review the file before submitting or just fill and forward? He gets paid either way. We don't, on recovery, and on eligible routes a rejection is a full refund.",
+    say: "He might be great. Two questions worth asking him though: what happens to your money if it's refused, and does he review the file before submitting or just fill and forward? He gets paid either way. We don't, on recovery. And where the route is under AtlysProtect, a refusal returns your service fee.",
     then: "What did he quote, and does that include the government fee? Half the time the comparison is fee-vs-total and the gap disappears.",
   },
   {
@@ -221,7 +221,7 @@ export const MOCK_SCENARIOS: readonly MockScenario[] = [
       },
       {
         id: "price.b",
-        text: "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and on eligible routes, a refusal means your money comes back. Most refusals aren't about the person, they're about the file. Can I ask what's in your file right now?",
+        text: "You're right, and anyone who tells you otherwise is lying to you. Approval is the officer's call. What I control is that nothing in your file gives him a reason to say no, and that on a route under AtlysProtect, a refusal returns your service fee — not the government fee, which the consulate keeps. Most refusals aren't about the person, they're about the file. Can I ask what's in your file right now?",
         outcome: "closes",
         customerResponse:
           "Passport, bank statements from the last three months, and my offer letter. Is that enough?",
@@ -297,7 +297,7 @@ export const MOCK_SCENARIOS: readonly MockScenario[] = [
         customerResponse:
           "Covered for your fee. Not for the flights or the leave I've already taken.",
         feedback:
-          "True but it answers a smaller question than the one asked. Leading with the refund reads as not having listened.",
+          "Wrong twice. \"Full refund\" is not the policy — AtlysProtect returns the service fee, not the government fee — so this is a written overcommitment. And even stated correctly it answers a smaller question than the one asked: leading with the refund reads as not having listened.",
       },
     ],
   },

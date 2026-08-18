@@ -37,6 +37,20 @@ export const DAY_GATE_ENABLED = false;
 export const STAMP_GATE_ENABLED = true;
 
 /**
+ * Whether the day's ODPAC report must be filed to open the next day, on top of
+ * passing the quiz.
+ *
+ * The report is a required activity by design - shadow two to three live chats,
+ * then write up what you saw against the five stages - so this defaults on. It
+ * is a separate flag from the stamp gate because it is a separate promise: a
+ * stamp sheet is the day's work, and this is evidence a joinee watched a real
+ * conversation and understood what happened in it.
+ *
+ * Only consulted while DAY_GATE_ENABLED is true.
+ */
+export const ODPAC_GATE_ENABLED = true;
+
+/**
  * The manager dashboard at `/admin`.
  *
  * `false` = the route is gone: it 404s, the admin API refuses, and nothing in

@@ -279,10 +279,15 @@ export async function adminOverview(): Promise<AdminJoineeRow[] | null> {
           );
         if (best) quizBest[day.slug] = `${best.score}/${best.maxScore}`;
       }
+      // Written work counts as activity. Without the exercises line, a joinee
+      // whose only action today was filing their ODPAC report reads as inactive
+      // and drops out of the daily Slack report entirely - taking the one
+      // artefact a mentor actually has to read with them.
       const timestamps = [
         ...Object.values(state.completedItems),
         ...state.attempts.map((a) => a.submittedAt),
         ...Object.values(state.drills).map((d) => d.updatedAt),
+        ...Object.values(state.exercises).map((e) => e.submittedAt),
       ].sort();
       return {
         email: profile.email,

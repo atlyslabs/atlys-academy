@@ -10,8 +10,14 @@ compatibility_date = "2026-08-04"
 
 # Cron triggers run in UTC, always. 13:30 UTC = 19:00 IST.
 # Change both this and the comment together, or the next reader will be misled.
+#
+# DISABLED while the report is still being tested. An empty list is not the same
+# as deleting this block: on deploy, `crons = []` clears any schedule already
+# registered on the Worker, whereas omitting [triggers] leaves it running. Keep
+# the empty list until the report should actually go out.
+# To re-enable: crons = ["30 13 * * *"]
 [triggers]
-crons = ["30 13 * * *"]
+crons = []
 
 [vars]
 # The deployed app. Not a secret. Override per environment.

@@ -1,11 +1,7 @@
 interface Env {
-  /** Deployed app origin, e.g. https://onboarding.atlys.com. From [vars]. */
   APP_URL: string;
-  /** Shared secret; must equal REPORT_TOKEN in the app's env. */
   REPORT_TOKEN: string;
-  /** Slack incoming webhook. A credential with the secret in the path. */
   SLACK_WEBHOOK_URL: string;
-  /** Optional Cloudflare Access service token, if the app sits behind Access. */
   CF_ACCESS_CLIENT_ID?: string;
   CF_ACCESS_CLIENT_SECRET?: string;
 }
@@ -16,7 +12,7 @@ interface DailyReport {
   slackBlocks?: unknown[];
 }
 
-/** Slack's hard ceiling is 50 blocks per message. Leave headroom. */
+
 const MAX_BLOCKS = 45;
 
 const worker = {
@@ -30,26 +26,21 @@ const worker = {
       }
       console.log(`posted ${blocks.length} blocks for ${report.date}`);
     } catch (error) {
-      // Cloudflare does not retry cron invocations, so a swallowed failure is a
-      // report that silently never arrives, and silence is indistinguishable
-      // from a quiet cohort. Say so in the channel instead.
+
       const detail = error instanceof Error ? error.message : String(error);
       await postToSlack(env, {
         text: `:warning: Onboarding daily report failed: ${detail}`,
       }).catch(() => {
-        // Slack is down too. Nothing left but the log.
+        
       });
-      throw error; // surface it in Workers Logs as a failed invocation
+      throw error; 
     }
   },
 };
 
 export default worker;
 
-/**
- * Today as an IST calendar date. The report covers an Indian working day, and
- * the worker runs on UTC, so this must be explicit rather than implied.
- */
+
 function istToday(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
@@ -71,8 +62,6 @@ async function fetchReport(env: Env, date: string): Promise<DailyReport> {
 
   if (!res.ok) throw new Error(`report ${res.status}: ${body.slice(0, 300)}`);
 
-  // A Cloudflare Access login page is HTML and still arrives with a 200, so
-  // check the shape rather than trusting the status code.
   try {
     return JSON.parse(body) as DailyReport;
   } catch {
@@ -89,8 +78,7 @@ async function postToSlack(env: Env, payload: unknown): Promise<void> {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    // Slack answers 400 `invalid_blocks` rather than describing the problem, so
-    // keep the body, it is the only clue.
+
     throw new Error(`slack ${res.status}: ${(await res.text()).slice(0, 300)}`);
   }
 }

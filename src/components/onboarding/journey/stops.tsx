@@ -19,8 +19,14 @@ import {
 } from "@/lib/progress/selectors";
 import { stampSheet } from "@/lib/progress/stamps";
 import type { ProgressState } from "@/lib/progress/types";
+import {
+  ODPAC_SHADOW_TARGET,
+  ODPAC_STAGES,
+  odpacExerciseKey,
+} from "@/content/onboarding/odpac";
 import { Checklist } from "@/components/onboarding/Checklist";
 import { LessonSection } from "@/components/onboarding/LessonSection";
+import { OdpacReport } from "@/components/onboarding/OdpacReport";
 import { MentorPanel } from "@/components/onboarding/MentorPanel";
 import { StampSheet } from "@/components/onboarding/StampSheet";
 import { ToolsChecklist } from "@/components/onboarding/ToolsChecklist";
@@ -169,6 +175,27 @@ export function stopsForDay(day: Day): TrailStop[] {
       render: () => <Drill />,
     });
   }
+
+  // Before the gate on purpose: the report is a required activity alongside the
+  // quiz, and it reads as homework rather than paperwork if it sits after the
+  // day's work and before the thing that lets you leave.
+  stops.push({
+    key: "odpac",
+    title: "ODPAC report",
+    kicker: `Shadow ${ODPAC_SHADOW_TARGET}, then write up what you saw`,
+    teaser: (state) => {
+      const stored = state.exercises[odpacExerciseKey(day.id)];
+      if (!stored) return "Not filed";
+      const written = ODPAC_STAGES.filter((stage) =>
+        new RegExp(`${stage.label}:\\s*\\S`).test(stored.body),
+      ).length;
+      return written === ODPAC_STAGES.length
+        ? "Filed · all five stages"
+        : `Filed · ${written} of ${ODPAC_STAGES.length} stages`;
+    },
+    done: (state) => odpacExerciseKey(day.id) in state.exercises,
+    render: () => <OdpacReport dayId={day.id} />,
+  });
 
   stops.push(
     {

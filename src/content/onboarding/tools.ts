@@ -20,10 +20,24 @@ export const TOOLS: readonly Tool[] = [
   },
   {
     key: "tools.retool_wt",
-    name: "Retool (WT, Walkie Talkie)",
-    purpose:
-      "Internal tooling: look up an application's real state. Day 4 runs on it.",
+    name: "Walkie Talkie (WT)",
+    purpose: "Calling guests. It is a phone, not a dashboard.",
     grantedBy: "Devesh",
+  },
+  // Cadence and Freshdesk come from the Pre Sales Mastery Playbook, not the
+  // original source doc, which predates both. Cadence is the tool Day 4 is
+  // actually built on, so a Day 1 list without it sends joinees into Day 4
+  // unable to do the work. Neither has a named granter yet.
+  {
+    key: "tools.cadence",
+    name: "Cadence",
+    purpose:
+      "The dashboard: guest history, AI overview, document status, journey status. Also where every interaction and lead status is logged.",
+  },
+  {
+    key: "tools.freshdesk",
+    name: "Freshdesk",
+    purpose: "Inbound tickets: email and chat inquiries that need resolving.",
   },
   {
     key: "tools.notion",

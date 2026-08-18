@@ -1,6 +1,7 @@
 "use client";
 
 import { DAYS } from "@/content/onboarding/days";
+import { ODPAC_SHADOW_TARGET } from "@/content/onboarding/odpac";
 import { PASS_THRESHOLD } from "@/content/onboarding/quiz";
 import type { Day } from "@/content/onboarding/types";
 import { UNLOCK_HOUR, UNLOCK_MINUTE } from "@/lib/dates";
@@ -52,6 +53,11 @@ export function SealedDay({
       unlockAt ? onWhichMorning(unlockAt, now) : "tomorrow"
     } at ${UNLOCK_LABEL}.`;
     if (unlockAt) clock = `in ${formatWait(unlockAt.getTime() - now.getTime())}`;
+  } else if (reason === "odpac") {
+    // Named specifically: everything else on the previous day is done, so a
+    // message about stamps or the quiz would send them looking in the wrong
+    // place for something they have already finished.
+    note = `Day ${previous?.id} needs its ODPAC report filed - shadow ${ODPAC_SHADOW_TARGET} and write up what you saw, then this chapter unseals at ${UNLOCK_LABEL} the next morning.`;
   } else if (previous && previousOpen) {
     const sheet = stampSheet(state, previous.id);
     const missing = sheet.total - sheet.earned;

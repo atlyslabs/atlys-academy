@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Schibsted_Grotesk } from "next/font/google";
+import { DAYS } from "@/content/onboarding/days";
 import { LoadingScreen } from "@/components/fx/LoadingScreen";
 import "./globals.css";
 
@@ -29,8 +30,11 @@ const fontVariables = [schibsted.variable, playfair.variable].join(" ");
 
 export const metadata: Metadata = {
   title: "Atlys Academy",
+  // Derived, not written down: the journey was scoped from five days to three
+  // and this string was the last place still claiming five.
   description:
-    "Guided onboarding for the Pre-checkout Sales function at Atlys: five days, from your first shadowed chat to your first live one.",
+    `Guided onboarding for the Pre-checkout Sales function at Atlys: ${DAYS.length} days, ` +
+    "from your first shadowed chat to your first live one.",
   applicationName: "Atlys Academy",
   icons: {
     icon: [{ url: "/favicon.ico", type: "image/x-icon", sizes: "any" }],

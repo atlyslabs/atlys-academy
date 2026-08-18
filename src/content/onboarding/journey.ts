@@ -90,32 +90,6 @@ export const JOURNEY_LEGS: readonly JourneyLeg[] = [
     lat: 40.64,
     lon: -73.78,
   },
-  {
-    dayId: 4,
-    code: "FRA",
-    place: "Frankfurt",
-    scene: "Transfer hub · Routing floor",
-    narration:
-      "The busiest transfer floor on the network, and the whole terminal is visible from here. Nothing that lands on you stays on you: every situation belongs at a desk, and knowing which one is the difference between an hour and a week.",
-    clock: "16:30",
-    gate: "D2",
-    cleared: "Everything you cannot solve, you can route.",
-    lat: 50.04,
-    lon: 8.56,
-  },
-  {
-    dayId: 5,
-    code: "DEL",
-    place: "Delhi",
-    scene: "Khullar Farms · You are the desk now",
-    narration:
-      "Last leg, and the only one that is not an airport. No more shadowing, no more observing. The next voice asking for help is talking to you, and four conversations stand between here and the floor.",
-    clock: "18:20",
-    gate: "E1",
-    cleared: "Redo. Come make the world smaller.",
-    lat: 28.56,
-    lon: 77.1,
-  },
 ] as const;
 
 export function legForDay(dayId: DayId): JourneyLeg {

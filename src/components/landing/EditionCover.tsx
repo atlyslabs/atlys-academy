@@ -18,7 +18,7 @@ import { PointerDiorama } from "@/components/fx/PointerDiorama";
 /**
  * The edition cover: the whole landing is one centred card floating over the
  * ASCII world, in the manner of a title page. Everything a joinee can do
- * lives inside the card - the five chapters, the passport, the leaderboard,
+ * lives inside the card - every chapter, the passport, the leaderboard,
  * the admin desk, sign-in - and the globe behind it walks the route one stop
  * at a time, captioned from journey.ts.
  *
@@ -200,7 +200,7 @@ export function EditionCover() {
             {DAY_COUNT} days, {LESSON_COUNT} lessons, {DRILL_COUNT} drills.
           </p>
 
-          <nav aria-label="The five days" className="mt-5">
+          <nav aria-label={`The ${DAY_COUNT} days`} className="mt-5">
             <ol>
               {DAYS.map((day) => {
                 const { done, total } = dayChecklistProgress(state, day);
@@ -304,9 +304,13 @@ export function EditionCover() {
 
         {/* The stage line: which stop the camera is on, and its opening
             beat. Pure staging flavour, so it is hidden from readers. */}
+        {/* Reserved at the tallest caption's height (3 lines on phones,
+            2 at the card's width): the card is centered together with this
+            block, so if the block breathed with the text, every caption
+            change would bob the whole card up and down. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none mt-6 min-h-[60px] text-center"
+          className="pointer-events-none mt-6 min-h-[104px] text-center sm:min-h-[80px]"
         >
           <p className="font-mono text-[10.5px] tracking-[0.18em] text-ink-dim">
             {STORY.map((stop, i) => (

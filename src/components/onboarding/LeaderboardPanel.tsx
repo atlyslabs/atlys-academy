@@ -1,5 +1,6 @@
 "use client";
 
+import { DAYS } from "@/content/onboarding/days";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -123,7 +124,7 @@ function Board({ board }: { board: LeaderboardData }) {
                 )}
               </div>
               <p className="mt-0.5 text-sm text-ink-muted">
-                {row.daysCompleted}/5 days
+                {row.daysCompleted}/{DAYS.length} days
               </p>
             </div>
 
