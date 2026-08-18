@@ -20,12 +20,12 @@ const ERROR_COPY: Record<string, string> = {
  * once the org chart is wired up - the values are what we persist.
  */
 const TEAM_LEADERS = [
-  "Aarav Sharma",
-  "Priya Nair",
-  "Rohan Mehta",
-  "Ananya Iyer",
-  "Karan Verma",
-  "Meera Krishnan",
+  "placeholder_1",
+  "placeholder_2",
+  "placeholder_3",
+  "placeholder_4",
+  "placeholder_5",
+  "placeholder_6",
 ] as const;
 
 /** How long the joinee's answers ride along in cookies (one year). */
