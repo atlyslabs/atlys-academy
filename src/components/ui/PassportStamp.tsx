@@ -15,13 +15,15 @@ import { cn } from "@/lib/utils";
  * over a dark panel the cream box would show. On dark, put a `bg-paper` plate
  * down first.
  *
- * The label prints UNDER the impression, straight, like a caption pencilled
- * beneath the ink - not across the stamp face, where the artwork made it
- * unreadable. Unearned stamps keep the earned footprint exactly - same sprite
- * box - so a half-finished page reads as a sheet with gaps rather than a
- * reflow that shifts every stamp as souvenirs land.
+ * Every face on the sheet carries its own word (READING, GATE HOLD, ...), so
+ * an earned stamp needs no caption - printing one under it would say the same
+ * thing twice. Only the EMPTY slot gets the pencilled caption: a dashed box
+ * alone says nothing about what is missing. Unearned stamps keep the earned
+ * footprint exactly - same sprite box - so a half-finished page reads as a
+ * sheet with gaps rather than a reflow that shifts every stamp as souvenirs
+ * land.
  *
- * Pages must pass `sprite` (assigned via `assignSprites`, one face per stamp);
+ * Pages must pass `sprite` (from `stamp-faces.ts`, each stamp's own face);
  * the lone-stamp fallback hashes the id and can collide across stamps.
  */
 
@@ -111,17 +113,18 @@ export function PassportStamp({
           />
         )}
       </span>
-      <span
-        className={cn(
-          "mt-1 whitespace-nowrap text-center font-mono uppercase leading-none",
-          size >= 120
-            ? "text-[10px] tracking-[0.16em]"
-            : "text-[9px] tracking-[0.14em]",
-          stamp.earned ? "text-ink-secondary" : "text-ink-muted",
-        )}
-      >
-        {stamp.label}
-      </span>
+      {!stamp.earned && (
+        <span
+          className={cn(
+            "mt-1 whitespace-nowrap text-center font-mono uppercase leading-none text-ink-muted",
+            size >= 120
+              ? "text-[10px] tracking-[0.16em]"
+              : "text-[9px] tracking-[0.14em]",
+          )}
+        >
+          {stamp.label}
+        </span>
+      )}
     </span>
   );
 }

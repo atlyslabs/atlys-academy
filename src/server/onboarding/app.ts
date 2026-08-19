@@ -1,8 +1,13 @@
+import { cookies } from "next/headers";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { LAST_DAY_ID } from "@/content/onboarding/days";
+import {
+  normalizeRole,
+  normalizeTeamLeader,
+} from "@/content/onboarding/team-leaders";
 import { isAdminEmail } from "@/lib/auth/config";
 import { ADMIN_ENABLED } from "@/lib/dev-flags";
 import {
@@ -48,16 +53,27 @@ const progressSchema = z.object({
         score: z.number().int().min(0),
         maxScore: z.number().int().min(1),
         passed: z.boolean(),
-        submittedAt: z.iso.datetime(),
+        // `offset: true` is load-bearing. Postgres returns timestamptz as
+        // "2026-08-16T21:07:02.286+00:00", while the bare `datetime()` pattern
+        // only accepts a "Z" suffix. So the moment an attempt round-tripped
+        // through the database it could never be uploaded again: the server's
+        // own output failed the server's own input schema, and every sync from
+        // that joinee 400'd forever - taking their reports and checklist with
+        // it. Accept both spellings of the same instant.
+        submittedAt: z.iso.datetime({ offset: true }),
       }),
     )
     .max(500),
+  // `nullish` for the same reason as `avatar` below: a drill that carries no
+  // score round-trips through the database as null, and one null here used to
+  // reject the entire upload - every unrelated quiz mark and report with it.
+  // A scoreless drill is normal; it must never cost a joinee their sync.
   drills: z.record(
     z.string(),
     z.object({
       status: z.string().min(1),
-      score: z.number().int().min(0).optional(),
-      maxScore: z.number().int().min(1).optional(),
+      score: z.number().int().min(0).nullish(),
+      maxScore: z.number().int().min(1).nullish(),
       updatedAt: z.string(),
     }),
   ),
@@ -73,13 +89,21 @@ const progressSchema = z.object({
   lastVisitedDay: z.number().int().min(1).max(365),
   // Optional - Zod strips unknown keys, so without this line an uploaded
   // avatar would silently vanish on every sync.
+  //
+  // `nullish`, not `optional`: a browser that has been through the avatar
+  // picker can hold `avatar: null`, and `optional()` rejects null. That single
+  // field failing took the WHOLE upload down with it - one joinee's quiz
+  // marks, checklist and ODPAC reports all stopped reaching the database
+  // while their screen said everything was saved. Nothing about an unset
+  // avatar should be able to do that, so it is accepted here and normalised
+  // to `undefined` below.
   avatar: z
     .object({
       color: z.number().int().min(0),
       face: z.number().int().min(0),
       hat: z.number().int().min(0),
     })
-    .optional(),
+    .nullish(),
 });
 
 /** Resolve the signed-in joinee's profile, or null when sync is unavailable. */
@@ -87,10 +111,22 @@ async function currentProfile() {
   if (!isSupabaseConfigured) return null;
   const session = await auth();
   if (!session?.user?.email || !session.user.id) return null;
+  // The role and team leader picked at sign-in ride along in cookies. This runs
+  // in the Hono route handler - the same Next request context `auth()` above
+  // reads from - so the cookies are readable here, and this is where they
+  // finally reach the profile row. Both are validated rather than trusted: the
+  // cookies are client-controlled, so anything off-roster normalises to null.
+  const store = await cookies();
+  const teamLeader = normalizeTeamLeader(
+    store.get("onboarding.teamLeader")?.value,
+  );
+  const role = normalizeRole(store.get("onboarding.role")?.value);
   return ensureProfile({
     googleSub: session.user.id,
     email: session.user.email,
     name: session.user.name,
+    teamLeader,
+    role,
   });
 }
 
@@ -138,6 +174,9 @@ const routes = app
       ...emptyProgress(),
       ...body,
       lastVisitedDay,
+      // `ProgressState.avatar` is optional, not nullable, and the store writes
+      // `?? null` on the way out - so null in becomes undefined here.
+      avatar: body.avatar ?? undefined,
     };
     await saveProgress(profile.id, state);
     return c.json({ ok: true });

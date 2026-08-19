@@ -1,16 +1,27 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { isAuthConfigured, isAdminEmail } from "@/lib/auth/config";
 import { ADMIN_ENABLED, ADMIN_PREVIEW_WITHOUT_AUTH } from "@/lib/dev-flags";
+import { TEAM_LEADERS } from "@/content/onboarding/team-leaders";
 import { isSupabaseConfigured } from "@/server/onboarding/db";
-import { adminOverview } from "@/server/onboarding/store";
+import {
+  addTeamLeader,
+  adminOverview,
+  listTeamLeaders,
+  teamLeaderRoster,
+} from "@/server/onboarding/store";
 import {
   AdminDesk,
   AdminNotice,
   EnvKey,
 } from "@/components/admin/AdminDesk";
 import { AdminTable } from "@/components/admin/AdminTable";
+import {
+  TeamLeaderRoster,
+  type AddLeaderState,
+} from "@/components/admin/TeamLeaderRoster";
 
 export const metadata = {
   title: "Admin · Atlys Academy",
@@ -30,13 +41,68 @@ export const dynamic = "force-dynamic";
  * building. All of that staging lives in `AdminDesk`.
  */
 export default async function AdminPage() {
+  const asOf = new Date().toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
   // Switched off: behave as though the route does not exist.
   if (!ADMIN_ENABLED) notFound();
+
+  /**
+   * Add a leader to the roster.
+   *
+   * A server action rather than an API route: it is one field on one page, and
+   * the action re-checks the session itself because a server action is a public
+   * endpoint whatever page it was rendered from.
+   */
+  async function addLeaderAction(
+    _previous: AddLeaderState,
+    formData: FormData,
+  ): Promise<AddLeaderState> {
+    "use server";
+    // The local-preview branch below has no session by definition. It cannot run
+    // in a deployment (see `ADMIN_PREVIEW_WITHOUT_AUTH`), so it is allowed to
+    // write; every other path needs a real admin.
+    if (!(ADMIN_PREVIEW_WITHOUT_AUTH && !isAuthConfigured)) {
+      const actor = await auth();
+      if (!isAdminEmail(actor?.user?.email)) {
+        return { ok: false, message: "Only an admin can change the roster." };
+      }
+    }
+
+    const name = (formData.get("name") ?? "").toString();
+    const result = await addTeamLeader(name);
+    if (result.ok) {
+      // The sign-in page and this desk both read the roster on render.
+      revalidatePath("/admin");
+      revalidatePath("/signin");
+      return {
+        ok: true,
+        message: `${result.leader.name} is on the roster and in the sign-in list.`,
+      };
+    }
+    return {
+      ok: false,
+      message:
+        result.reason === "duplicate"
+          ? "Somebody with that name is already on the roster."
+          : result.reason === "invalid"
+            ? "Give the leader a name between 2 and 64 characters."
+            : "The roster table is not set up yet. Run supabase/schema.sql.",
+    };
+  }
+
 
   // Local preview while Google credentials are still missing. Development
   // only - see the flag.
   if (ADMIN_PREVIEW_WITHOUT_AUTH && !isAuthConfigured) {
     const rows = isSupabaseConfigured ? await adminOverview() : null;
+    const previewStored = isSupabaseConfigured ? await listTeamLeaders() : null;
+    const previewLeaders = isSupabaseConfigured
+      ? await teamLeaderRoster()
+      : [...TEAM_LEADERS];
     return (
       <AdminDesk>
         <p className="mb-6 border-l border-brand-text/40 pl-4 text-[13px] leading-relaxed text-ink-dim">
@@ -47,7 +113,14 @@ export default async function AdminPage() {
           Sign-in checks are skipped because Google credentials are not set.
           This bypass is development-only and cannot run in a deployment.
         </p>
-        <AdminTable rows={rows ?? []} />
+        <div className="space-y-6">
+          <TeamLeaderRoster
+            leaders={previewLeaders}
+            action={addLeaderAction}
+            stored={previewStored !== null}
+          />
+          <AdminTable rows={rows ?? []} asOf={asOf} />
+        </div>
       </AdminDesk>
     );
   }
@@ -105,10 +178,27 @@ export default async function AdminPage() {
     );
   }
 
-  const rows = await adminOverview();
+  const [rows, storedLeaders, leaders] = await Promise.all([
+    adminOverview(),
+    listTeamLeaders(),
+    // Exactly what the sign-in page will offer, seed-list fallback included -
+    // the desk must not claim the roster is empty while sign-in shows six
+    // names.
+    teamLeaderRoster(),
+  ]);
+
   return (
     <AdminDesk>
-      <AdminTable rows={rows ?? []} />
+      <div className="space-y-6">
+        {/* First thing under the masthead: adding a leader is a ten-second job
+            and must not cost a scroll to the foot of the page. */}
+        <TeamLeaderRoster
+          leaders={leaders}
+          action={addLeaderAction}
+          stored={storedLeaders !== null}
+        />
+        <AdminTable rows={rows ?? []} asOf={asOf} />
+      </div>
     </AdminDesk>
   );
 }

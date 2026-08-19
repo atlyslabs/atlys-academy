@@ -1,28 +1,18 @@
 import { DAYS } from "@/content/onboarding/days";
 import { LESSONS } from "@/content/onboarding/lessons";
+import { odpacExerciseKey } from "@/content/onboarding/odpac";
 import { TOOLS } from "@/content/onboarding/tools";
 import type { DayId, DrillId } from "@/content/onboarding/types";
 import type { ProgressState } from "./types";
 
-/**
- * Passport stamps - the souvenir a joinee collects for each thing they finish.
- *
- * Like points, stamps are a **pure function of progress state**: nothing is
- * stored, so a stamp can never be awarded twice, go stale, or disagree with the
- * progress it represents. Recomputing is the only source of truth.
- *
- * This module deliberately imports no selectors. It derives quiz passes itself
- * from `state.attempts`, which keeps the dependency one-way - `selectors.ts`
- * imports *this*, so the day gate can require a full sheet without a cycle.
- *
- * The rule that matters most: **a stamp must be obtainable.** 14 of 24 lessons
- * are still placeholders awaiting Shovan's content, and a placeholder has no
- * "mark as read" control - so counting it would make its day impossible to
- * complete. Only lessons with a written body count, and a day with none gets no
- * reading stamp at all rather than an uncollectable one.
- */
 
-export type StampKind = "reading" | "activities" | "tools" | "drill" | "quiz";
+export type StampKind =
+  | "reading"
+  | "activities"
+  | "tools"
+  | "drill"
+  | "odpac"
+  | "quiz";
 
 export interface Stamp {
   /** Stable id, e.g. `"day2.drill.pause-10s"`. Derived, never persisted. */
@@ -50,8 +40,6 @@ const DRILL_STAMP_LABELS: Partial<Record<DrillId, string>> = {
   "ownership-sort": "Control",
   "ownership-run": "Fast track",
   "connect-islands": "Routed",
-  // Wired up with the day-desk redesign; before it these three drills were
-  // unreachable and their stamps printed the generic face.
   "flag-swipe": "Red flags",
   "anxiety-wall": "Calmed",
   "reframe-deck": "Reframed",
@@ -129,6 +117,19 @@ export function stampsForDay(state: ProgressState, dayId: DayId): Stamp[] {
       earned: Boolean(result && TERMINAL_DRILL_STATUSES.has(result.status)),
     });
   }
+
+  // The daily shadowing report. It is a required activity on every day, in the
+  // same class as the reading and the checklist, so it earns a stamp like they
+  // do - filing it and getting nothing back was the one piece of real work on
+  // the page that left no mark on the passport.
+  stamps.push({
+    id: `${day.slug}.odpac`,
+    dayId,
+    kind: "odpac",
+    label: "Shadowed",
+    requirement: "File the day's ODPAC report",
+    earned: odpacExerciseKey(dayId) in state.exercises,
+  });
 
   stamps.push({
     id: `${day.slug}.quiz`,

@@ -1,19 +1,29 @@
 "use client";
 
-import { useId, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { DAYS } from "@/content/onboarding/days";
 import {
   ODPAC_STAGES,
   odpacExerciseKey,
   parseOdpacBody,
 } from "@/content/onboarding/odpac";
+import {
+  teamLeaderName,
+  UNASSIGNED_TEAM_LEADER,
+} from "@/content/onboarding/team-leaders";
 import type { DayId } from "@/content/onboarding/types";
 // Type-only import: erased at compile time, so none of the server-only store
 // module lands in the client bundle.
 import type { AdminJoineeRow } from "@/server/onboarding/store";
+import { AnalyticsPanel } from "@/components/admin/AnalyticsPanel";
 import {
   ProgressRadar,
-  radarMean,
   type RadarAxis,
 } from "@/components/onboarding/ProgressRadar";
 import { cn } from "@/lib/utils";
@@ -167,6 +177,8 @@ type OdpacFilter = "any" | "all" | "missing" | "none";
 type ActiveFilter = "any" | "recent" | "dormant" | "never";
 
 interface Filters {
+  /** Roster id of a single team leader, or "all". The primary scope. */
+  leader: string;
   cohort: string;
   query: string;
   days: DaysFilter;
@@ -177,6 +189,7 @@ interface Filters {
 }
 
 const NO_FILTERS: Filters = {
+  leader: "all",
   cohort: "all",
   query: "",
   days: "any",
@@ -186,11 +199,55 @@ const NO_FILTERS: Filters = {
   active: "any",
 };
 
+/** The narrowing filters, reset together whenever the scope widens again. */
+const NO_DETAIL = {
+  days: "any",
+  quiz: "any",
+  stamps: "any",
+  odpac: "any",
+  active: "any",
+} as const;
+
+/**
+ * The axis the desk is read along: cohort start, or team leader. This is the
+ * first decision a manager makes, and it does two jobs at once - it chooses
+ * which value dropdown is offered, and it bands the table.
+ *
+ * Held apart from `Filters` so "Clear filters" resets what is shown without
+ * also throwing away how the manager chose to read it.
+ */
+type ScopeAxis = "cohort" | "leader";
+
+/** How the rows are banded, which follows from the scope. */
+type GroupMode = "cohort" | "leader";
+
+/** The two readings of the same filtered set: the rows, or the roll-up. */
+type AdminTab = "table" | "analytics";
+
+/**
+ * Bands are the axis you are scoping by until you pick one value on it, at
+ * which point banding drops to the other axis - so "all team leaders" gives a
+ * band per leader, and picking one leader re-bands their people by cohort.
+ */
+function groupModeFor(axis: ScopeAxis, value: string): GroupMode {
+  if (value === "all") return axis;
+  return axis === "leader" ? "cohort" : "leader";
+}
+
+/** The sentinel a null team leader groups under. Sorts last, never crashes. */
+const UNASSIGNED = UNASSIGNED_TEAM_LEADER;
+
 /** Dormant is measured in whole days idle, which is how a manager thinks. */
 const DORMANT_AFTER_DAYS = 7;
 
 function matches(facts: RowFacts, filters: Filters): boolean {
   const { row } = facts;
+
+  if (filters.leader !== "all") {
+    // "unassigned" is a real, selectable scope: match rows with no leader.
+    const leader = row.teamLeader ?? UNASSIGNED;
+    if (leader !== filters.leader) return false;
+  }
 
   if (filters.cohort !== "all" && row.cohortDate !== filters.cohort) {
     return false;
@@ -260,19 +317,43 @@ function matches(facts: RowFacts, filters: Filters): boolean {
   return true;
 }
 
+interface Group {
+  /** Stable key and band label. A cohort ISO date, a leader id, or UNASSIGNED. */
+  key: string;
+  /** The heading printed on the band, already formatted for the mode. */
+  label: string;
+  members: RowFacts[];
+}
+
 /**
  * The admin overview - presentation only. All authorisation and data fetching
  * happen in the server page; this component just renders rows.
  *
- * Three readings, in the order a manager needs them: the shape of whoever is on
- * screen, the filters that decide who that is, then the joinees themselves
- * grouped under the morning they started - so a fortnight of staggered joiners
- * reads as three cohorts rather than one confusing list.
+ * Four readings, in the order a manager needs them: the shape of whoever is on
+ * screen, the controls that decide who that is and how they are banded, then the
+ * joinees themselves - grouped either by the morning they started (the see-all
+ * default) or by the team leader they report to.
  */
-export function AdminTable({ rows }: { rows: AdminJoineeRow[] }) {
+export function AdminTable({
+  rows,
+  asOf,
+}: {
+  rows: AdminJoineeRow[];
+  /**
+   * The date this data was read, stamped by the server page. Passed in rather
+   * than read from a clock here: the analytics tab prints it onto a shareable
+   * plate, and a client clock would make the same rows render two different
+   * dates either side of hydration.
+   */
+  asOf: string;
+}) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  // Keyed by email, and held here rather than per cohort so a row stays open
-  // while the filters move it between bands.
+  // View settings, deliberately outside `filters` so clearing filters keeps
+  // them: which axis the desk is read along, and which tab is open.
+  const [axis, setAxis] = useState<ScopeAxis>("cohort");
+  const [tab, setTab] = useState<AdminTab>("table");
+  // Keyed by email, and held here rather than per band so a row stays open while
+  // the filters or the grouping move it between bands.
   const [openRows, setOpenRows] = useState<ReadonlySet<string>>(new Set());
 
   function toggle(email: string) {
@@ -293,6 +374,27 @@ export function AdminTable({ rows }: { rows: AdminJoineeRow[] }) {
     [rows, now],
   );
 
+  /**
+   * id -> display name, taken from the rows. The server resolved each against
+   * the live roster, so a leader an admin added today reads correctly without
+   * shipping the roster to the browser. Falls back to the static seed list, and
+   * finally to the id, so an unknown leader still prints something.
+   */
+  const leaderNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const row of rows) {
+      if (row.teamLeader && row.teamLeaderName) {
+        names.set(row.teamLeader, row.teamLeaderName);
+      }
+    }
+    return names;
+  }, [rows]);
+  // Stable across renders so the memos below can depend on it honestly.
+  const nameFor = useCallback(
+    (id: string) => leaderNames.get(id) ?? teamLeaderName(id),
+    [leaderNames],
+  );
+
   const cohorts = useMemo(
     () =>
       [...new Set(rows.map((row) => row.cohortDate))].sort((a, b) =>
@@ -301,30 +403,91 @@ export function AdminTable({ rows }: { rows: AdminJoineeRow[] }) {
     [rows],
   );
 
+  // Leader options come from the unfiltered rows, exactly like `cohorts`: built
+  // from `shown` they would collapse to the one leader just selected. Sorted by
+  // display name, with the unassigned band always last.
+  const leaders = useMemo(() => {
+    const ids = new Set(rows.map((row) => row.teamLeader ?? UNASSIGNED));
+    return [...ids].sort((a, b) => {
+      if (a === UNASSIGNED) return 1;
+      if (b === UNASSIGNED) return -1;
+      return nameFor(a).localeCompare(nameFor(b));
+    });
+  }, [rows, nameFor]);
+
   const shown = useMemo(
     () => facts.filter((fact) => matches(fact, filters)),
     [facts, filters],
   );
 
-  /** Newest cohort first, and inside a cohort the fullest passport first. */
-  const groups = useMemo(() => {
-    const byDate = new Map<string, RowFacts[]>();
+  /** The value selected on the scope axis, and whether it narrows anything. */
+  const scopeValue = axis === "leader" ? filters.leader : filters.cohort;
+  const scoped = scopeValue !== "all";
+  const mode = groupModeFor(axis, scopeValue);
+
+  /**
+   * Switching axis clears both axis values and every narrowing filter: a
+   * cohort filter left set while the desk is read by leader is a filter nobody
+   * can see, and those are the ones that make a manager mistrust the numbers.
+   */
+  function changeAxis(next: ScopeAxis) {
+    setAxis(next);
+    setFilters({ ...filters, ...NO_DETAIL, cohort: "all", leader: "all" });
+  }
+
+  /** Widening back to "all" drops the narrowing filters it had unlocked. */
+  function changeScopeValue(value: string) {
+    const cleared = value === "all" ? NO_DETAIL : {};
+    setFilters({
+      ...filters,
+      ...cleared,
+      cohort: axis === "cohort" ? value : "all",
+      leader: axis === "leader" ? value : "all",
+    });
+  }
+
+  /**
+   * Bands, by the chosen mode. Cohort bands run newest first; leader bands run
+   * by display name with the unassigned band last. Inside every band the
+   * fullest passport leads. The group key is coalesced to a sentinel so a null
+   * team leader can never reach the comparator or a React key.
+   */
+  const groups = useMemo<Group[]>(() => {
+    const buckets = new Map<string, RowFacts[]>();
     for (const fact of shown) {
-      const list = byDate.get(fact.row.cohortDate) ?? [];
+      const key =
+        mode === "leader"
+          ? fact.row.teamLeader ?? UNASSIGNED
+          : fact.row.cohortDate;
+      const list = buckets.get(key) ?? [];
       list.push(fact);
-      byDate.set(fact.row.cohortDate, list);
+      buckets.set(key, list);
     }
-    return [...byDate.entries()]
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([cohortDate, members]) => ({
-        cohortDate,
-        members: members.sort(
-          (a, b) =>
-            b.row.stamps.earned - a.row.stamps.earned ||
-            a.name.localeCompare(b.name),
-        ),
-      }));
-  }, [shown]);
+
+    const keys = [...buckets.keys()].sort((a, b) => {
+      if (mode === "leader") {
+        if (a === UNASSIGNED) return 1;
+        if (b === UNASSIGNED) return -1;
+        return nameFor(a).localeCompare(nameFor(b));
+      }
+      return b.localeCompare(a);
+    });
+
+    return keys.map((key) => ({
+      key,
+      label:
+        mode === "leader"
+          ? key === UNASSIGNED
+            ? "No team leader on file"
+            : nameFor(key)
+          : `Started ${formatDate(key, true)}`,
+      members: (buckets.get(key) ?? []).sort(
+        (a, b) =>
+          b.row.stamps.earned - a.row.stamps.earned ||
+          a.name.localeCompare(b.name),
+      ),
+    }));
+  }, [shown, mode, nameFor]);
 
   const axes = useMemo(
     () => cohortAxes(shown.map((fact) => fact.row)),
@@ -346,89 +509,231 @@ export function AdminTable({ rows }: { rows: AdminJoineeRow[] }) {
     );
   }
 
+  const bandedByLeader = mode === "leader";
+
+  /** What the analytics plate says it is covering, in plain words. */
+  const scopeLabel = scoped
+    ? axis === "leader"
+      ? scopeValue === UNASSIGNED
+        ? "Joinees with no team leader"
+        : nameFor(scopeValue)
+      : `Cohort of ${formatDate(scopeValue)}`
+    : "Every cohort";
+
   return (
     <div className="space-y-6">
-      <CohortPanel
-        axes={axes}
-        joinees={shown.length}
-        filtered={shown.length !== rows.length}
-      />
+      {/* The plot alone, top right. The prose, the per-day list and the mean
+          that used to sit beside it were three readings of the same numbers the
+          table below already prints - the shape is the only one that adds
+          something a column cannot. */}
+      {/* Pulled up beside the masthead at wide sizes so the plot sits top
+          right of "Cohort progress" instead of opening a band of its own. The
+          standfirst is capped at 58ch, so there is always clear space to its
+          right; below `lg` it drops back into the normal flow. */}
+      <div className="flex justify-end lg:-mt-[164px]">
+        <ProgressRadar
+          axes={axes}
+          caption={`Mean quiz mark per day, ${shown.length} ${
+            shown.length === 1 ? "joinee" : "joinees"
+          }`}
+          size={184}
+          className="w-[184px]"
+        />
+      </div>
 
       <FilterBar
         filters={filters}
+        axis={axis}
+        scopeValue={scopeValue}
+        scoped={scoped}
         cohorts={cohorts}
+        leaders={leaders}
+        nameFor={nameFor}
         onChange={setFilters}
+        onAxisChange={changeAxis}
+        onScopeValueChange={changeScopeValue}
         shown={shown.length}
         total={rows.length}
       />
 
-      {groups.length === 0 ? (
-        <div className="desk-card px-7 py-12 text-center sm:py-14">
-          <FrameBeam />
-          <p className="font-display text-[24px] italic leading-snug text-ink">
-            No joinee matches these filters.
-          </p>
-          <button
-            type="button"
-            onClick={() => setFilters(NO_FILTERS)}
-            className="mt-4 text-[13.5px] text-ink underline decoration-hairline-lit underline-offset-4 transition-colors hover:decoration-ink-dim"
+      {/* The Joinees section always renders, so the tabs never vanish under a
+          filter that matches nobody - the empty state lives inside the table
+          panel instead. */}
+      <section className="desk-card">
+        <FrameBeam />
+
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 pb-5 pt-6 sm:px-8 sm:pt-7">
+          <h2 className="font-display text-[26px] italic leading-none text-ink">
+            Joinees
+          </h2>
+          <div
+            role="tablist"
+            aria-label="Joinee views"
+            className="inline-flex rounded-full border border-hairline bg-raised p-0.5"
           >
-            Clear all filters
-          </button>
-        </div>
-      ) : (
-        <section className="desk-card">
-          <FrameBeam />
-
-          <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-5 pb-5 pt-6 sm:px-8 sm:pt-7">
-            <h2 className="font-display text-[26px] italic leading-none text-ink">
-              Joinees
-            </h2>
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-dim tabular-nums">
-              Grouped by cohort, fullest passport first
-            </p>
-          </header>
-
-          {/* One table for every cohort rather than one per band: separate
-              tables size their columns independently, so the same column
-              landed at a different x in each cohort and nothing could be
-              scanned down the page. */}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1040px] text-left">
-              <caption className="sr-only">
-                Every joinee shown, grouped by the day their cohort started,
-                newest cohort first, and inside each cohort the fullest
-                passport first.
-              </caption>
-              <thead>
-                <tr className="border-y border-hairline bg-white/[0.015]">
-                  <th scope="col" className="w-10 py-2.5 pl-5 sm:pl-8">
-                    <span className="sr-only">
-                      ODPAC reports and written answers
-                    </span>
-                  </th>
-                  <HeaderCell>Joinee</HeaderCell>
-                  <HeaderCell>Days cleared</HeaderCell>
-                  <HeaderCell>Quiz marks</HeaderCell>
-                  <HeaderCell>Activities</HeaderCell>
-                  <HeaderCell>ODPAC reports</HeaderCell>
-                  <HeaderCell>Last active</HeaderCell>
-                </tr>
-              </thead>
-
-              {groups.map((group) => (
-                <CohortBody
-                  key={group.cohortDate}
-                  cohortDate={group.cohortDate}
-                  members={group.members}
-                  openRows={openRows}
-                  onToggle={toggle}
-                />
-              ))}
-            </table>
+            {(
+              [
+                { value: "table", label: "Table" },
+                { value: "analytics", label: "Analytics" },
+              ] as const
+            ).map((option) => {
+              const selected = tab === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  id={`joinee-tab-${option.value}`}
+                  aria-selected={selected}
+                  aria-controls={`joinee-panel-${option.value}`}
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => setTab(option.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                      event.preventDefault();
+                      setTab(tab === "table" ? "analytics" : "table");
+                    }
+                  }}
+                  className={cn(
+                    "h-8 rounded-full px-4 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors",
+                    selected
+                      ? "bg-white/[0.08] text-ink"
+                      : "text-ink-dim hover:text-ink-muted",
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
           </div>
-        </section>
-      )}
+        </header>
+
+        {tab === "table" ? (
+          <div
+            role="tabpanel"
+            id="joinee-panel-table"
+            aria-labelledby="joinee-tab-table"
+          >
+            {groups.length === 0 ? (
+              <div className="px-7 pb-12 pt-4 text-center">
+                <p className="font-display text-[24px] italic leading-snug text-ink">
+                  No joinee matches these filters.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFilters(NO_FILTERS)}
+                  className="mt-4 text-[13.5px] text-ink underline decoration-hairline-lit underline-offset-4 transition-colors hover:decoration-ink-dim"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="px-5 pb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-dim sm:px-8">
+                  {bandedByLeader
+                    ? "By team leader, fullest passport first"
+                    : "By cohort start, fullest passport first"}
+                </p>
+
+                {/* One table for every band rather than one per band: separate
+                    tables size their columns independently, so the same column
+                    landed at a different x in each band and nothing could be
+                    scanned down the page. */}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1040px] text-left">
+                    <caption className="sr-only">
+                      {bandedByLeader
+                        ? "Every joinee shown, grouped by team leader, unassigned last, and inside each group the fullest passport first."
+                        : "Every joinee shown, grouped by the day their cohort started, newest cohort first, and inside each cohort the fullest passport first."}
+                    </caption>
+                    <thead>
+                      <tr className="border-y border-hairline bg-white/[0.015]">
+                        <th scope="col" className="w-10 py-2.5 pl-5 sm:pl-8">
+                          <span className="sr-only">
+                            ODPAC reports and written answers
+                          </span>
+                        </th>
+                        <HeaderCell>Joinee</HeaderCell>
+                        <HeaderCell>Days cleared</HeaderCell>
+                        <HeaderCell>Quiz marks</HeaderCell>
+                        <HeaderCell>Activities</HeaderCell>
+                        <HeaderCell>ODPAC reports</HeaderCell>
+                        <HeaderCell>Last active</HeaderCell>
+                      </tr>
+                    </thead>
+
+                    {groups.map((group) => (
+                      // The mode is part of the key so a regroup remounts
+                      // cleanly rather than reconciling a cohort band into a
+                      // leader one.
+                      <GroupBody
+                        key={`${mode}:${group.key}`}
+                        label={group.label}
+                        members={group.members}
+                        showLeader={!bandedByLeader}
+                        openRows={openRows}
+                        onToggle={toggle}
+                      />
+                    ))}
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div
+            role="tabpanel"
+            id="joinee-panel-analytics"
+            aria-labelledby="joinee-tab-analytics"
+            className="px-5 pb-6 sm:px-8 sm:pb-8"
+          >
+            {/* The team switcher sits here, on the dark chrome, deliberately
+                NOT on the white plate: the plate is what gets captured, and a
+                dropdown in the corner of a shared screenshot looks like a
+                mistake. One click takes a leader straight to their own
+                dashboard, ready to screenshot. */}
+            <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label
+                htmlFor="analytics-team"
+                className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-dim"
+              >
+                Dashboard for
+              </label>
+              <div className="min-w-[200px]">
+                <Select
+                  id="analytics-team"
+                  value={axis === "leader" ? filters.leader : "all"}
+                  onChange={(value) => {
+                    setAxis("leader");
+                    setFilters({
+                      ...filters,
+                      ...NO_DETAIL,
+                      cohort: "all",
+                      leader: value,
+                    });
+                  }}
+                  options={[
+                    { value: "all", label: "Every team" },
+                    ...leaders.map((leader) => ({
+                      value: leader,
+                      label:
+                        leader === UNASSIGNED
+                          ? "No team leader"
+                          : nameFor(leader),
+                    })),
+                  ]}
+                />
+              </div>
+            </div>
+
+            <AnalyticsPanel
+              rows={shown.map((fact) => fact.row)}
+              teamLabel={scopeLabel}
+              asOf={asOf}
+            />
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -436,108 +741,46 @@ export function AdminTable({ rows }: { rows: AdminJoineeRow[] }) {
 /* ------------------------------------------------------------------------ */
 
 /**
- * The shape of whoever is on screen, in three readings across the plate: the
- * headline mean, then every day named with its own number, then the plot. The
- * list is the accessible reading and the plot is decoration on top of it, which
- * is why the plot carries no table of its own here.
+ * Two tiers, in the order the questions get asked.
  *
- * The shortest day is marked, but only when there is a spread to mark - a group
- * sitting flat at nothing has no weakest day, it has no marks.
+ * FIRST you choose the axis the desk is read along - cohort start or team
+ * leader - and a value on it. That one decision drives the value dropdown, the
+ * banding of the table and the roll-up in the analytics tab.
+ *
+ * THEN the narrowing filters unlock. They stay locked until the scope is
+ * actually narrowed, because "everyone missing an ODPAC report" is a question
+ * with no owner: the useful version is always "...in this cohort" or "...on
+ * this leader's team". Widening the scope again clears them, so a filter can
+ * never be left applied from behind a control nobody can see.
+ *
+ * The name search sits apart from both: it is a lookup, not a filter, and it
+ * works whatever the scope is.
  */
-function CohortPanel({
-  axes,
-  joinees,
-  filtered,
-}: {
-  axes: RadarAxis[];
-  joinees: number;
-  filtered: boolean;
-}) {
-  const mean = radarMean(axes);
-  const values = axes.map((axis) => axis.value);
-  const lowest = Math.min(...values);
-  const spread = Math.max(...values) > lowest;
-
-  return (
-    <section className="desk-card px-5 py-6 sm:px-8 sm:py-8">
-      <FrameBeam />
-
-      <div className="grid items-start gap-8 md:grid-cols-2 md:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_264px] xl:items-center xl:gap-14">
-        <div className="min-w-0">
-          <h2 className="font-display text-[26px] italic leading-none text-ink">
-            Cohort shape
-          </h2>
-          <p className="mt-3 max-w-[46ch] text-[13.5px] leading-relaxed text-ink-muted">
-            Every joinee&apos;s best quiz mark per day, averaged across the{" "}
-            {filtered ? "joinees shown" : "whole cohort"}. A short spoke is a day
-            the material has not landed on yet.
-          </p>
-
-          <p className="mt-7 flex items-baseline gap-3">
-            <span className="font-condensed text-[56px] leading-none text-ink tabular-nums">
-              {mean}%
-            </span>
-            <span className="font-mono text-[10px] uppercase leading-tight tracking-[0.16em] text-ink-dim">
-              mean quiz mark
-              <br />
-              {joinees} {joinees === 1 ? "joinee" : "joinees"}
-            </span>
-          </p>
-        </div>
-
-        {/* Third at wide sizes, full width under the pair at medium: the day
-            list is the reading, so it never gets squeezed into a gutter. */}
-        <ol className="min-w-0 md:order-last md:col-span-2 xl:order-none xl:col-span-1">
-          {axes.map((axis) => (
-            <li
-              key={axis.label}
-              className="flex items-baseline gap-4 border-t border-hairline/70 py-2.5 first:border-t-0 first:pt-0"
-            >
-              <span className="w-[46px] shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim">
-                {axis.label}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink-muted">
-                {axis.title}
-              </span>
-              {spread && axis.value === lowest && (
-                <span className="shrink-0 font-mono text-[9.5px] uppercase tracking-[0.14em] text-brand-text">
-                  shortest
-                </span>
-              )}
-              <span
-                className={cn(
-                  "w-11 shrink-0 text-right font-mono text-[14px] tabular-nums",
-                  axis.value === 0 ? "text-ink-dim/70" : "text-ink",
-                )}
-              >
-                {Math.round(axis.value * 100)}%
-              </span>
-            </li>
-          ))}
-        </ol>
-
-        <ProgressRadar
-          axes={axes}
-          withTable={false}
-          size={264}
-          className="mx-auto md:w-[264px] xl:shrink-0"
-        />
-      </div>
-    </section>
-  );
-}
-
-/** One control per column. Labels sit above their control, never inside it. */
 function FilterBar({
   filters,
+  axis,
+  scopeValue,
+  scoped,
   cohorts,
+  leaders,
+  nameFor,
   onChange,
+  onAxisChange,
+  onScopeValueChange,
   shown,
   total,
 }: {
   filters: Filters;
+  axis: ScopeAxis;
+  scopeValue: string;
+  scoped: boolean;
   cohorts: string[];
+  leaders: string[];
+  /** Resolves a roster id to its display name, roster changes included. */
+  nameFor: (id: string) => string;
   onChange: (next: Filters) => void;
+  onAxisChange: (axis: ScopeAxis) => void;
+  onScopeValueChange: (value: string) => void;
   shown: number;
   total: number;
 }) {
@@ -545,31 +788,87 @@ function FilterBar({
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value });
 
+  const scopeOptions =
+    axis === "leader"
+      ? [
+          {
+            value: "all",
+            label: `All ${leaders.length} team ${
+              leaders.length === 1 ? "leader" : "leaders"
+            }`,
+          },
+          ...leaders.map((leader) => ({
+            value: leader,
+            label: leader === UNASSIGNED ? "Unassigned" : nameFor(leader),
+          })),
+        ]
+      : [
+          {
+            value: "all",
+            label: `All ${cohorts.length} ${
+              cohorts.length === 1 ? "cohort" : "cohorts"
+            }`,
+          },
+          ...cohorts.map((date) => ({
+            value: date,
+            label: formatDate(date),
+          })),
+        ];
+
   return (
     <section aria-label="Filters" className="desk-card px-5 py-5 sm:px-8 sm:py-6">
       <FrameBeam />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        <Field label="Cohort start">
+      {/* Tier one: the axis, its value, and the name lookup. */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] md:items-end">
+        <Field label="Read by">
+          <div
+            role="radiogroup"
+            aria-label="Read by"
+            className="flex h-9 items-center gap-1 rounded-lg border border-hairline bg-raised p-1"
+          >
+            {(
+              [
+                { value: "cohort", label: "Cohort start" },
+                { value: "leader", label: "Team leader" },
+              ] as const
+            ).map((option) => {
+              const active = axis === option.value;
+              return (
+                <label key={option.value} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="admin-scope-axis"
+                    value={option.value}
+                    checked={active}
+                    onChange={() => onAxisChange(option.value)}
+                    className="peer sr-only"
+                  />
+                  <span
+                    className={cn(
+                      "flex h-7 items-center whitespace-nowrap rounded-md px-3 text-[12.5px] transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-brand-text",
+                      active
+                        ? "bg-white/[0.08] text-ink"
+                        : "text-ink-dim hover:text-ink-muted",
+                    )}
+                  >
+                    {option.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </Field>
+
+        <Field label={axis === "leader" ? "Which team leader" : "Which cohort"}>
           <Select
-            value={filters.cohort}
-            onChange={(value) => set("cohort", value)}
-            options={[
-              {
-                value: "all",
-                label: `All ${cohorts.length} ${
-                  cohorts.length === 1 ? "cohort" : "cohorts"
-                }`,
-              },
-              ...cohorts.map((date) => ({
-                value: date,
-                label: formatDate(date),
-              })),
-            ]}
+            value={scopeValue}
+            onChange={onScopeValueChange}
+            options={scopeOptions}
           />
         </Field>
 
-        <Field label="Joinee">
+        <Field label="Find a joinee">
           <input
             type="search"
             value={filters.query}
@@ -578,7 +877,26 @@ function FilterBar({
             className="h-9 w-full rounded-lg border border-hairline bg-raised px-2.5 text-[13px] text-ink transition-colors placeholder:text-ink-dim hover:border-hairline-lit focus:border-brand-text focus:outline-none"
           />
         </Field>
+      </div>
 
+      {/* Tier two: what each joinee has done. Locked until the scope narrows. */}
+      <fieldset
+        disabled={!scoped}
+        className={cn(
+          "mt-4 border-t border-hairline/70 pt-4 transition-opacity",
+          !scoped && "opacity-40",
+        )}
+      >
+        <legend className="sr-only">Narrow this scope</legend>
+
+        {!scoped && (
+          <p className="mb-4 text-[12.5px] leading-relaxed text-ink-dim">
+            Pick {axis === "leader" ? "a team leader" : "a cohort"} above to
+            unlock these.
+          </p>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Field label="Days cleared">
           <Select
             value={filters.days}
@@ -643,7 +961,8 @@ function FilterBar({
             ]}
           />
         </Field>
-      </div>
+        </div>
+      </fieldset>
 
       <p
         aria-live="polite"
@@ -685,13 +1004,17 @@ function Select({
   value,
   onChange,
   options,
+  id,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
+  /** Only needed when the label is a sibling rather than a wrapping `Field`. */
+  id?: string;
 }) {
   return (
     <select
+      id={id}
       value={value}
       onChange={(event) => onChange(event.target.value)}
       // bg-raised rather than a translucent plate: the native option list
@@ -714,18 +1037,27 @@ function Select({
 /* ------------------------------------------------------------------------ */
 
 /**
- * One cohort as its own `<tbody>`: a banded row naming the morning they all
- * started, then their rows. Multiple bodies in one table is what keeps the
- * columns aligned down the whole page while still separating the cohorts.
+ * One band as its own `<tbody>`: a banded row naming the group (a cohort's
+ * start morning, or a team leader), then its rows. Multiple bodies in one table
+ * is what keeps the columns aligned down the whole page while still separating
+ * the bands.
+ *
+ * The band `label` arrives already formatted for the mode - a cohort passes a
+ * date sentence, a leader passes a name - so `formatDate` is never handed a name
+ * to turn into a dash. `showLeader` prints each joinee's leader under their name
+ * when the bands are cohorts; under a leader band it is what the band already
+ * says, so it is dropped.
  */
-function CohortBody({
-  cohortDate,
+function GroupBody({
+  label,
   members,
+  showLeader,
   openRows,
   onToggle,
 }: {
-  cohortDate: string;
+  label: string;
   members: RowFacts[];
+  showLeader: boolean;
   openRows: ReadonlySet<string>;
   onToggle: (email: string) => void;
 }) {
@@ -735,13 +1067,13 @@ function CohortBody({
     <tbody className="border-b border-hairline last:border-b-0">
       <tr>
         <th
-          scope="colgroup"
+          scope="rowgroup"
           colSpan={7}
           className="border-b border-hairline/70 bg-white/[0.03] px-5 py-3 text-left sm:px-8"
         >
           <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <span className="font-display text-[18px] font-normal italic leading-none text-ink">
-              Started {formatDate(cohortDate, true)}
+              {label}
             </span>
             <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-dim tabular-nums">
               {members.length} {members.length === 1 ? "joinee" : "joinees"}
@@ -800,6 +1132,13 @@ function CohortBody({
                 <p className="mt-1 text-[11.5px] leading-tight text-ink-dim">
                   {row.email}
                 </p>
+                {/* The team leader, only when the bands are cohorts - under a
+                    leader band the band heading already says it. */}
+                {showLeader && (
+                  <p className="mt-1.5 font-mono text-[9.5px] uppercase leading-tight tracking-[0.14em] text-ink-dim">
+                    {row.teamLeaderName ?? "No lead"}
+                  </p>
+                )}
               </td>
 
               <td className="px-4 py-3.5">
@@ -849,7 +1188,13 @@ function CohortBody({
                 )}
               >
                 <td colSpan={7} className="px-5 pb-7 pt-1 sm:pl-[68px] sm:pr-8">
-                  <WrittenWork row={row} />
+                  {/* Capped and scrollable: an ODPAC report has no length
+                      limit worth relying on, and one long one used to push
+                      every other joinee off the screen. The panel keeps its
+                      own scrollbar so the table around it stays put. */}
+                  <div className="max-h-[26rem] overflow-y-auto overscroll-contain pr-1">
+                    <WrittenWork row={row} />
+                  </div>
                 </td>
               </tr>
             )}
@@ -1065,9 +1410,6 @@ function WrittenWork({ row }: { row: AdminJoineeRow }) {
   const withWork = days.filter(
     (entry) => entry.report || entry.others.length > 0,
   );
-  const missing = days
-    .filter((entry) => !entry.report)
-    .map((entry) => entry.day.id);
   // Keys belonging to no day at all. Nothing writes these today, but a renamed
   // exercise key must not silently vanish from the one place a mentor reads.
   const loose = row.exercises.filter(
@@ -1084,23 +1426,41 @@ function WrittenWork({ row }: { row: AdminJoineeRow }) {
 
   return (
     <div className="space-y-3">
-      {withWork.map(({ day, report, others }) => (
-        <article
+      {/* One fold per day. Five stages of prose times three days is a wall of
+          text when a mentor usually wants one report, so each opens on demand.
+          `<details>` rather than component state: the repo already animates
+          `::details-content`, and a native disclosure is keyboard-operable and
+          findable by the browser's own in-page search. */}
+      {days.map(({ day, report, others }) => (
+        <details
           key={day.id}
-          className="rounded-xl border border-hairline bg-white/[0.02] px-4 py-4 sm:px-5"
+          className="group rounded-xl border border-hairline bg-white/[0.02] px-4 py-3 sm:px-5"
         >
-          <header className="flex flex-wrap items-baseline justify-between gap-x-5 gap-y-1 border-b border-hairline/70 pb-3">
-            <h4 className="font-mono text-[10px] uppercase tracking-[0.16em] text-brand-text">
-              Day {day.id} ODPAC
-              <span className="ml-2.5 normal-case tracking-normal text-ink-dim">
+          <summary className="flex cursor-pointer list-none flex-wrap items-baseline justify-between gap-x-5 gap-y-1 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-text">
+            <h4 className="flex items-baseline gap-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-brand-text">
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="size-2.5 shrink-0 text-ink-dim transition-transform duration-200 group-open:rotate-90"
+              >
+                <path d="M6 4l4 4-4 4" />
+              </svg>
+              ODPAC {day.id}
+              <span className="normal-case tracking-normal text-ink-dim">
                 {day.title}
               </span>
             </h4>
             <p className="font-mono text-[10px] text-ink-dim tabular-nums">
               {report ? formatDate(report.submittedAt) : "not filed"}
             </p>
-          </header>
+          </summary>
 
+          <div className="mt-3 border-t border-hairline/70 pt-1">
           {report ? (
             <OdpacStages body={report.body} />
           ) : (
@@ -1120,12 +1480,13 @@ function WrittenWork({ row }: { row: AdminJoineeRow }) {
                   {formatDate(exercise.submittedAt)}
                 </span>
               </p>
-              <p className="mt-2 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-muted">
+              <p className="mt-2 whitespace-pre-wrap break-words text-[13.5px] leading-relaxed text-ink-muted">
                 {exercise.body}
               </p>
             </div>
           ))}
-        </article>
+          </div>
+        </details>
       ))}
 
       {loose.map((exercise) => (
@@ -1139,18 +1500,13 @@ function WrittenWork({ row }: { row: AdminJoineeRow }) {
               {formatDate(exercise.submittedAt)}
             </span>
           </p>
-          <p className="mt-2 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-muted">
+          <p className="mt-2 whitespace-pre-wrap break-words text-[13.5px] leading-relaxed text-ink-muted">
             {exercise.body}
           </p>
         </article>
       ))}
 
-      {missing.length > 0 && (
-        <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-dim">
-          No ODPAC report yet for{" "}
-          {missing.map((dayId) => `Day ${dayId}`).join(", ")}
-        </p>
-      )}
+
     </div>
   );
 }
@@ -1183,7 +1539,7 @@ function OdpacStages({ body }: { body: string }) {
             </dt>
             <dd
               className={cn(
-                "mt-1.5 whitespace-pre-wrap text-[13.5px] leading-relaxed",
+                "mt-1.5 whitespace-pre-wrap break-words text-[13.5px] leading-relaxed",
                 text ? "text-ink-muted" : "text-ink-dim/70",
               )}
             >

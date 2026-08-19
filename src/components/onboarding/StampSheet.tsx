@@ -60,10 +60,12 @@ const clamp = (value: number, min: number, max: number) =>
 const SCATTER_SPREAD_X = 0.8;
 
 /**
- * Row centres by row count, in % of the plate's height. Hand-tuned rather
- * than derived: a stamp is a box PLUS a caption below it, so rows need more
- * clearance than columns - the three-row page runs nearly edge to edge or
- * the middle row's boxes bury the top row's captions.
+ * Row centres by row count, in % of the plate's height. Hand-tuned for the
+ * common depths - a stamp is a box PLUS a caption below it, so rows need
+ * more clearance than columns; deeper pages fall back to even spacing over
+ * the same 16-84 span. Every row count MUST resolve to `rows` distinct
+ * bands: clamping a fourth row onto a three-row table is how Day 2's last
+ * stamps once printed on top of the row above.
  */
 const SCATTER_ROW_BANDS: Record<number, readonly number[]> = {
   1: [50],
@@ -71,21 +73,30 @@ const SCATTER_ROW_BANDS: Record<number, readonly number[]> = {
   3: [16, 50, 84],
 };
 
+function scatterRowBands(rows: number): readonly number[] {
+  return (
+    SCATTER_ROW_BANDS[rows] ??
+    Array.from({ length: rows }, (_, row) => 16 + (68 * row) / (rows - 1))
+  );
+}
+
 /**
  * Where a stamp lands on a scattered page: the page is cut into a loose grid
  * of cells (so nothing overlaps) and each stamp drifts a hashed distance off
  * its cell centre - the way real entry stamps wander around a passport page
  * rather than queueing along the top. Jitter is kept smaller than the gap
- * between cells, so neighbours can kiss but never pile up.
+ * between cells, so neighbours can kiss but never pile up. Busier pages take
+ * a fourth column rather than a fourth row: the plate is wider than it is
+ * tall, so depth costs legibility long before width does.
  */
 function scatterPosition(stampId: string, index: number, total: number) {
-  const cols = total <= 4 ? 2 : 3;
+  const cols = total <= 4 ? 2 : total <= 9 ? 3 : 4;
   const rows = Math.max(1, Math.ceil(total / cols));
   const col = index % cols;
   const row = Math.floor(index / cols);
-  const bands = SCATTER_ROW_BANDS[rows] ?? SCATTER_ROW_BANDS[3];
+  const bands = scatterRowBands(rows);
   const cx = 50 + (((col + 0.5) / cols) * 100 - 50) * SCATTER_SPREAD_X;
-  const cy = bands[Math.min(row, bands.length - 1)];
+  const cy = bands[row];
   const jx = (hash01(`${stampId}:x`) - 0.5) * (26 / cols);
   const jy = (hash01(`${stampId}:y`) - 0.5) * (16 / rows);
   return {

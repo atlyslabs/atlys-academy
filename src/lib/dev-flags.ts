@@ -96,3 +96,20 @@ export const CALENDAR_GATE_ENABLED = true;
  * seconds, show the counter, then they can answer").
  */
 export const PAUSE_COUNTDOWN_ENABLED = true;
+
+/**
+ * Whether an admin's own profile is hidden from the admin desk.
+ *
+ * An admin signing in to READ the desk is not a joinee: they have no team
+ * leader and no progress, so leaving them in the cohort drags every completion
+ * rate down and puts a staff row in a screenshot meant to credit a team.
+ *
+ * `true`  = staff rows are hidden. The launch behaviour.
+ * `false` = staff rows are listed like anyone else.
+ *
+ * Temporarily `false` (2026-08-19): the only account on this deployment is an
+ * admin who is also the test joinee, so hiding staff empties the desk and there
+ * is nothing to check the dashboards against. Flip back to `true` before
+ * launch - see docs/pre-deploy.md.
+ */
+export const HIDE_STAFF_FROM_DESK = false;

@@ -1077,3 +1077,55 @@ dialog.trail-window::backdrop {
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
 }
+
+/* ---------------------------------------------------------------------------
+ * The report plate - the admin desk's analytics tab.
+ *
+ * A white island on the night stage, and deliberately so: the panel exists to
+ * be screenshotted into Slack to credit a team leader, and a near-black
+ * rectangle pasted into a chat thread reads as a glitch. Light also survives
+ * re-compression and other people's themes.
+ *
+ * Same mechanism as `.paper-plate` above: it RE-SCOPES tokens that already
+ * exist in `@theme` rather than inventing new ones, because Tailwind v4 only
+ * emits utilities for names declared there. That is what lets the markup inside
+ * keep writing `text-ink`, `border-hairline`, `text-gold` and have every one of
+ * them resolve to a white-surface value with no per-utility overrides.
+ *
+ * Contrast measured on #ffffff; every value clears WCAG AA at its printed size,
+ * and the micro-label floor (`ink-dim`, used at 10px) clears AA at 5.2:1.
+ * ------------------------------------------------------------------------- */
+
+.report-plate {
+  --color-page: #ffffff;
+  --color-raised: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f4f4f6;
+  --color-ink: #16161a; /* 18.0:1 */
+  --color-ink-secondary: #45444c; /*  9.6:1 */
+  --color-ink-muted: #55555f; /*  7.4:1 */
+  --color-ink-dim: #6b6b76; /*  5.3:1 - the floor, for 10px micro-labels */
+  --color-hairline: rgb(22 22 26 / 0.12);
+  --color-hairline-lit: rgb(22 22 26 / 0.24);
+  --color-line: #e4e4e8;
+  --color-brand: #3a40c2; /*  7.8:1 - in-progress fills and meters */
+  --color-brand-hover: #2f35ad;
+  --color-brand-text: #3a40c2;
+  --color-accent: #3a40c2;
+  --color-accent-soft: #eef0fe;
+  --color-complete: #0f7a46; /*  5.4:1 - the milestone tick */
+  --color-badge-green: #0f7a46;
+  --color-badge-green-soft: #e6f2ea;
+  --color-gold: #7a5c0a; /*  6.2:1 - reserved for a whole thing finished */
+  --color-error: #b3261e; /*  6.5:1 - a mark below the pass line */
+  --color-badge-coral: #b3261e;
+  --color-badge-amber-soft: #fbf3dd;
+
+  background: #ffffff;
+  color: var(--color-ink);
+  /* No backdrop-filter: a screenshot of a blurred plate picks up whatever was
+     behind it, and this plate is meant to travel. */
+  box-shadow:
+    inset 0 0 0 1px rgb(22 22 26 / 0.08),
+    0 18px 50px rgb(0 0 0 / 0.45);
+}

@@ -1,7 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
-import { ALLOWED_EMAIL_DOMAIN, isAuthConfigured } from "@/lib/auth/config";
+import {
+  ALLOWED_EMAIL_DOMAIN,
+  isAdminEmail,
+  isAuthConfigured,
+} from "@/lib/auth/config";
+import { teamLeaderRoster } from "@/server/onboarding/store";
+import { SignInForm } from "@/components/auth/SignInForm";
 
 export const metadata = {
   title: "Sign in · Atlys Academy",
@@ -15,29 +21,20 @@ const ERROR_COPY: Record<string, string> = {
   Verification: "That sign-in link has expired. Try again.",
 };
 
-/**
- * Placeholder roster of team leaders. Swap for the real list (or a fetch)
- * once the org chart is wired up - the values are what we persist.
- */
-const TEAM_LEADERS = [
-  "placeholder_1",
-  "placeholder_2",
-  "placeholder_3",
-  "placeholder_4",
-  "placeholder_5",
-  "placeholder_6",
-] as const;
-
 /** How long the joinee's answers ride along in cookies (one year). */
 const PROFILE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
- * Stash the name + team leader before we hand off to Google. OAuth bounces the
- * browser to Google and back, so anything typed here has to survive a full
- * round-trip - cookies do, component state does not.
+ * Stash the name, role and (for presales) team leader before we hand off to
+ * Google. OAuth bounces the browser to Google and back, so anything typed here
+ * has to survive a full round-trip - cookies do, component state does not.
+ *
+ * Admins have no team leader, so we only persist one for presales and clear any
+ * value a previous presales attempt left behind.
  */
 async function persistProfile(formData: FormData) {
   const name = (formData.get("name") ?? "").toString().trim();
+  const role = (formData.get("role") ?? "").toString().trim();
   const teamLeader = (formData.get("teamLeader") ?? "").toString().trim();
 
   const store = await cookies();
@@ -47,15 +44,22 @@ async function persistProfile(formData: FormData) {
     sameSite: "lax" as const,
   };
   if (name) store.set("onboarding.name", name, opts);
-  if (teamLeader) store.set("onboarding.teamLeader", teamLeader, opts);
+  if (role) store.set("onboarding.role", role, opts);
+
+  if (role === "presales" && teamLeader) {
+    store.set("onboarding.teamLeader", teamLeader, opts);
+  } else {
+    store.delete("onboarding.teamLeader");
+  }
 }
 
 /**
  * Sign-in: the cold open's lockup box made permanent, with the light beam
- * walking its frame. The joinee names themselves and picks their team leader,
- * then continues through Google below. Every auth decision here - the
- * not-configured escape hatch, the already-signed-in redirect, the domain
- * restriction and the open-redirect guard - is unchanged from before.
+ * walking its frame. The joinee picks a role, names themselves, and - if they
+ * are a presales associate - their team leader, then continues through Google
+ * below. Admins skip the team-leader question and, once signed in, land on the
+ * admin desk instead of the journey. The domain restriction and the
+ * open-redirect guard are unchanged.
  */
 export default async function SignInPage({
   searchParams,
@@ -68,7 +72,13 @@ export default async function SignInPage({
   // Read anything a previous attempt saved so the fields aren't blank on retry.
   const store = await cookies();
   const savedName = store.get("onboarding.name")?.value ?? "";
+  const savedRole = store.get("onboarding.role")?.value ?? "";
   const savedLeader = store.get("onboarding.teamLeader")?.value ?? "";
+
+  // The live roster: whatever an admin has added on the desk, with the
+  // built-in list as the fallback. Read here rather than imported so a leader
+  // added a minute ago is already an option.
+  const teamLeaders = await teamLeaderRoster();
 
   // Nothing to sign in to yet - don't strand anyone behind a dead button.
   if (!isAuthConfigured) {
@@ -79,15 +89,18 @@ export default async function SignInPage({
           we&rsquo;ll carry it into the journey.
         </p>
 
-        <form
-          className="mt-8"
+        <SignInForm
           action={async (formData: FormData) => {
             "use server";
             await persistProfile(formData);
-            redirect("/onboarding");
+            const role = (formData.get("role") ?? "").toString().trim();
+            redirect(landingFor(role, "/onboarding"));
           }}
+          savedName={savedName}
+          savedRole={savedRole}
+          savedLeader={savedLeader}
+          teamLeaders={teamLeaders}
         >
-          <ProfileFields name={savedName} teamLeader={savedLeader} />
           <button
             type="submit"
             className="group mt-6 flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-hairline-lit px-6 text-[15px] font-medium text-ink transition-colors hover:border-ink-dim"
@@ -100,13 +113,17 @@ export default async function SignInPage({
               &rarr;
             </span>
           </button>
-        </form>
+        </SignInForm>
       </Shell>
     );
   }
 
-  // Already signed in: skip the page entirely.
-  if (await auth()) redirect(destination);
+  // Already signed in: skip the page entirely. A returning admin goes to the
+  // desk where they actually work; everyone else to their destination.
+  const existing = await auth();
+  if (existing) {
+    redirect(isAdminEmail(existing.user?.email) ? "/admin" : destination);
+  }
 
   return (
     <Shell>
@@ -127,16 +144,18 @@ export default async function SignInPage({
         </p>
       )}
 
-      <form
-        className="mt-8"
+      <SignInForm
         action={async (formData: FormData) => {
           "use server";
           await persistProfile(formData);
-          await signIn("google", { redirectTo: destination });
+          const role = (formData.get("role") ?? "").toString().trim();
+          await signIn("google", { redirectTo: landingFor(role, destination) });
         }}
+        savedName={savedName}
+        savedRole={savedRole}
+        savedLeader={savedLeader}
+        teamLeaders={teamLeaders}
       >
-        <ProfileFields name={savedName} teamLeader={savedLeader} />
-
         <button
           type="submit"
           className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-full bg-ink text-[15px] font-medium text-page transition-[background-color,transform] duration-200 hover:bg-ink-muted active:scale-[0.98]"
@@ -144,104 +163,10 @@ export default async function SignInPage({
           <GoogleMark />
           Continue with Google
         </button>
-      </form>
+      </SignInForm>
     </Shell>
   );
 }
-
-/**
- * The two identity fields shared by both branches: a name and the team-leader
- * dropdown. `required` keeps the browser from submitting an empty pass, so the
- * cookies we set are never blank.
- */
-function ProfileFields({
-  name,
-  teamLeader,
-}: {
-  name: string;
-  teamLeader: string;
-}) {
-  return (
-    <div className="space-y-4 text-left">
-      <div>
-        <label
-          htmlFor="name"
-          className="mb-1.5 block text-[13px] font-medium text-ink-muted"
-        >
-          Your name
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          required
-          autoComplete="name"
-          defaultValue={name}
-          placeholder="e.g. Sana Kapoor"
-          className={FIELD_CLASS}
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="teamLeader"
-          className="mb-1.5 block text-[13px] font-medium text-ink-muted"
-        >
-          Team leader
-        </label>
-        <div className="relative">
-          <select
-            id="teamLeader"
-            name="teamLeader"
-            required
-            defaultValue={teamLeader}
-            className={`${FIELD_CLASS} appearance-none pr-11 ${
-              teamLeader ? "" : "text-ink-dim"
-            }`}
-          >
-            <option value="" disabled style={OPTION_PLACEHOLDER_STYLE}>
-              Select your team leader
-            </option>
-            {TEAM_LEADERS.map((leader) => (
-              <option key={leader} value={leader} style={OPTION_STYLE}>
-                {leader}
-              </option>
-            ))}
-          </select>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-ink-dim"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path
-                d="M2.5 4.5L6 8l3.5-3.5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Shared field chrome so the input and select read as one control set. */
-const FIELD_CLASS =
-  "h-12 w-full rounded-xl border border-hairline-lit bg-white/[0.02] px-4 text-[15px] text-ink placeholder:text-ink-dim outline-none transition-colors focus:border-ink-dim";
-
-/**
- * The native <select> popup is drawn by the OS with a light background, so the
- * dark theme's near-white ink token would render white-on-white and vanish
- * until hovered. Pin the option colours to fixed dark-on-light values instead.
- */
-const OPTION_STYLE = { color: "#18181b", background: "#ffffff" } as const;
-const OPTION_PLACEHOLDER_STYLE = {
-  color: "#71717a",
-  background: "#ffffff",
-} as const;
 
 /**
  * Only ever redirect to a path inside this app. Without this, `?next=` is an
@@ -252,6 +177,16 @@ function safeDestination(next: string | undefined): string {
   if (!next) return "/onboarding";
   if (!next.startsWith("/") || next.startsWith("//")) return "/onboarding";
   return next;
+}
+
+/**
+ * Where a just-identified joinee lands. Admins go straight to the desk;
+ * everyone else to the journey (or the deep-link they were headed for). The
+ * role is self-declared, so `/admin` still gates on the real admin allowlist -
+ * a mis-picked "Admin" simply bounces off it back to the journey.
+ */
+function landingFor(role: string, fallback: string): string {
+  return role === "admin" ? "/admin" : fallback;
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

@@ -3,7 +3,15 @@ create table if not exists public.profiles (
   google_sub text not null unique,
   email text not null unique,
   full_name text,
+  team_leader text,
+  role text,
   cohort_date date not null default current_date,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.team_leaders (
+  id text primary key,
+  name text not null,
   created_at timestamptz not null default now()
 );
 
@@ -56,6 +64,9 @@ create table if not exists public.app_state (
 
 
 alter table public.app_state add column if not exists avatar jsonb;
+alter table public.profiles add column if not exists team_leader text;
+alter table public.profiles add column if not exists role text;
+alter table public.team_leaders enable row level security;
 alter table public.profiles enable row level security;
 alter table public.progress_items enable row level security;
 alter table public.quiz_attempts enable row level security;

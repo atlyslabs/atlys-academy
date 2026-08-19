@@ -65,9 +65,13 @@ async function upload(state: ProgressState): Promise<void> {
     if (!response.ok) {
       // A rejected upload (validation, expired session) must not be
       // invisible: the state is safe locally, but the manager's view stops
-      // moving. Say so where a developer will look.
+      // moving. Say so where a developer will look - and say WHY. A bare
+      // status turned a one-field validation failure into days of silent
+      // non-syncing, because the screen kept reporting everything as saved.
+      const detail = await response.text().catch(() => "");
       console.warn(
         `[progress] sync rejected with ${response.status}; kept locally, will retry on the next change`,
+        detail.slice(0, 500),
       );
     }
   } catch {
