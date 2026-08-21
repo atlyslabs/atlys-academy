@@ -53,7 +53,7 @@ export const DAYS: readonly Day[] = [
         key: "day1.request_tool_access",
         label: "Request every tool on the travel kit",
         detail:
-          "Cadence, Freshdesk, Freshchat, Exotel, WT, and the rest. Chase these today.",
+          "Cadence, Freshchat, Walkie Talkie, Notion. Chase these today.",
         accessNeeded: true,
       },
       {

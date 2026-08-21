@@ -40,11 +40,6 @@ export const TOOL_MATCH_PAIRS: readonly ToolMatchPair[] = [
     job: "Find the glossary or a process doc",
   },
   {
-    id: "exotel",
-    tool: "Exotel",
-    job: "Take a call, or find a call recording",
-  },
-  {
     id: "whatsapp",
     tool: "WhatsApp groups",
     job: "Where Ops, Product and Sales actually talk",

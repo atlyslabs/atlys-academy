@@ -146,9 +146,11 @@ from us and pushes to Slack.
 
 Still needed:
 
-- **When should it fire?** The worker is set to 19:00 IST as a placeholder, and
-  covers all active joinees in one message. Confirm the time, and whether one
-  message per joinee is wanted instead. → ______
+- ✅ **When should it fire?** **09:00 IST, covering the previous day** (decided
+  21 Aug 2026). Day 1's report lands on Day 2 morning, 90 minutes before the
+  10:30 unlock, so a mentor can act on it before the joinee starts the next day.
+  Still one message covering all active joinees, not one per joinee. The cron
+  itself ships disabled — see `worker/README.md` § Go live.
 - **Which channel?** A private one, because the report carries joinees' verbatim
   writing. A DM to Shovan instead would need a bot token and a real scope grant
   rather than a webhook, and nobody else could find the history. → ______

@@ -21,11 +21,6 @@ export const ANSWERS: Record<QuizSlug, Record<QuestionId, AnswerKey>> = {
       explanation:
         "Customers do not come to buy a visa, they come to stop being afraid of one. What removes the fear is the things we can actually be held to (a committed delivery date we are accountable to, a published refund policy, a route that can be filed), not a confident tone. New joiners miss this two ways: treating the conversation as order processing, and reaching for false reassurance, which only moves the fear further down the line.",
     },
-    "d1.q7": {
-      correct: "a",
-      explanation:
-        "Roughly one in five conversions are destinations that are visa-free or near-free for an Indian passport; together they produce almost none of the revenue while consuming real agent hours. The hard countries (US, UK, Schengen, Canada, Japan, Korea, China) are where the value is and where the customer most needs a competent human. Grading a customer by their fee is forbidden; choosing where your own hours go is a different question.",
-    },
     "d1.q8": {
       correct: "a",
       explanation:
@@ -56,6 +51,11 @@ export const ANSWERS: Record<QuizSlug, Record<QuestionId, AnswerKey>> = {
       explanation:
         "Fabricated documents get customers banned, not just refused, so this is a walk-away with a flag: immediate, and not a negotiation. Asking what else exists in their name is the right move for someone who is *worried* their balance is weak; it is no longer the move once they have asked you to change what a document says. Leaving the decision with them is the same red line with your fingerprints wiped off it.",
     },
+    "d1.q16": {
+      correct: "a",
+      explanation:
+        "Two minutes is the cap. Before any hold you state the reason, give a two-minute timeframe and ask permission; if it runs over, you come back, buy more time, and thank them on return. Staying off the line to get the complete answer is the tempting one and it is wrong: the guest cannot tell the difference between you working and you having forgotten them. Transferring turns a hold into a deflection, which is a separate flag. And \"three minutes is normal\" is the belief the standard exists to correct. Failing to seek permission before a hold is one of the eight QA-flagged behaviours on its own.",
+    },
     "d1.q14": {
       correct: "a",
       explanation:
@@ -74,12 +74,7 @@ export const ANSWERS: Record<QuizSlug, Record<QuestionId, AnswerKey>> = {
     "d4.q2": {
       correct: "a",
       explanation:
-        "Bugs are Product. Knowing which team owns which decision is the point of Day 4.",
-    },
-    "d4.q4": {
-      correct: "a",
-      explanation:
-        "The flowchart is for you. Its value is that you stop having to ask who owns the next step.",
+        "Bugs are Product: feature clarity, bugs and roadmap are their desk. Ops owns visa processing, timelines and exceptions. Knowing which team owns which decision is the difference between routing a problem and sitting on it.",
     },
     "d4.q7": {
       correct: "a",

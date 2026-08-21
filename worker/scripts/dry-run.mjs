@@ -4,12 +4,11 @@ const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 const token = process.env.REPORT_TOKEN ?? "";
 const webhook = process.env.SLACK_WEBHOOK_URL ?? "";
 
-// The report's day boundary is a working day in India, not UTC.
-const date =
-  process.env.REPORT_DATE ??
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
-    new Date(),
-  );
+// The report's day boundary is a working day in India, not UTC - and the
+// scheduled run covers the PREVIOUS day, so this default matches the cron
+// rather than the calendar. Set REPORT_DATE=YYYY-MM-DD to report any other day
+// (that is also how a missed day is backfilled).
+const date = process.env.REPORT_DATE ?? previousIstDay();
 const MAX_BLOCKS = 45;
 
 if (!token) {
@@ -90,4 +89,12 @@ function hint(status) {
 function fail(message) {
   console.error(`\n✗ ${message}`);
   process.exit(1);
+}
+
+/** Yesterday as a YYYY-MM-DD IST date. Mirrors `istReportDate` in src/index.ts. */
+function previousIstDay() {
+  const dayBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+    dayBefore,
+  );
 }

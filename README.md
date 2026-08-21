@@ -61,16 +61,19 @@ activity counts and written exercise answers. Access is Google-sign-in only,
 restricted to `ADMIN_EMAILS` (default `shovan@atlys.com`); there is
 deliberately no password fallback, so it is unreachable until OAuth keys exist.
 
-`GET /api/onboarding/admin/daily-report` returns the end-of-day report as JSON
-plus ready-to-post Slack Block Kit blocks (admin session, or `x-report-token`
-header matching `REPORT_TOKEN`). It reports facts — scores, completions, verbatim
+`GET /api/onboarding/admin/daily-report` returns one day's report as JSON plus
+ready-to-post Slack Block Kit blocks (admin session, or `x-report-token` header
+matching `REPORT_TOKEN`). It reports facts — scores, completions, verbatim
 writing — not generated summaries. `date` is an **IST** calendar day, defaulting
 to today in IST, because an Indian working evening straddles two UTC dates.
 
 The cron that posts it lives in [`worker/`](worker/README.md) — a Cloudflare
 scheduled worker that pulls this endpoint and posts the blocks to a Slack
-webhook. It is separate from the app because a request-driven app has no timer,
-and because it keeps the Slack credential out of the public web app.
+webhook. It fires at **09:00 IST and reports the previous day**, so Day 1's
+report is in the channel before Day 2 unlocks at 10:30. It is separate from the
+app because a request-driven app has no timer, and because it keeps the Slack
+credential out of the public web app. The schedule currently ships disabled —
+`worker/README.md` has the one-line go-live step.
 
 ## Database
 

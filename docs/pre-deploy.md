@@ -66,6 +66,25 @@ default.
 **Do:** set `AUTH_URL` (or `AUTH_TRUST_HOST=true`) in production and add it to
 `.env.example`.
 
+### 1.5 The Slack report cron is disabled
+
+`crons` in `worker/wrangler.toml` is `[]`, so nothing posts. The worker, the
+endpoint and the message are all built and tested; only the schedule is off.
+
+The schedule is **09:00 IST, reporting the previous day** (`30 3 * * *` in UTC,
+paired with `istReportDate()` in `worker/src/index.ts`). Day 1's report lands on
+Day 2 morning, 90 minutes ahead of the 10:30 unlock, so a mentor can act on it
+before the joinee starts the next day. Changed from 19:00-same-day on
+21 Aug 2026.
+
+Those two values have to move together. A 9am cron asking for "today" reports a
+day 30 minutes old and posts an empty message every morning.
+
+**Do:** work through `worker/README.md` § Go live — it is one line in
+`wrangler.toml` plus `npm run deploy`, with the four things that must be true
+first (launch flags, `APP_URL`, secrets, a `--preview` dry run against the
+deployed app).
+
 ---
 
 ## 2. Security

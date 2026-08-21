@@ -8,14 +8,28 @@ name = "onboarding-daily-report"
 main = "src/index.ts"
 compatibility_date = "2026-08-04"
 
-# Cron triggers run in UTC, always. 13:30 UTC = 19:00 IST.
+# Cron triggers run in UTC, always. 03:30 UTC = 09:00 IST.
 # Change both this and the comment together, or the next reader will be misled.
+# India has no DST, so a fixed UTC cron holds 09:00 IST all year.
 #
-# DISABLED while the report is still being tested. An empty list is not the same
-# as deleting this block: on deploy, `crons = []` clears any schedule already
-# registered on the Worker, whereas omitting [triggers] leaves it running. Keep
-# the empty list until the report should actually go out.
-# To re-enable: crons = ["30 13 * * *"]
+# 09:00 IST, and the report covers the PREVIOUS IST day - so Day 1's report
+# lands on Day 2 morning, 90 minutes before the 10:30 unlock. The worker picks
+# the date itself (`istReportDate` in src/index.ts); moving the cron without
+# moving that, or the reverse, silently reports the wrong day.
+#
+# The day field is `0,2-6`: Sunday plus Tuesday-Saturday, i.e. EVERY DAY EXCEPT
+# MONDAY. The office runs Mon-Sat, and each run reports the day before, so the
+# Monday run is the only one with nothing to cover - it would report Sunday.
+# Cron numbers the week from Sunday, so a plain `2-0` range does not exist and
+# Sunday has to be listed on its own.
+#
+# DISABLED until launch. An empty list is not the same as deleting this block: on
+# deploy, `crons = []` clears any schedule already registered on the Worker,
+# whereas omitting [triggers] leaves it running. Keep the empty list until the
+# report should actually go out.
+#
+# To go live:  crons = ["30 3 * * 0,2-6"]
+# Full checklist in README.md § Go live.
 [triggers]
 crons = []
 
@@ -24,7 +38,7 @@ crons = []
 APP_URL = "http://localhost:3000"
 
 # Without this, a failed run is only visible in a live `wrangler tail` session
-# that nobody is watching at 7pm.
+# that nobody is watching at 9am.
 [observability]
 enabled = true
 

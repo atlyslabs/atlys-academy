@@ -7,13 +7,18 @@ import { PASS_THRESHOLD } from "@/content/onboarding/quiz";
 import type { AdminJoineeRow } from "./store";
 
 /**
- * The end-of-day report, as Slack Block Kit.
+ * One day's cohort report, as Slack Block Kit.
  *
- * Read by one person on a phone at 7pm, so it is built to be skimmed: a
- * headline count, then one card per joinee, then that joinee's ODPAC report
+ * Read by one person on a phone at 9am the morning AFTER the day it covers, in
+ * the gap before the next day unlocks at 10:30 - so it is built to be skimmed:
+ * a headline count, then one card per joinee, then that joinee's ODPAC report
  * underneath it. Dividers do the separating - without them each joinee's
  * summary runs straight into the previous one's written work and the message
  * reads as a wall of text.
+ *
+ * Every date here is `forDate`, the day being reported on. Nothing in the copy
+ * says "today", because to the reader it is yesterday - the caller decides which
+ * day, and the scheduled worker always asks for the previous one.
  */
 
 type SlackText = { type: "mrkdwn" | "plain_text"; text: string };
@@ -84,12 +89,12 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
   ];
 
   if (active.length === 0) {
-    blocks.push(section("No joinee activity today."));
+    blocks.push(section("No joinee activity on this day."));
     return { date: forDate, joinees: rows, activeToday: 0, slackBlocks: blocks };
   }
 
-  const filed = active.filter((row) => odpacToday(row, start, end).length > 0);
-  const missing = active.filter((row) => odpacToday(row, start, end).length === 0);
+  const filed = active.filter((row) => odpacOn(row, start, end).length > 0);
+  const missing = active.filter((row) => odpacOn(row, start, end).length === 0);
 
   blocks.push(
     context(
@@ -99,14 +104,14 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
   );
   if (missing.length > 0) {
     blocks.push(
-      context(`:warning:  No ODPAC yet: ${missing.map(nameOf).join(", ")}`),
+      context(`:warning:  ODPAC not filed: ${missing.map(nameOf).join(", ")}`),
     );
   }
 
   for (const row of active) {
     blocks.push(divider());
 
-    const reports = odpacToday(row, start, end);
+    const reports = odpacOn(row, start, end);
     // A blank line under the name, and wide separators between the numbers.
     // Both are deliberate: this is the line that was unreadable when it was a
     // single run-on string.
@@ -121,14 +126,14 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     lines.push(
       reports.length > 0
         ? `ODPAC:   filed ${reports.map((r) => istTime(r.submittedAt)).join(", ")}`
-        : "ODPAC:   *not filed today*",
+        : "ODPAC:   *not filed*",
     );
 
     blocks.push(section(truncate(lines.join("\n"), BLOCK_CHARS)));
 
     // Short answers ride under the card as small grey text, so they do not
     // compete with the ODPAC report below them.
-    for (const written of otherWritingToday(row, start, end)) {
+    for (const written of otherWritingOn(row, start, end)) {
       blocks.push(
         context(`_${written.key}_ — ${truncate(written.body, SHORT_EXERCISE_CHARS)}`),
       );
@@ -137,6 +142,9 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     for (const report of reports) blocks.push(odpacBlock(report));
   }
 
+  // `activeToday` counts activity on `forDate`, not on the day this is called.
+  // The name is the published field the worker and dry-run script already read;
+  // renaming it buys nothing and breaks a deployed worker mid-rollout.
   return {
     date: forDate,
     joinees: rows,
@@ -154,13 +162,13 @@ function isOdpac(exerciseKey: string): boolean {
   return exerciseKey.endsWith(".odpac");
 }
 
-function odpacToday(row: AdminJoineeRow, start: number, end: number): Written[] {
+function odpacOn(row: AdminJoineeRow, start: number, end: number): Written[] {
   return row.exercises.filter(
     (e) => isOdpac(e.key) && within(e.submittedAt, start, end),
   );
 }
 
-function otherWritingToday(
+function otherWritingOn(
   row: AdminJoineeRow,
   start: number,
   end: number,

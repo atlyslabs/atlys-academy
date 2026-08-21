@@ -1,3 +1,4 @@
+import { DAYS } from "./days";
 import type { Quiz, QuizSlug } from "./types";
 
 
@@ -5,7 +6,7 @@ export const PASS_THRESHOLD = 0.7;
 
 const day1: Quiz = {
   slug: "day1",
-  title: "Day 1 · Welcome",
+  title: `Day 1 · ${DAYS[0].title}`,
   dayId: 1,
   questions: [
     {
@@ -194,6 +195,32 @@ const day1: Quiz = {
       ],
     },
     {
+      id: "d1.q16",
+      prompt:
+        "You have put a guest on hold to check something, and it has run to three minutes. What does the standard require?",
+      options: [
+        {
+          id: "a",
+          label:
+            "Come back on the line, buy more time, and thank them on return: a hold is capped at two minutes before you check in",
+        },
+        {
+          id: "b",
+          label:
+            "Stay off the line until you have the complete answer, so you only interrupt them once",
+        },
+        {
+          id: "c",
+          label:
+            "Come back, apologise, and transfer them to whoever can answer it",
+        },
+        {
+          id: "d",
+          label: "Nothing. Three minutes is within a normal hold",
+        },
+      ],
+    },
+    {
       id: "d1.q14",
       prompt:
         "A guest picks up your outbound call. What are the first words out of your mouth?",
@@ -292,7 +319,7 @@ const day1: Quiz = {
 
 const day2: Quiz = {
   slug: "day2",
-  title: "Day 2 · Product & Customer Basics",
+  title: `Day 2 · ${DAYS[1].title}`,
   dayId: 2,
   questions: [
     {
@@ -600,7 +627,7 @@ const day2: Quiz = {
 
 const day3: Quiz = {
   slug: "day3",
-  title: "Day 3 · Visa Deep Dive",
+  title: `Day 3 · ${DAYS[2].title}`,
   dayId: 3,
   // Day 3 is the US B1/B2 route, confirmed by the manager (Aug 2026).
   // `d3.q1`-`d3.q5` test process framing only, which is all the journey doc

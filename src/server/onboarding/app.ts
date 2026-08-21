@@ -204,9 +204,14 @@ const routes = app
   })
 
   /**
-   * The end-of-day report - facts only, plus ready-to-post Slack blocks. The
+   * One day's report - facts only, plus ready-to-post Slack blocks. The
    * scheduled worker in `worker/` pulls this once a day and posts the blocks to
    * a Slack webhook; the app itself never talks to Slack.
+   *
+   * This endpoint reports whichever day it is asked for. Which day that is is
+   * the schedule's decision, not this handler's: the worker fires at 09:00 IST
+   * and asks for the previous IST day, so a day's report lands the next morning
+   * before the 10:30 unlock. See `worker/README.md`.
    *
    * Auth: an admin session, or the REPORT_TOKEN header for the automation.
    * While that env var is unset the token path is off entirely, so an empty
@@ -236,6 +241,10 @@ const routes = app
     if (!rows) return c.json({ error: "Database not configured" }, 503);
     // IST, not UTC: the report covers an Indian working day, and defaulting to
     // the server's UTC date would report the wrong one for anything after 18:30.
+    //
+    // Today is the default for a HUMAN opening this mid-day with no date. The
+    // worker never relies on it - it always passes `?date=` for the previous
+    // day - so changing this default would not change what Slack receives.
     const forDate = c.req.query("date") ?? istToday();
     return c.json(buildDailyReport(rows, forDate));
   });
