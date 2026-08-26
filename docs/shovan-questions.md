@@ -20,7 +20,7 @@ Reply against the numbers (e.g. "1.3 — …"). Partial answers are fine and use
 beyond the DS-160), 2.9 (AtlysProtect returns the service fee), 2.11 (Rejection
 Recovery, pay on approval), 2.13 (commit to the number on the country page), 2.15
 (the interview, from Snehasish), 8.3 (the Day 4 dashboard is WT — Walkie Talkie —
-and Devesh grants access, with a real member ID).
+and someone grants access to it).
 
 Day 3 now teaches six lessons rather than four: the DS-160 and the interview are
 new, and they are the first genuine US-route facts in the app. Its quiz is eleven
@@ -777,11 +777,11 @@ Standing directory:
 | Rejection reasons | Sameer | | Day 3 — 2.10, ask per country. 2.5 answered |
 | Appointment booking | Sahil | | Day 3 — 2.6, he is the POC |
 | Resubmission rules | Mukul | | Day 3 — 2.12 |
-| Walkie Talkie (WT) access | Devesh | `U08TSLL1VRC` | Day 4 — before the day starts |
+| Walkie Talkie (WT) access | *(name removed)* | | Day 4 — before the day starts |
 
-The four Day 3 names are already in the app's Day 3 panel with the DM button
-disabled, so only the member ID is outstanding for them. Devesh is the one entry
-with a live DM button.
+The four Day 3 names were in the app's Day 3 panel with the DM button
+disabled. That panel has since been cut back to the two people a joinee can
+actually reach, so none of these names appear in the app any more.
 
 **Slack member ID, not @handle** — looks like `U01AB2CD3EF`, found under *View
 full profile → ⋮ → Copy member ID*. Handles break when someone renames
@@ -789,7 +789,7 @@ themselves; member IDs don't, and only a member ID can open a DM directly.
 
 7.1 Is there a channel joinees should post in rather than DMing?
 7.2 *Partly resolved: Day 3 now has four named people, above, against one fact
-each. Devesh's ID for WT access is in hand. Still pending are the Day 3 four's member
+each. Still pending are the Day 3 four's member
 IDs, the Ops Lead and Growth/Design names for the two Day 3 Q&A hours, and
 Santosh's ID on Day 4. Until an ID arrives the app shows the person and disables
 the DM button rather than guessing at a handle.*
@@ -819,7 +819,7 @@ and how to ask** — not the link alone.
 |---|---|---|---|
 | Freshchat | | | |
 | Exotel | | | |
-| Retool (WT — Walkie Talkie) | Devesh (`U08TSLL1VRC`) | Slack DM | |
+| Retool (WT — Walkie Talkie) | *(name removed)* | Slack DM | |
 | Notion | | | |
 | Grafana | | | |
 | WhatsApp groups | | | |
@@ -853,8 +853,10 @@ That has been rewritten everywhere it appeared — the Day 4 lesson, the Day 1 t
 checklist, and the tool-matching drill, which had joinees matching WT to "look up
 what state an application is in".
 
-Access: WT is granted by **Devesh**, `U08TSLL1VRC`, and he stays on **Day 1**
-because Day 1 is the access day. **Who grants Cadence is not recorded anywhere** —
+Access: WT is granted by a named person on **Day 1**, because Day 1 is the
+access day. The name and Slack ID were removed from this doc in Aug 2026 along
+with the mentor panel entry, since who grants what is a rota question and a
+stale name sends a joinee to somebody who has moved team. **Who grants Cadence is not recorded anywhere** —
 that is now the highest-priority access gap, because Day 4 cannot be done without
 it. Freshdesk has the same problem. Both have been added to the Day 1 checklist
 with no granter named.
