@@ -247,7 +247,7 @@ src/
     error.tsx  not-found.tsx              # beige error states, never a blank page
     onboarding/
       layout.tsx                          # ProgressProvider for journey + quizzes
-      page.tsx                            # 5-day journey
+      page.tsx                            # 3-day journey
       quiz/[slug]/page.tsx                # quiz runner (prerendered per day)
     api/onboarding/[[...route]]/route.ts  # Hono catch-all
   content/onboarding/
