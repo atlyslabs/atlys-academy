@@ -1,11 +1,37 @@
 import type { DayId } from "./types";
 
-const SHOVAN = "U07TQMWHH0T";
+/**
+ * Who to follow on each day.
+ *
+ * Cut back to two people in Aug 2026. It used to list eleven entries across the
+ * three days - a subject-matter expert per topic, most of them with no Slack ID
+ * - and the ones without an ID rendered a disabled "ID pending" button, so more
+ * than half the panel was a list of people a joinee could read about and not
+ * reach. A directory of unreachable names is worse than a short list of
+ * reachable ones: it buries the two people who can actually answer.
+ *
+ * What is here now is the person who runs the academy and the joinee's own team
+ * leader. Everyone else - Ops, the US team, whoever grants a tool - is reached
+ * through one of those two, which is what happens in practice anyway.
+ *
+ * Day 3 has no entry at all, and that is deliberate rather than an omission:
+ * `stops.tsx` skips the "Your people" stop when a day's list is empty, so the
+ * day board simply does not show one.
+ */
+
+/** Komal Rawat, who runs the academy. The only real Slack ID on the panel. */
+const KOMAL = "U0BQHHVSWLD";
+
 export interface Mentor {
-  /** Real name, or a role description while the name is pending. */
+  /** Real name, or the role where the person differs per joinee. */
   name: string;
-  /** True when we only know the role, not the person. */
-  pending?: boolean;
+  /**
+   * Slack member ID, or null when there is nobody fixed to link to.
+   *
+   * Null is not a gap to be filled later - the only null here is the team
+   * leader, who is a different person for each joinee and is picked at sign-in.
+   * `MentorPanel` renders no button at all rather than a disabled one.
+   */
   slackMemberId: string | null;
   /** What to go to them for, so the DM opens with the right question. */
   owns: string;
@@ -14,70 +40,22 @@ export interface Mentor {
 export const MENTORS_BY_DAY: Record<DayId, Mentor[]> = {
   1: [
     {
-      name: "Shovan",
-      slackMemberId: SHOVAN,
+      name: "Komal Rawat",
+      slackMemberId: KOMAL,
       owns: "Everything Day 1: the intro meeting, tool access, and any question you are not sure who owns.",
     },
-    // Day 1 is the access day (source doc: "Tools to get access to (Day 1)"), so
-    // the person who grants WT belongs here, not on Day 4 where it gets used.
     {
-      name: "Devesh",
-      slackMemberId: "U08TSLL1VRC",
-      owns: "Access to Walkie Talkie (WT), the calling tool on your Day 1 list. Ask him about Cadence too while you are there: it is the dashboard Day 4 is actually built on, and nobody has recorded who grants it.",
+      name: "Your team leader",
+      slackMemberId: null,
+      owns: "Your day to day, and the first person to ask about anything on the floor. You chose them when you signed in.",
     },
   ],
   2: [
     {
-      name: "Shovan",
-      slackMemberId: SHOVAN,
+      name: "Your team leader",
+      slackMemberId: null,
       owns: "Tone, the pause rule, and the 30-minute sync at the end of the day.",
     },
   ],
-  3: [
-    {
-      name: "Shovan",
-      slackMemberId: SHOVAN,
-      owns: "Escalation paths, decision ownership, and the money you may put in writing.",
-    },
-    {
-      name: "Santosh",
-      slackMemberId: null,
-      owns: "Pipeline monitoring in Cadence, and the 1-hour sync.",
-    },
-    {
-      name: "Ops Lead",
-      pending: true,
-      slackMemberId: null,
-      owns: "The visa process itself: the 1-hour Q&A, and the five common failure points.",
-    },
-    {
-      name: "Growth/Design",
-      pending: true,
-      slackMemberId: null,
-      owns: "The 1-hour Q&A on what customers most need reassurance about.",
-    },
-    // Named against specific US-visa facts by Shovan, Aug 2026 (§2.4-2.6, 2.10,
-    // 2.12). They are not the day's mentors - they are the person to ask for one
-    // answer each, which is why `owns` reads as the question itself.
-    {
-      name: "Sameer",
-      slackMemberId: null,
-      owns: "The most common rejection reasons, in order. He has already answered the document question (for the US B1/B2 we need nothing from the guest but the DS-160), so ask him per country rather than re-asking that.",
-    },
-    {
-      name: "Sahil",
-      slackMemberId: null,
-      owns: "Appointment booking, as the POC for it: how a slot gets found, what actually drives the wait, and whether we can speed it up.",
-    },
-    {
-      name: "Mukul",
-      slackMemberId: null,
-      owns: "Resubmission rules.",
-    },
-    {
-      name: "Snehasish, or the US team",
-      slackMemberId: "U06DP5AE63G",
-      owns: "The US route in detail. What the app teaches on the DS-160 and the interview came from him, so he is who to ask when a guest raises something about the B1/B2 that the lessons do not cover.",
-    },
-  ],
+  3: [],
 };

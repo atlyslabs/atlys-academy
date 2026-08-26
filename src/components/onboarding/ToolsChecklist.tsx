@@ -14,11 +14,7 @@ export function ToolsChecklist() {
       items={TOOLS.map((tool) => ({
         key: tool.key,
         label: tool.name,
-        // Where we know who grants an account, it goes on the line with the
-        // request. Chasing access is the whole point of this checklist.
-        detail: tool.grantedBy
-          ? `${tool.purpose} Access from ${tool.grantedBy}.`
-          : tool.purpose,
+        detail: tool.purpose,
       }))}
     />
   );

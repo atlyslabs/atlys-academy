@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { DAYS } from "@/content/onboarding/days";
+import { DAYS, LAST_DAY_ID } from "@/content/onboarding/days";
 import { lessonsForDay } from "@/content/onboarding/lessons";
 import { MENTORS_BY_DAY } from "@/content/onboarding/mentors";
 import { PASS_THRESHOLD } from "@/content/onboarding/quiz";
@@ -12,11 +12,19 @@ import { UNLOCK_HOUR, UNLOCK_MINUTE } from "@/lib/dates";
 import { DRILL_COMPONENTS, DRILL_LABELS } from "@/lib/drill-registry";
 import { useProgress } from "@/lib/progress/provider";
 import {
+  drillAttemptsLeft,
+  isTerminalDrillStatus,
+  MAX_QUIZ_ATTEMPTS,
+  quizAttemptsLeft,
+  quizSettled,
+} from "@/lib/progress/attempts";
+import {
   bestAttempt,
   dayChecklistProgress,
   hasPassedQuiz,
   isItemDone,
 } from "@/lib/progress/selectors";
+import { hasEarnedVoucher, voucherBlockers } from "@/lib/progress/voucher";
 import { stampSheet } from "@/lib/progress/stamps";
 import type { ProgressState } from "@/lib/progress/types";
 import {
@@ -30,6 +38,7 @@ import { OdpacReport } from "@/components/onboarding/OdpacReport";
 import { MentorPanel } from "@/components/onboarding/MentorPanel";
 import { StampSheet } from "@/components/onboarding/StampSheet";
 import { ToolsChecklist } from "@/components/onboarding/ToolsChecklist";
+import { VoucherCard } from "@/components/onboarding/VoucherCard";
 
 const PASS_PERCENT = Math.round(PASS_THRESHOLD * 100);
 const UNLOCK_LABEL = `${UNLOCK_HOUR}:${String(UNLOCK_MINUTE).padStart(2, "0")}`;
@@ -60,7 +69,6 @@ export interface TrailStop {
 /** The trail for one day, in working order. */
 export function stopsForDay(day: Day): TrailStop[] {
   const lessons = lessonsForDay(day.id);
-  const readable = lessons.filter((lesson) => lesson.body !== null);
   const mentors = MENTORS_BY_DAY[day.id] ?? [];
 
   const stops: TrailStop[] = [
@@ -140,16 +148,13 @@ export function stopsForDay(day: Day): TrailStop[] {
       title: "The reading",
       kicker: "The day's teaching, page by page",
       teaser: (state) => {
-        const read = readable.filter(
+        const read = lessons.filter(
           (lesson) => lesson.itemKey in state.completedItems,
         ).length;
-        return readable.length > 0
-          ? `${read} of ${readable.length} read`
-          : `${lessons.length} pages`;
+        return `${read} of ${lessons.length} read`;
       },
       done: (state) =>
-        readable.length > 0 &&
-        readable.every((lesson) => lesson.itemKey in state.completedItems),
+        lessons.every((lesson) => lesson.itemKey in state.completedItems),
       render: () => <LessonSection dayId={day.id} />,
     });
   }
@@ -159,19 +164,25 @@ export function stopsForDay(day: Day): TrailStop[] {
     stops.push({
       key: `drill-${drillId}`,
       title: DRILL_LABELS[drillId],
-      kicker: "A drill - play it until it sticks",
+      kicker: "A drill - three plays to get it right",
       chromeless: true,
       teaser: (state) => {
         const result = state.drills[drillId];
         if (!result) return "Not attempted";
-        if (typeof result.score === "number" && result.maxScore)
-          return `${result.status} · ${result.score}/${result.maxScore}`;
-        return result.status;
+        const score =
+          typeof result.score === "number" && result.maxScore
+            ? `${result.status} · ${result.score}/${result.maxScore}`
+            : result.status;
+        const left = drillAttemptsLeft(state, drillId);
+        // Only worth saying while it is still actionable. "0 plays left" on a
+        // finished drill is noise; on an unfinished one it is the whole story,
+        // and `isTerminalDrillStatus` is what tells the two apart.
+        if (left === 0 && !isTerminalDrillStatus(result.status)) {
+          return `${score} · plays used`;
+        }
+        return left > 0 && left < 3 ? `${score} · ${left} left` : score;
       },
-      done: (state) => {
-        const status = state.drills[drillId]?.status;
-        return status === "passed" || status === "complete";
-      },
+      done: (state) => isTerminalDrillStatus(state.drills[drillId]?.status),
       render: () => <Drill />,
     });
   }
@@ -226,21 +237,49 @@ export function stopsForDay(day: Day): TrailStop[] {
     {
       key: "gate",
       title: "The gate",
-      kicker: `The day's quiz - ${PASS_PERCENT}% opens the way out`,
+      kicker: `The day's quiz - ${PASS_PERCENT}% opens the way out, ${MAX_QUIZ_ATTEMPTS} attempts`,
       teaser: (state) => {
+        const best = bestAttempt(state, day.slug);
         if (hasPassedQuiz(state, day.slug)) {
-          const best = bestAttempt(state, day.slug);
           return best ? `Passed · best ${best.score}/${best.maxScore}` : "Passed";
         }
-        const best = bestAttempt(state, day.slug);
-        return best
-          ? `Best ${best.score}/${best.maxScore} · below the line`
-          : "Not sat yet";
+        if (!best) return `Not sat yet · ${MAX_QUIZ_ATTEMPTS} attempts`;
+        const left = quizAttemptsLeft(state, day.slug);
+        // Saying "0 left" and stopping would read as a dead end. It is not one:
+        // the best score stands and the day still opens, so the teaser says so.
+        return left > 0
+          ? `Best ${best.score}/${best.maxScore} · ${left} ${left === 1 ? "try" : "tries"} left`
+          : `Best ${best.score}/${best.maxScore} · attempts used`;
       },
-      done: (state) => hasPassedQuiz(state, day.slug),
+      // Settled, not passed. A tick here means "done with", and after three
+      // attempts the joinee is done with it whether or not they cleared 70% -
+      // leaving it permanently untickable would be the one dead end the whole
+      // attempts policy exists to avoid.
+      done: (state) => quizSettled(state, day.slug),
       render: ({ now }) => <GatePanel day={day} now={now} />,
     },
   );
+
+  // The voucher, last, and only on the final day. It is the one stop that is
+  // about the whole academy rather than this day, so it sits after the gate -
+  // the joinee reaches it by finishing everything above it.
+  if (day.id === LAST_DAY_ID) {
+    stops.push({
+      key: "voucher",
+      title: "Your voucher",
+      kicker: "Earned at the end of the academy, redeemed with your team leader",
+      teaser: (state) =>
+        hasEarnedVoucher(state)
+          ? "Issued - copy it and go talk to your team leader"
+          : `${voucherBlockers(state).length} thing${voucherBlockers(state).length === 1 ? "" : "s"} left`,
+      done: (state) => hasEarnedVoucher(state),
+      render: () => (
+        <div className="p-4 sm:p-6">
+          <VoucherCard />
+        </div>
+      ),
+    });
+  }
 
   return stops;
 }
@@ -330,9 +369,11 @@ function GatePanel({ day, now }: { day: Day; now: Date }) {
           <p className="mt-2 max-w-[46ch] text-[14px] leading-relaxed text-ink-muted">
             {passed
               ? `Passed${best ? ` - best ${best.score}/${best.maxScore}` : ""}. The Boarded stamp is on the page.`
-              : best
-                ? `Best attempt so far: ${best.score}/${best.maxScore} - below the ${PASS_PERCENT}% line. Retries cost nothing.`
-                : `Pass at ${PASS_PERCENT}% or better to earn the Boarded stamp. Retries cost nothing.`}
+              : !best
+                ? `Pass at ${PASS_PERCENT}% or better to earn the Boarded stamp. You get ${MAX_QUIZ_ATTEMPTS} attempts.`
+                : quizAttemptsLeft(state, day.slug) > 0
+                  ? `Best attempt so far: ${best.score}/${best.maxScore} - below the ${PASS_PERCENT}% line. ${quizAttemptsLeft(state, day.slug)} of ${MAX_QUIZ_ATTEMPTS} ${quizAttemptsLeft(state, day.slug) === 1 ? "attempt" : "attempts"} left.`
+                  : `All ${MAX_QUIZ_ATTEMPTS} attempts used - best ${best.score}/${best.maxScore}, below the ${PASS_PERCENT}% line. That score stands and the journey carries on; talk it through with your team leader.`}
           </p>
         </div>
 

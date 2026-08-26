@@ -18,9 +18,7 @@ import { PointerDiorama } from "@/components/fx/PointerDiorama";
 
 const DAY_COUNT = DAYS.length;
 const DRILL_COUNT = new Set(DAYS.flatMap((day) => day.drills ?? [])).size;
-/** Placeholder lessons have no "mark as read" control, so they don't count. */
-const READABLE_LESSONS = LESSONS.filter((lesson) => lesson.body !== null);
-const LESSON_COUNT = READABLE_LESSONS.length;
+const LESSON_COUNT = LESSONS.length;
 const EMPTY = emptyProgress();
 
 const STORY = JOURNEY_LEGS.map((leg) => ({
@@ -77,7 +75,7 @@ export function EditionCover() {
   // `progress` only exists client-side, so the clock read cannot desync SSR.
   const currentDay = progress ? resumeDay(progress, gateDayKey()) : 1;
   const stamps = stampTotals(state);
-  const lessonsRead = READABLE_LESSONS.filter(
+  const lessonsRead = LESSONS.filter(
     (lesson) => lesson.itemKey in state.completedItems,
   ).length;
   const storyLine =

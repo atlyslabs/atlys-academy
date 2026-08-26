@@ -3,6 +3,7 @@ import "server-only";
 import { DAYS } from "@/content/onboarding/days";
 import { ODPAC_STAGES, parseOdpacBody } from "@/content/onboarding/odpac";
 import { PASS_THRESHOLD } from "@/content/onboarding/quiz";
+import { UNASSIGNED_TEAM_LEADER } from "@/content/onboarding/team-leaders";
 
 import type { AdminJoineeRow } from "./store";
 
@@ -55,6 +56,17 @@ const ODPAC_STAGE_CHARS = 240;
 /** Short written answers stay inline under the card, so they stay short. */
 const SHORT_EXERCISE_CHARS = 220;
 
+/**
+ * How long after their cohort date a joinee is still *expected* to be working.
+ *
+ * The course is three days; the rest absorbs holidays, a slow start, and a
+ * joinee who begins mid-week. Past this window someone who never finished stops
+ * being reported as idle - they are a roster problem by then, and naming them in
+ * the channel every morning for a month is exactly how this report turns into
+ * noise nobody reads.
+ */
+const EXPECTED_FOR_DAYS = 7;
+
 /** Today as a YYYY-MM-DD IST calendar date. `en-CA` formats in that order. */
 export function istToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -88,9 +100,36 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     },
   ];
 
+  // Who *should* have been working: still mid-course, and still inside the
+  // window where that is a reasonable expectation.
+  const expected = expectedOn(rows, forDate);
+  const activeEmails = new Set(active.map((row) => row.email));
+  const idle = expected.filter((row) => !activeEmails.has(row.email));
+
   if (active.length === 0) {
-    blocks.push(section("No joinee activity on this day."));
-    return { date: forDate, joinees: rows, activeToday: 0, slackBlocks: blocks };
+    // Nobody mid-course at all - everyone finished and no new intake has
+    // started. There is no one this report could be about, so it says so in one
+    // line rather than implying that a cohort sat idle.
+    if (expected.length === 0) {
+      blocks.push(section("*No new joinees* — nobody is mid-course."));
+      return emptyReport(forDate, rows, expected, idle, blocks);
+    }
+
+    // The opposite case, and the one worth waking up for: there IS a cohort
+    // mid-course and not one of them touched it. Naming them is the whole point
+    // - "no activity" alone gives the reader nothing to act on.
+    blocks.push(
+      context(
+        `*0* of ${expected.length} joinee${expected.length === 1 ? "" : "s"} mid-course were active`,
+      ),
+    );
+    blocks.push(
+      section(
+        `:warning:  *Nobody mid-course did anything on this day.*\n\n` +
+          idle.map((row) => idleLine(row, forDate)).join("\n"),
+      ),
+    );
+    return emptyReport(forDate, rows, expected, idle, blocks);
   }
 
   const filed = active.filter((row) => odpacOn(row, start, end).length > 0);
@@ -107,6 +146,16 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
       context(`:warning:  ODPAC not filed: ${missing.map(nameOf).join(", ")}`),
     );
   }
+  // Someone mid-course who did nothing at all never reaches the cards below,
+  // because those are built from `active`. Without this line they vanish from
+  // the report entirely on the day it most matters that someone notices.
+  if (idle.length > 0) {
+    blocks.push(
+      context(
+        `:zzz:  No activity, still mid-course: ${idle.map(nameOf).join(", ")}`,
+      ),
+    );
+  }
 
   for (const row of active) {
     blocks.push(divider());
@@ -118,10 +167,27 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     const stats =
       `${row.points} pts   ·   ${row.daysCompleted} of ${DAYS.length} days   ·   ` +
       `${row.activitiesDone} ${row.activitiesDone === 1 ? "activity" : "activities"}`;
-    const lines = [`*${nameOf(row)}*`, "", stats];
+    // The leader rides on the name line rather than a line of its own: it is
+    // part of who this row is, and one more line per joinee is a whole extra
+    // screen of scrolling on a phone once the cohort is real.
+    const lines = [
+      `*${nameOf(row)}*   ·   ${teamLeaderLabel(row)}`,
+      "",
+      stats,
+    ];
 
     const quizzes = quizLine(row);
     if (quizzes) lines.push(`Quizzes:   ${quizzes}`);
+
+    // The voucher only appears once it has been earned, and it goes on the
+    // joinee's own card rather than in a list of its own: the team leader
+    // redeems it in a conversation with that person, so the code belongs next
+    // to their name and their scores, which is the context that conversation
+    // needs. `store.ts` leaves it null until it is genuinely earned, so this
+    // line can never quote a code to somebody who has not finished.
+    if (row.voucherCode) {
+      lines.push(`Voucher:   \`${row.voucherCode}\`  · ready to redeem`);
+    }
 
     lines.push(
       reports.length > 0
@@ -149,11 +215,82 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     date: forDate,
     joinees: rows,
     activeToday: active.length,
+    expectedToday: expected.length,
+    idleToday: idle.length,
     slackBlocks: blocks,
   };
 }
 
 /* -------------------------------------------------------------------------- */
+
+/**
+ * The two no-activity outcomes share a shape; only their blocks differ.
+ *
+ * Both still publish `activeToday: 0`. The worker no longer decides anything
+ * from that number - every case here is worth posting - but the admin desk and
+ * the dry-run script both read it.
+ */
+function emptyReport(
+  forDate: string,
+  rows: AdminJoineeRow[],
+  expected: AdminJoineeRow[],
+  idle: AdminJoineeRow[],
+  blocks: SlackBlock[],
+) {
+  return {
+    date: forDate,
+    joinees: rows,
+    activeToday: 0,
+    expectedToday: expected.length,
+    idleToday: idle.length,
+    slackBlocks: blocks,
+  };
+}
+
+/**
+ * Joinees who should plausibly have been working on `forDate`: still short of
+ * finishing, and still inside `EXPECTED_FOR_DAYS` of their cohort date.
+ *
+ * A cohort date in the future relative to the reported day is excluded too - a
+ * joinee cannot be idle on a day before they were due to start.
+ */
+function expectedOn(rows: AdminJoineeRow[], forDate: string): AdminJoineeRow[] {
+  const day = Date.parse(`${forDate}T00:00:00+05:30`);
+  if (!Number.isFinite(day)) return [];
+
+  return rows.filter((row) => {
+    if (row.daysCompleted >= DAYS.length) return false;
+    const started = Date.parse(`${row.cohortDate}T00:00:00+05:30`);
+    if (!Number.isFinite(started)) return false;
+    const elapsed = (day - started) / 86_400_000;
+    return elapsed >= 0 && elapsed <= EXPECTED_FOR_DAYS;
+  });
+}
+
+/**
+ * One idle joinee, as a line the reader can act on: who, how far in, how long
+ * they have been on the roster, and whether they ever started at all.
+ */
+function idleLine(row: AdminJoineeRow, forDate: string): string {
+  const onDay = Math.min(row.daysCompleted + 1, DAYS.length);
+  const elapsed = daysBetween(row.cohortDate, forDate);
+  const joined =
+    elapsed === 0
+      ? "joined that day"
+      : elapsed === 1
+        ? "joined the day before"
+        : `joined ${elapsed} days earlier`;
+  const started = row.lastActivityAt ? "" : " · *never started*";
+  return `•  *${nameOf(row)}* — day ${onDay} of ${DAYS.length}, ${joined}${started}`;
+}
+
+/** Whole IST days from `from` to `to`. Negative when `from` is later. */
+function daysBetween(from: string, to: string): number {
+  const a = Date.parse(`${from}T00:00:00+05:30`);
+  const b = Date.parse(`${to}T00:00:00+05:30`);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return Math.round((b - a) / 86_400_000);
+}
 
 type Written = AdminJoineeRow["exercises"][number];
 
@@ -180,6 +317,25 @@ function otherWritingOn(
 
 function nameOf(row: AdminJoineeRow): string {
   return row.name ?? row.email;
+}
+
+/**
+ * The joinee's team leader, for the name line.
+ *
+ * `teamLeaderName` is already resolved against the live roster in `store.ts`, so
+ * nothing here has to know about the roster. Two of its three cases are worth
+ * printing rather than hiding:
+ *
+ * - **null** - no leader on file. Printed as "Unassigned" (the same word the
+ *   admin desk uses) instead of omitted, because a joinee whose sign-in did not
+ *   capture a leader is a gap someone should close, and a segment that silently
+ *   disappears is indistinguishable from a rendering fault.
+ * - **a raw id** - the leader was removed from the roster while joinees still
+ *   point at them. `store.ts` falls back to the id on purpose; a visible slug is
+ *   actionable in a way a blank is not.
+ */
+function teamLeaderLabel(row: AdminJoineeRow): string {
+  return `Team leader: ${row.teamLeaderName ?? UNASSIGNED_TEAM_LEADER}`;
 }
 
 /**

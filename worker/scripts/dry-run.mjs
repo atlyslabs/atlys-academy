@@ -39,9 +39,18 @@ try {
 
 const blocks = report.slackBlocks ?? [];
 console.log(
-  `← ${res.status} · ${report.activeToday} active on ${report.date} · ` +
+  `← ${res.status} · ${report.activeToday} active, ${report.idleToday ?? 0} idle ` +
+    `of ${report.expectedToday ?? 0} mid-course on ${report.date} · ` +
     `${blocks.length} blocks · ${report.joinees?.length ?? 0} rows in payload`,
 );
+
+// Mirrors `scheduled()` in src/index.ts. Every outcome the app produces is worth
+// posting - a day with nobody mid-course is one line, a day where a live cohort
+// went idle names them - so the only skip is a response carrying no blocks.
+if (blocks.length === 0) {
+  console.log("No blocks returned. Nothing to post — same as the cron would do.");
+  process.exit(0);
+}
 
 if (preview) {
   console.log("\n--- message that would be posted ---\n");

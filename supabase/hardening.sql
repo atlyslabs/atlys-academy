@@ -7,6 +7,13 @@
 -- once you know the data is clean.
 --
 -- Ordered by what bites first.
+--
+-- RUN `schema.sql` FIRST. It carries the additive `drill_results.attempts`
+-- column the three-attempt drill cap needs, and this file assumes the shape
+-- that file produces. Audited against the application on 26 Aug 2026: two
+-- statements here were stale and are fixed inline (the missing `team_leaders`
+-- revoke, and a status check that would have rejected the pause drill's
+-- 'rushed').
 
 
 -- ---------------------------------------------------------------------------
@@ -28,6 +35,9 @@ revoke all on public.quiz_attempts         from anon, authenticated;
 revoke all on public.drill_results         from anon, authenticated;
 revoke all on public.exercise_submissions  from anon, authenticated;
 revoke all on public.app_state             from anon, authenticated;
+-- Added later than the rest of this list, and missed by it until Aug 2026: the
+-- roster is editable from the admin desk and maps ids to real people's names.
+revoke all on public.team_leaders          from anon, authenticated;
 
 comment on table public.exercise_submissions is
   'Free-text joinee work, including the daily ODPAC report under key dayN.odpac. Service-role only: no RLS policy exists by design.';
@@ -67,13 +77,20 @@ alter table public.exercise_submissions
   add constraint exercise_body_length
   check (char_length(body) <= 20000) not valid;
 
--- `status` is free text today. These four are the only values the client
--- writes; anything else means a bug upstream and should not persist silently.
+-- `status` is free text today. These are the only values the client writes;
+-- anything else means a bug upstream and should not persist silently.
+--
+-- 'rushed' was MISSING from this list until Aug 2026, and its absence was a
+-- live bug waiting to happen: the pause drill writes `status: "rushed"` when a
+-- joinee sends before the countdown, and `not valid` skips existing rows but
+-- still enforces on every new write - so applying this file as it stood would
+-- have made that write fail from then on. Grep for `setDrillResult` before
+-- editing this list; the current set is complete, passed, rushed, in-progress.
 alter table public.drill_results
   drop constraint if exists drill_status_known;
 alter table public.drill_results
   add constraint drill_status_known
-  check (status in ('not-started', 'in-progress', 'complete', 'passed')) not valid;
+  check (status in ('not-started', 'in-progress', 'complete', 'passed', 'rushed')) not valid;
 
 -- The journey was scoped from five days to three. Nothing in the database
 -- stopped a stored `5`, and on read it resolves to no day at all. The app now

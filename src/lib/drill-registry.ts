@@ -3,11 +3,14 @@
 import type { ComponentType } from "react";
 import type { DrillId } from "@/content/onboarding/types";
 import { AnxietyWall } from "@/components/onboarding/AnxietyWall";
+import { ApacLoop } from "@/components/onboarding/ApacLoop";
 import { ConnectIslands } from "@/components/onboarding/ConnectIslands";
 import { DosDontsSorter } from "@/components/onboarding/DosDontsSorter";
+import { Ds160Consistency } from "@/components/onboarding/Ds160Consistency";
+import { EdgeCaseScenarios } from "@/components/onboarding/EdgeCaseScenarios";
 import { FlagSwipe } from "@/components/onboarding/FlagSwipe";
-import { LaneRunner } from "@/components/onboarding/LaneRunner";
-import { ObjectionLibrary } from "@/components/onboarding/ObjectionLibrary";
+import { FollowupRewrite } from "@/components/onboarding/FollowupRewrite";
+import { LeadStatusSort } from "@/components/onboarding/LeadStatusSort";
 import { OwnershipSort } from "@/components/onboarding/OwnershipSort";
 import { PauseDrill } from "@/components/onboarding/PauseDrill";
 import { ReframeDeck } from "@/components/onboarding/ReframeDeck";
@@ -24,25 +27,29 @@ import { ToolMatchPuzzle } from "@/components/onboarding/ToolMatchPuzzle";
  * Whatever the new day page looks like, it can mount a day's drills by
  * reading `day.drills` and looking each id up here.
  *
- * Every id in the `DrillId` union now resolves. The old map in `DayPanel`
- * covered nine of the twelve - `flag-swipe`, `anxiety-wall` and
- * `reframe-deck` had shipped as components but were never wired to a card, so
- * Day 1's flag drill and two of Day 2's were unreachable in the UI. They are
- * included here so the redesign starts from the full set.
+ * Four of these entries are the same component twice over, which is deliberate:
+ * `flag-swipe` and `ds160-consistency` are one swipe deck with two configs,
+ * `rewrite-chat` and `followup-rewrite` one writing drill, `ownership-sort` and
+ * `lead-status` one column sorter, `mock-scenarios` and `edge-cases` one
+ * branching scenario. Adding a drill is usually a content file and a four-line
+ * wrapper, not a new interaction.
  */
 export const DRILL_COMPONENTS: Record<DrillId, ComponentType> = {
   "pause-10s": PauseDrill,
   "dos-donts": DosDontsSorter,
   "rewrite-chat": RewriteExercise,
-  "objection-library": ObjectionLibrary,
+  "apac-loop": ApacLoop,
   "mock-scenarios": ScenarioBranch,
   "tool-match": ToolMatchPuzzle,
   "ownership-sort": OwnershipSort,
-  "ownership-run": LaneRunner,
   "connect-islands": ConnectIslands,
   "flag-swipe": FlagSwipe,
   "anxiety-wall": AnxietyWall,
   "reframe-deck": ReframeDeck,
+  "edge-cases": EdgeCaseScenarios,
+  "followup-rewrite": FollowupRewrite,
+  "lead-status": LeadStatusSort,
+  "ds160-consistency": Ds160Consistency,
 };
 
 /**
@@ -57,13 +64,16 @@ export const DRILL_LABELS: Record<DrillId, string> = {
   "pause-10s": "The ten-second pause",
   "dos-donts": "Do and don't",
   "rewrite-chat": "Rewrite the chat",
-  "objection-library": "Objection library",
+  "apac-loop": "Run the loop",
   "mock-scenarios": "Mock scenarios",
   "tool-match": "Match the tool",
   "ownership-sort": "Who owns it",
-  "ownership-run": "Ownership run",
-  "connect-islands": "Connect the teams",
+  "connect-islands": "Route the situation",
   "flag-swipe": "Spot the flag",
   "anxiety-wall": "The anxiety wall",
   "reframe-deck": "Reframe the objection",
+  "edge-cases": "When the playbook is wrong",
+  "followup-rewrite": "The two-minute follow-up",
+  "lead-status": "Move the lead",
+  "ds160-consistency": "The second reader",
 };

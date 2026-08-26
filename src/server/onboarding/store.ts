@@ -10,6 +10,7 @@ import { HIDE_STAFF_FROM_DESK } from "@/lib/dev-flags";
 import { calculatePoints } from "@/lib/progress/points";
 import { hasPassedQuiz } from "@/lib/progress/selectors";
 import { stampTotals } from "@/lib/progress/stamps";
+import { hasEarnedVoucher } from "@/lib/progress/voucher";
 import {
   type AvatarConfig,
   emptyProgress,
@@ -17,6 +18,7 @@ import {
   type QuizAttemptRecord,
 } from "@/lib/progress/types";
 import { getDb } from "./db";
+import { voucherCodeFor } from "./voucher";
 
 /**
  * Server persistence for joinee progress.
@@ -45,6 +47,30 @@ export interface JoineeIdentity {
   teamLeader?: string | null;
   /** "presales" or "admin", validated at the edge. Null when not picked. */
   role?: string | null;
+}
+
+/**
+ * True when a Supabase error is "drill_results.attempts is not there yet".
+ *
+ * Same tolerance as `isMissingProfileColumn` below, and it exists for the same
+ * reason: the column is added by an additive statement in
+ * `supabase/schema.sql`, and until someone runs it the reads and writes below
+ * would fail. Without this, a deploy of the three-attempt cap against an
+ * un-migrated database does not degrade - it breaks hard and silently. The
+ * SELECT returns Postgres 42703 and `drills.data` comes back null, so EVERY
+ * drill result vanishes from the loaded state; the upsert returns PostgREST
+ * PGRST204 and throws, so every progress sync 500s. Neither says why.
+ *
+ * With this, a database missing the column behaves exactly as it did before the
+ * cap existed: drill results load and save, and every drill reads as one play
+ * used (see `drillAttemptsUsed`), so nobody is locked out either.
+ */
+function isMissingAttemptsColumn(
+  error: { code?: string; message?: string } | null,
+): boolean {
+  if (!error) return false;
+  const known = error.code === "42703" || error.code === "PGRST204";
+  return known && (error.message ?? "").includes("attempts");
 }
 
 /**
@@ -165,30 +191,45 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
   const db = getDb();
   if (!db) return emptyProgress();
 
-  const [items, attempts, drills, exercises, appState] = await Promise.all([
-    db
-      .from("progress_items")
-      .select("item_key, completed_at")
-      .eq("profile_id", profileId),
-    db
-      .from("quiz_attempts")
-      .select("id, quiz_slug, score, max_score, passed, submitted_at")
-      .eq("profile_id", profileId)
-      .order("submitted_at", { ascending: true }),
-    db
+  const [items, attempts, drillsWithAttempts, exercises, appState] =
+    await Promise.all([
+      db
+        .from("progress_items")
+        .select("item_key, completed_at")
+        .eq("profile_id", profileId),
+      db
+        .from("quiz_attempts")
+        .select("id, quiz_slug, score, max_score, passed, submitted_at")
+        .eq("profile_id", profileId)
+        .order("submitted_at", { ascending: true }),
+      db
+        .from("drill_results")
+        .select("drill_id, status, score, max_score, attempts, updated_at")
+        .eq("profile_id", profileId),
+      db
+        .from("exercise_submissions")
+        .select("exercise_key, body, submitted_at")
+        .eq("profile_id", profileId),
+      db
+        .from("app_state")
+        .select("last_visited_day, avatar")
+        .eq("profile_id", profileId)
+        .maybeSingle(),
+    ]);
+
+  // Fall back to the pre-cap column list on a database that has not had the
+  // additive `attempts` column applied yet. Re-reading is cheap and only
+  // happens on such a database; the alternative is losing every drill result.
+  let drills = drillsWithAttempts;
+  if (drillsWithAttempts.error && isMissingAttemptsColumn(drillsWithAttempts.error)) {
+    console.warn(
+      "[onboarding] drill_results.attempts is missing - run supabase/schema.sql to enable the three-attempt drill cap. Treating every stored drill as one play used.",
+    );
+    drills = (await db
       .from("drill_results")
       .select("drill_id, status, score, max_score, updated_at")
-      .eq("profile_id", profileId),
-    db
-      .from("exercise_submissions")
-      .select("exercise_key, body, submitted_at")
-      .eq("profile_id", profileId),
-    db
-      .from("app_state")
-      .select("last_visited_day, avatar")
-      .eq("profile_id", profileId)
-      .maybeSingle(),
-  ]);
+      .eq("profile_id", profileId)) as typeof drillsWithAttempts;
+  }
 
   const state = emptyProgress();
   for (const row of items.data ?? []) {
@@ -209,6 +250,11 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
       status: row.status,
       score: row.score ?? undefined,
       maxScore: row.max_score ?? undefined,
+      // Null for a row written before the column existed, and absent entirely
+      // on a database where the column itself is missing. `drillAttemptsUsed`
+      // reads either as one play used, so those joinees keep two goes instead
+      // of being locked out of a drill they had already done.
+      attempts: row.attempts ?? undefined,
       updatedAt: row.updated_at,
     };
   }
@@ -223,6 +269,37 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
     state.avatar = appState.data.avatar as ProgressState["avatar"];
   }
   return state;
+}
+
+/**
+ * Upsert drill results, dropping the attempt count on a database that has not
+ * had the additive `attempts` column applied.
+ *
+ * Retrying without the field rather than failing is the same tolerance
+ * `ensureProfile` shows for the sign-in columns. The alternative is worse than
+ * an unenforced cap: a single unknown column makes PostgREST reject the whole
+ * upsert, which throws out of `saveProgress` and 500s the sync - so the joinee's
+ * checklist, quiz marks and ODPAC report all stop reaching the database while
+ * their screen keeps saying everything is saved. That exact failure has
+ * happened three times on this project already, for three different fields.
+ * See docs/pre-deploy.md.
+ */
+async function upsertDrills(
+  db: NonNullable<ReturnType<typeof getDb>>,
+  drills: Record<string, unknown>[],
+) {
+  const withAttempts = await db.from("drill_results").upsert(drills);
+  if (!withAttempts.error || !isMissingAttemptsColumn(withAttempts.error)) {
+    return withAttempts;
+  }
+  console.warn(
+    "[onboarding] drill_results.attempts is missing - saving drill results without the attempt count. Run supabase/schema.sql to enable the three-attempt drill cap.",
+  );
+  const stripped = drills.map((row) => {
+    const { attempts: _dropped, ...rest } = row as { attempts?: unknown };
+    return rest;
+  });
+  return db.from("drill_results").upsert(stripped);
 }
 
 export async function saveProgress(
@@ -254,6 +331,7 @@ export async function saveProgress(
     status: result.status,
     score: result.score ?? null,
     max_score: result.maxScore ?? null,
+    attempts: result.attempts ?? null,
     updated_at: result.updatedAt,
   }));
   const exercises = Object.entries(state.exercises).map(
@@ -272,7 +350,7 @@ export async function saveProgress(
     attempts.length
       ? db.from("quiz_attempts").upsert(attempts, { ignoreDuplicates: true })
       : null,
-    drills.length ? db.from("drill_results").upsert(drills) : null,
+    drills.length ? upsertDrills(db, drills) : null,
     exercises.length ? db.from("exercise_submissions").upsert(exercises) : null,
     db.from("app_state").upsert({
       profile_id: profileId,
@@ -481,6 +559,16 @@ export interface AdminJoineeRow {
   stamps: { earned: number; total: number };
   /** Free-text submissions, verbatim - what the mentor actually reads. */
   exercises: { key: string; body: string; submittedAt: string }[];
+  /**
+   * The end-of-academy voucher code, or null until it is earned.
+   *
+   * Derived here from `profiles.id` rather than stored, so the desk and the
+   * joinee's own screen cannot disagree - see `voucher.ts`. Null while
+   * unearned, deliberately: a team leader must never be able to read out a code
+   * to somebody who has not finished, and printing one early is exactly how
+   * that would happen.
+   */
+  voucherCode: string | null;
   lastActivityAt: string | null;
 }
 
@@ -598,6 +686,9 @@ export async function adminOverview(): Promise<AdminJoineeRow[] | null> {
           body: sub.body,
           submittedAt: sub.submittedAt,
         })),
+        voucherCode: hasEarnedVoucher(state)
+          ? voucherCodeFor(profile.id)
+          : null,
         lastActivityAt: timestamps.at(-1) ?? null,
       };
     }),

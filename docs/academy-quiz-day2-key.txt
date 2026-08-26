@@ -1,0 +1,111 @@
+Day 2 · The guest and the conversation - ANSWER KEY
+Matches academy-quiz-day2-paper.txt. Regenerating both keeps them in step.
+
+ 1.  OPTION 4  -  The guest fills the silence and tells you the real fear behind their question
+
+     WHY: The guest will tell you how to sell to them if you shut up long enough. Silence is an intel-gathering tool, not a politeness one.
+
+     ------------------------------------------------------------------
+
+ 2.  OPTION 2  -  You answered the question but missed the fear. You are now solving the wrong problem
+
+     WHY: Answering fast means you answered the question and missed the fear. The doc's example: the real message was "I was rejected once before and don't want to lose money again."
+
+     ------------------------------------------------------------------
+
+ 3.  OPTION 4  -  Intel: budget concerns, timeline pressure, past bad experiences, competitor comparisons
+
+     WHY: Budget concerns, timeline pressure, past bad experiences, competitor comparisons. All volunteered rather than extracted. Free intel.
+
+     ------------------------------------------------------------------
+
+ 4.  OPTION 3  -  Guessing whether a visa will be approved
+
+     WHY: Don't guess visa outcomes. The other three options are all on the Dos list.
+
+     ------------------------------------------------------------------
+
+ 5.  OPTION 4  -  Do not send it as-is. A template sent without context proves nobody read them
+
+     WHY: Don't copy-paste without context. Read what they asked; the template is a starting point, not the reply.
+
+     ------------------------------------------------------------------
+
+ 6.  OPTION 2  -  Do not contradict Ops. Resolve it with Ops before you reply to the guest
+
+     WHY: Don't contradict Ops or Product guidelines. Two different answers from one company means the guest believes neither.
+
+     ------------------------------------------------------------------
+
+ 7.  OPTION 4  -  Friendly, calm, confident
+
+     WHY: Friendly, calm, confident: the doc's tone guideline.
+
+     ------------------------------------------------------------------
+
+ 8.  OPTION 2  -  With facts
+
+     WHY: Reassure with facts, not assumptions. Reassurance that isn't grounded in something true is just a guess with a nicer voice.
+
+     ------------------------------------------------------------------
+
+ 9.  OPTION 4  -  Change what he thinks the problem is, rather than answering the same questions better
+
+     WHY: Teach. Do not answer the question better than the last agent. Change what the customer thinks the problem is. "The hard part is the form" becomes "the hard part is the appointment". Once he sees the problem differently our answer is the obvious one and price stops being the conversation. Research on around 6,000 salespeople found that in complex, high-stakes sales the people who set out to be liked are the worst performers; the best teach the customer something they did not know.
+
+     ------------------------------------------------------------------
+
+10.  OPTION 4  -  By consequence of delay, and the other three get a time from you, not silence
+
+     WHY: Empathy is never rationed; sequence always is. In an emergency room every patient matters equally, which is precisely why triage exists. Nobody honours "all patients are priority" by seeing them in arrival order. The quality of attention is identical whether the case is worth Rs 3,000 or Rs 40,000; the order is set by consequence of delay, not by fee and not by who complained loudest. And nobody waits in silence: if you cannot deal with someone now, they get a time, not nothing. The unanswered message is the empathy failure. The wait is not.
+
+     ------------------------------------------------------------------
+
+11.  OPTION 1  -  A refund protects the fee; only time protects the trip, which is why seven weeks is the asset here
+
+     WHY: The most important reframe we have. A refund protects the fee. Only time protects the trip. A refusal seven weeks out is a delay he can recover from; the same refusal ten days out is a cancelled holiday. Sell the calendar, not the guarantee, and never put a refund figure in writing without checking the cover for that exact route.
+
+     ------------------------------------------------------------------
+
+12.  OPTION 2  -  They are pricing the outcome. You cannot sell the outcome, so move them to pricing the avoidable failure
+
+     WHY: They are pricing the outcome, and the outcome is not ours to sell. Move them to pricing the avoidable failure: the file.
+
+     ------------------------------------------------------------------
+
+13.  OPTION 4  -  They often know him personally. Attacking him makes his word more credible, not less
+
+     WHY: They often know him personally. Attacking him makes his word more credible, not less. Ask questions about him instead.
+
+     ------------------------------------------------------------------
+
+14.  OPTION 1  -  Whether the quoted amount includes the government fee
+
+     WHY: Half the time the comparison is our total against his fee. Once the government fee is added, the gap disappears on its own.
+
+     ------------------------------------------------------------------
+
+15.  OPTION 4  -  State plainly what it buys. Never apologise for it or soften it
+
+     WHY: Say plainly what the fee buys: slot search, document audit, a photo that passes spec, someone answering at 11pm. Hesitation reads as the fee being negotiable.
+
+     ------------------------------------------------------------------
+
+16.  OPTION 3  -  Agree with them (do not pretend a fee refund covers a trip), then name what actually protects it
+
+     WHY: Agreeing with the hard part is what makes the rest credible. Then name the two things that do protect the trip: no avoidable gaps, and applying early enough that a refusal is a delay rather than a cancellation.
+
+     ------------------------------------------------------------------
+
+17.  OPTION 4  -  Name the two things self-service cannot do (an earlier slot than the portal shows, and an outside reader on their file), then ask how far out their travel is
+
+     WHY: Don't argue that they can't do it themselves. Name the two things self-service genuinely can't do, then let urgency do the selling.
+
+     ------------------------------------------------------------------
+
+18.  OPTION 1  -  Finding the real concern underneath the stated objection, before you answer it
+
+     WHY: Probe finds the real concern under the stated one, before you answer. Price objections are frequently timeline objections and timeline objections are frequently rejection fear, so answering the words you heard is how you give a correct response to a question nobody asked. It is the same instinct as the Day 2 pause rule: silence and a question do the same job.
+
+     ------------------------------------------------------------------
+

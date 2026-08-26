@@ -1,18 +1,32 @@
 /**
  * Content for the arcade drills. Same rule as every other content module:
- * traceable to `docs/source-journey.md` (Cluster A, the Dos/Don'ts, the day-4
- * learn list) - no invented facts.
+ * traceable to the lessons in `lessons.ts` - no invented facts.
  *
  * The lane-runner reuses `OWNERSHIP_STATEMENTS` from `puzzles.ts` directly and
  * has no content of its own.
  */
 
 /**
- * Day 4 - "route the situation to the right desk", drawn as two islands with
- * lines between them. Left: what just happened in your chat. Right: where it
- * goes. Sources: day-4 learn list ("Product: feature clarity, bugs, roadmap",
- * "Ops: visa processing, timelines, exceptions"), day-1 responsibilities
- * ("Coordinating with Ops for edge cases"), and the Don'ts.
+ * Day 1 - "route the situation to the right desk", drawn as an airport floor.
+ * Left: what just happened in your chat. Right: where it goes.
+ *
+ * Rebuilt Aug 2026. The old version routed to a "Product desk" taking "feature
+ * clarity, bugs, roadmap", sourced from a day-4 learn list that no longer
+ * exists. No lesson mentions a Product team, a roadmap or a bug - two of the six
+ * pairs were unanswerable from the material, and the drill scored the guess as
+ * knowledge.
+ *
+ * The material does teach routing, just a different one, and it is worth more
+ * than the invented one because it is the seam where cases actually break:
+ *
+ *   1.4  the test itself - "if it is about whether and what, it is yours. If it
+ *        is about where it is and when, it is theirs" - with post-checkout named
+ *        as "ops, PRO, CX"
+ *   3.8  the three escalations that break the normal flow: your PM before
+ *        advising on a ban or an overstay, the operations team for the UAE
+ *        active-visa error, the Emergency Helpline for a guest denied check-in
+ *
+ * Which also means this drill now carries most of 3.8, the lesson that had none.
  */
 export interface IslandPair {
   id: string;
@@ -39,9 +53,9 @@ export interface TerminalZone {
   sign: string;
   /**
    * The second line on the sign: what this desk takes. Real signage, not a
-   * giveaway - every line is the source doc's own, so the drill tests which
-   * situation belongs where rather than whether the joinee can guess what four
-   * unlabelled pads mean. Traceable to the day-4 learn list and the Don'ts.
+   * giveaway - every line is a lesson's own, so the drill tests which situation
+   * belongs where rather than whether the joinee can guess what four unlabelled
+   * pads mean.
    */
   hint: string;
   x: number;
@@ -50,77 +64,94 @@ export interface TerminalZone {
 
 export const TERMINAL_ZONES: readonly TerminalZone[] = [
   {
-    destination: "Product",
-    code: "P",
-    sign: "Product desk",
-    hint: "Feature clarity · bugs · roadmap",
+    destination: "Yours",
+    code: "Y",
+    sign: "Your desk",
+    hint: "Whether and what · pre-checkout",
     x: 24,
     y: 22,
   },
   {
-    destination: "Ops",
+    destination: "Post-checkout (ops, PRO, CX)",
     code: "O",
-    sign: "Ops desk",
-    hint: "Visa processing · timelines · exceptions",
+    sign: "Post-checkout",
+    hint: "Where it is and when · live cases",
     x: 76,
     y: 22,
   },
   {
-    destination: "Resolve with Ops before replying",
-    code: "R",
-    sign: "Back office",
-    hint: "Line up with Ops before you reply",
-    x: 76,
+    destination: "Your PM",
+    code: "P",
+    sign: "Your PM",
+    hint: "Bans and overstays · before you advise",
+    x: 24,
     y: 78,
   },
   {
-    destination: "Hand over with full context",
-    code: "H",
-    sign: "Shift handover",
-    hint: "Follow-ups and handovers, with context",
-    x: 24,
+    destination: "Emergency Helpline",
+    code: "E",
+    sign: "Emergency Helpline",
+    hint: "Denied at the airport · they own it",
+    x: 76,
     y: 78,
   },
 ] as const;
 
 export const ISLAND_PAIRS: readonly IslandPair[] = [
   {
-    id: "isl.bug",
-    left: "The checkout button is throwing an error for a guest",
-    right: "Product",
-    because: "Feature clarity, bugs and roadmap are Product's desk.",
-  },
-  {
-    id: "isl.timeline",
-    left: "An application looks stuck and the guest is asking why",
-    right: "Ops",
-    because: "Visa processing, timelines and exceptions are Ops' desk.",
-  },
-  {
-    id: "isl.edge",
-    left: "A question you cannot answer turns out to be an edge case",
-    right: "Ops",
+    id: "isl.whether",
+    left: "A guest with a three-week runway asks whether their timeline can work at all",
+    right: "Yours",
     because:
-      "Coordinating with Ops for edge cases is one of the five core responsibilities. Guessing is not.",
+      "Whether and what is yours: pre-checkout decides what is right and gets the file ready. Including when the honest answer is that three weeks is not enough.",
   },
   {
-    id: "isl.roadmap",
-    left: "A guest asks whether a missing feature is coming",
-    right: "Product",
-    because: "Roadmap questions are Product's, not something to promise in chat.",
-  },
-  {
-    id: "isl.conflict",
-    left: "Ops told the guest one thing; you believe another is correct",
-    right: "Resolve with Ops before replying",
+    id: "isl.which_embassy",
+    left: "A guest asks which embassy to apply to for five nights in France and three in Spain",
+    right: "Yours",
     because:
-      "Don't contradict Ops or Product guidelines. Two answers from one company means neither is believed.",
+      "Still a what question, and one you can answer: you apply where you spend the most nights. Diagnosis is the pre-checkout skill.",
   },
   {
-    id: "isl.handover",
-    left: "Your shift is ending mid-conversation",
-    right: "Hand over with full context",
+    id: "isl.where_is_it",
+    left: "A guest who paid last week asks where their application has got to",
+    right: "Post-checkout (ops, PRO, CX)",
     because:
-      "A guest repeating themselves is the clearest signal a handover was done badly.",
+      "Where it is and when is theirs. They work a live case with a committed date and talk about where the application is now.",
+  },
+  {
+    id: "isl.uae_error",
+    left: "A guest hits an error saying an active visa is already on record, blocking a new UAE application",
+    right: "Post-checkout (ops, PRO, CX)",
+    because:
+      "A known issue that may be a system fault, so it needs backend resolution: escalate to the operations team immediately, and never tell the guest it is their fault. Promise the follow-up, never the resolution.",
+  },
+  {
+    id: "isl.overstay",
+    left: "A guest mentions in passing that they overstayed a previous visa by two days",
+    right: "Your PM",
+    because:
+      "Escalate to your PM before advising anyone with a ban or an overstay. Even a single day makes someone high-risk for that country. Do not guess on this one.",
+  },
+  {
+    id: "isl.ban",
+    left: "A guest asks whether a ban on their record can be worked around",
+    right: "Your PM",
+    because:
+      "Same hard rule, and the tempting answer is the dangerous one. Be honest about the effect on approval probability rather than building false hope.",
+  },
+  {
+    id: "isl.airport",
+    left: "A guest calls from the airport. They have just been denied check-in over a visa problem",
+    right: "Emergency Helpline",
+    because:
+      "A genuine emergency, not a process flow. Do not hold them for more than 60 seconds, and stay on the call until the handover is confirmed. Ownership here means making sure the guest is covered, not being the one who fixes it.",
+  },
+  {
+    id: "isl.timeline_number",
+    left: "A guest wants a better timeline than the country page gives, and their case is genuinely unusual",
+    right: "Post-checkout (ops, PRO, CX)",
+    because:
+      "Genuine special cases get revised with Ops. You do not invent a number, and you do not improve on the page because a guest wants a better one.",
   },
 ] as const;

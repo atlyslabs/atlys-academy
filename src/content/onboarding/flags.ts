@@ -8,15 +8,14 @@
  * line. `because` is the manual's own reason, shown after the joinee answers.
  */
 
-export interface FlagLine {
-  id: string;
-  /** The sentence as an agent would send it. */
-  text: string;
-  /** True when it is safe to say. False means never say it. */
-  safe: boolean;
-  /** Why it lands on that side. The teaching, shown after the swipe. */
-  because: string;
-}
+import type { SwipeDeckConfig, SwipeLine } from "./types";
+
+/**
+ * One line in this deck. Kept as a named alias because the shape is now shared
+ * with the Day 3 DS-160 deck: `safe` is "the right-hand call", and each deck's
+ * own config says what the two sides mean.
+ */
+export type FlagLine = SwipeLine;
 
 export const FLAG_LINES: readonly FlagLine[] = [
   {
@@ -90,3 +89,19 @@ export const FLAG_LINES: readonly FlagLine[] = [
       "Sounds kind, functions as a promise. When it does not work out the customer remembers this sentence, not the disclaimer.",
   },
 ];
+
+export const FLAG_DECK: SwipeDeckConfig = {
+  drillId: "flag-swipe",
+  eyebrow: "Drill · reflex",
+  title: "Green flag, red flag",
+  description:
+    "Ten sentences an agent might type into a live chat. Swipe right if it is safe to say, left if it is never said. You get about one second in a real conversation, so do not deliberate. The reason lands after you call it.",
+  right: { label: "✅ Safe to say", stamp: "SAFE ✓", heading: "✅ Safe to say" },
+  left: {
+    label: "❌ Never say this",
+    stamp: "NEVER ✗",
+    heading: "❌ Never say",
+  },
+  cardKicker: "You, in the chat",
+  lines: FLAG_LINES,
+};

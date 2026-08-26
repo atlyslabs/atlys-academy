@@ -6,6 +6,12 @@ import type { Quiz, QuizQuestion } from "@/content/onboarding/types";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { api } from "@/lib/api-client";
+import {
+  MAX_QUIZ_ATTEMPTS,
+  quizAttemptsLeft,
+  quizAttemptsUsed,
+  quizPassed,
+} from "@/lib/progress/attempts";
 import { useProgress } from "@/lib/progress/provider";
 import { seededShuffle } from "@/lib/shuffle";
 import { cn } from "@/lib/utils";
@@ -17,7 +23,7 @@ type Selections = Record<string, string>;
 type Status = "answering" | "submitting" | "graded" | "error";
 
 export function QuizRunner({ quiz }: { quiz: Quiz }) {
-  const { recordAttempt } = useProgress();
+  const { state, ready, recordAttempt } = useProgress();
   const [attemptNumber, setAttemptNumber] = useState(0);
   const [selections, setSelections] = useState<Selections>({});
   const [status, setStatus] = useState<Status>("answering");
@@ -31,7 +37,22 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   const answeredCount = Object.keys(selections).length;
   const allAnswered = answeredCount === quiz.questions.length;
 
+  // Attempts come from stored progress, not from `attemptNumber` - that is a
+  // per-mount counter used only to reseed the shuffle, and it resets to 0 on
+  // every page load. The authoritative count is the list of submitted records.
+  const used = quizAttemptsUsed(state, quiz.slug);
+  const left = quizAttemptsLeft(state, quiz.slug);
+  const passed = quizPassed(state, quiz.slug);
+  // `ready` is load-bearing: the store is read asynchronously, so before it
+  // resolves every joinee looks like they have used zero attempts. Submitting
+  // in that window would let someone past the cap by being quick, and blocking
+  // on it would flash a false "no attempts left" at everyone. Wait instead.
+  const capReached = ready && left <= 0;
+
   async function submit() {
+    // Belt and braces: the button is disabled, but a double-click can land two
+    // calls before React re-renders and the second must not spend a fourth go.
+    if (!ready || left <= 0) return;
     setStatus("submitting");
     try {
       const response = await api.api.onboarding.quiz[":slug"].submit.$post({
@@ -62,6 +83,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   }
 
   function retry() {
+    if (left <= 0) return;
     setAttemptNumber(attemptNumber + 1);
     setSelections({});
     setResult(null);
@@ -76,6 +98,8 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         result={result}
         selections={selections}
         onRetry={retry}
+        attemptsUsed={used}
+        attemptsLeft={left}
       />
     );
   }
@@ -97,9 +121,15 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
           {quiz.title}
         </h1>
         <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-dim">
-          {quiz.questions.length} questions · 70% to pass · no time limit ·
-          unlimited retries
+          {quiz.questions.length} questions · 70% to pass · no time limit ·{" "}
+          {MAX_QUIZ_ATTEMPTS} attempts
         </p>
+        {ready && used > 0 && (
+          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-brand-text tabular-nums">
+            Attempt {Math.min(used + 1, MAX_QUIZ_ATTEMPTS)} of{" "}
+            {MAX_QUIZ_ATTEMPTS} · {left} {left === 1 ? "try" : "tries"} left
+          </p>
+        )}
       </header>
 
       <ol className="mt-8 space-y-6" data-scroll-scene="The questions">
@@ -129,7 +159,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Button
             onClick={submit}
-            disabled={!allAnswered || status === "submitting"}
+            disabled={!allAnswered || status === "submitting" || capReached}
           >
             {status === "submitting" ? "Grading…" : "Submit answers"}
           </Button>
@@ -137,6 +167,14 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
             {answeredCount} of {quiz.questions.length} answered
           </p>
         </div>
+
+        {capReached && (
+          <p className="mt-4 border-t border-dashed border-brand/25 pt-3.5 text-sm leading-relaxed text-ink-secondary">
+            {passed
+              ? `You have used all ${MAX_QUIZ_ATTEMPTS} attempts. You passed this one, so nothing is outstanding - your best score stands.`
+              : `You have used all ${MAX_QUIZ_ATTEMPTS} attempts. Your best score stands and the journey carries on from here - the next day is not held up by this. Talk it through with your team leader.`}
+          </p>
+        )}
       </div>
 
       {status === "error" && (

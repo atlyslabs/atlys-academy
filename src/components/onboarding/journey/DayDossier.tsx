@@ -54,9 +54,7 @@ function Masthead({ day }: { day: Day }) {
   const { state } = useProgress();
   const checklist = dayChecklistProgress(state, day);
   const sheet = stampSheet(state, day.id);
-  const readable = lessonsForDay(day.id).filter(
-    (lesson) => lesson.body !== null,
-  );
+  const readable = lessonsForDay(day.id);
   const passed = hasPassedQuiz(state, day.slug);
   const leg = legForDay(day.id);
   // Every stamp on the page, quiz included: the chapter is cleared.

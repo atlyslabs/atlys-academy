@@ -4,14 +4,14 @@ import type { DayId } from "./types";
  * The travel staging layer.
  *
  * Atlys sells trips, so onboarding is staged as one. The joinee flies a real
- * five-stop route and lands at Atlys in Delhi on the last day. Each leg carries
- * a genuine airport code and a latitude and longitude, which is what lets the
- * roadmap put its stations on the actual world map rather than at hand-tuned
- * percentages that mean nothing.
+ * three-stop route. Each leg carries a genuine airport code and a latitude and
+ * longitude, which is what lets the roadmap put its stations on the actual
+ * world map rather than at hand-tuned percentages that mean nothing.
  *
- * Cities are chosen to match what each day teaches: Day 3 covers the US B1/B2
- * visa, so Day 3 lands in New York; Day 4 is routing and coordination, so it
- * sits at a transfer hub. The last leg is fixed by the business, not by me.
+ * Cities are chosen to match what each day teaches: Day 2 is the desk where
+ * every guest asks one question out loud and a different one underneath, so it
+ * sits at the busiest counter on its continent; Day 3 covers the US B1/B2
+ * visa, so it lands in New York.
  *
  * This is **staging only**. It sits alongside the day content in `days.ts` and
  * never replaces it: `Day.title` and every learn topic, activity and drill stay

@@ -1,8 +1,9 @@
 import type { Verdict } from "./types";
 
 /**
- * Content for the two matching puzzles. Everything here is traceable to
- * docs/source-journey.md - the tools list and Cluster A. No invented facts.
+ * Content for the two matching puzzles. Everything here is traceable to the
+ * lessons in `lessons.ts` - the tool stack in 1.10 and the ownership split in
+ * 3.4. No invented facts.
  */
 
 /** Day 1 - match each tool to the job it does. Built from the tools list. */
@@ -13,12 +14,21 @@ export interface ToolMatchPair {
   job: string;
 }
 
+/**
+ * The six tools of lesson 1.10, and only those six.
+ *
+ * Grafana and "WhatsApp groups" used to sit here, carried over from the old
+ * five-day source doc. Neither survives in the lessons: Grafana appears nowhere
+ * at all, and the Grafana card taught the joinee to look up pipeline state on a
+ * dashboard that is not the case tool. WhatsApp is a guest follow-up channel in
+ * 3.6, never internal comms.
+ *
+ * Boomerang and DD replace them, because 1.10 says of those two specifically:
+ * "the two you will skip if nobody tells you why they matter" - and a stack
+ * drill that omits them reproduces the failure the lesson was written to
+ * prevent, then 3.7 opens every shift with both names.
+ */
 export const TOOL_MATCH_PAIRS: readonly ToolMatchPair[] = [
-  {
-    id: "grafana",
-    tool: "Grafana",
-    job: "Check the pipeline and funnel numbers on a dashboard",
-  },
   {
     id: "freshchat",
     tool: "Freshchat",
@@ -35,21 +45,26 @@ export const TOOL_MATCH_PAIRS: readonly ToolMatchPair[] = [
     job: "Call a guest",
   },
   {
-    id: "notion",
-    tool: "Notion",
-    job: "Find the glossary or a process doc",
+    id: "boomerang",
+    tool: "Boomerang",
+    job: "Check your own numbers, and pull the cold-lead list to work",
   },
   {
-    id: "whatsapp",
-    tool: "WhatsApp groups",
-    job: "Where Ops, Product and Sales actually talk",
+    id: "dd",
+    tool: "DD (Daily Dashboard)",
+    job: "See the team's performance and which lines of business are under target",
+  },
+  {
+    id: "notion",
+    tool: "Notion",
+    job: "Find the glossary, a process doc, or the country page for a route",
   },
 ];
 
 /**
- * Day 3 - who owns what. Three-way sort built strictly from Cluster A and the
- * source doc's framing: the officer decides, Atlys controls the file and the
- * slot, the guest controls their own bookings and timing.
+ * Day 3 - who owns what. Three-way sort built strictly from lesson 3.4's
+ * framing: the officer decides, Atlys controls the file and the slot, the guest
+ * controls their own bookings and timing.
  */
 export type Owner = "atlys" | "officer" | "guest";
 

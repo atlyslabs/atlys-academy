@@ -70,11 +70,6 @@ export function Checklist({
                   </a>
                 )}
 
-                {item.accessNeeded && (
-                  <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.14em] text-badge-amber">
-                    Needs tool access
-                  </span>
-                )}
               </span>
             </label>
           </li>

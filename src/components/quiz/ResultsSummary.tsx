@@ -1,6 +1,7 @@
 "use client";
 
 import { LAST_DAY_ID } from "@/content/onboarding/days";
+import { MAX_QUIZ_ATTEMPTS } from "@/lib/progress/attempts";
 import Link from "next/link";
 import type { Quiz } from "@/content/onboarding/types";
 import { Badge } from "@/components/ui/Badge";
@@ -33,11 +34,17 @@ export function ResultsSummary({
   result,
   selections,
   onRetry,
+  attemptsUsed,
+  attemptsLeft,
 }: {
   quiz: Quiz;
   result: GradedResult;
   selections: Record<string, string>;
   onRetry: () => void;
+  /** Submitted attempts at this quiz, including the one just graded. */
+  attemptsUsed: number;
+  /** Attempts still available. Zero hides the retry button entirely. */
+  attemptsLeft: number;
 }) {
   const percent = Math.round((result.score / result.maxScore) * 100);
 
@@ -86,7 +93,9 @@ export function ResultsSummary({
             ? quiz.dayId === LAST_DAY_ID
               ? "Passed. That was the final gate - the journey is complete."
               : `Passed. Finish the rest of Day ${quiz.dayId}'s passport page, and Day ${quiz.dayId + 1} unseals tomorrow at 10:30.`
-            : "Below 70%. Read the explanations, then take it again. Retries cost nothing."}
+            : attemptsLeft > 0
+              ? `Below 70%. Read the explanations, then take it again - ${attemptsLeft} of ${MAX_QUIZ_ATTEMPTS} ${attemptsLeft === 1 ? "attempt" : "attempts"} left.`
+              : `Below 70%, and that was attempt ${attemptsUsed} of ${MAX_QUIZ_ATTEMPTS}. Your best score stands and the journey carries on - read the explanations, then talk this one through with your team leader.`}
         </p>
       </Card>
 
@@ -162,9 +171,16 @@ export function ResultsSummary({
         >
           Back to the journey →
         </Link>
-        <Button variant="secondary" onClick={onRetry}>
-          {result.passed ? "Take it again" : "Retry the quiz"}
-        </Button>
+        {/* No button once the three attempts are gone. A disabled one would
+            invite clicking; the sentence above already says what happened. */}
+        {attemptsLeft > 0 && (
+          <Button variant="secondary" onClick={onRetry}>
+            {result.passed ? "Take it again" : "Retry the quiz"}
+            <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+              {attemptsLeft} left
+            </span>
+          </Button>
+        )}
       </div>
     </div>
   );

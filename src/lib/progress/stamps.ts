@@ -3,6 +3,7 @@ import { LESSONS } from "@/content/onboarding/lessons";
 import { odpacExerciseKey } from "@/content/onboarding/odpac";
 import { TOOLS } from "@/content/onboarding/tools";
 import type { DayId, DrillId } from "@/content/onboarding/types";
+import { isTerminalDrillStatus } from "./attempts";
 import type { ProgressState } from "./types";
 
 
@@ -26,23 +27,24 @@ export interface Stamp {
   earned: boolean;
 }
 
-/** A drill counts once it reaches a terminal status. Matches `points.ts`. */
-const TERMINAL_DRILL_STATUSES = new Set(["passed", "complete"]);
 
 /** Stamp face wording per drill. Keeps the desk and the passport consistent. */
 const DRILL_STAMP_LABELS: Partial<Record<DrillId, string>> = {
   "pause-10s": "Gate hold",
   "dos-donts": "Screened",
   "rewrite-chat": "Rebooked",
-  "objection-library": "Fare rules",
+  "apac-loop": "Sequenced",
   "mock-scenarios": "Counter",
   "tool-match": "Baggage",
   "ownership-sort": "Control",
-  "ownership-run": "Fast track",
   "connect-islands": "Routed",
   "flag-swipe": "Red flags",
   "anxiety-wall": "Calmed",
   "reframe-deck": "Reframed",
+  "edge-cases": "Diverted",
+  "lead-status": "Manifest",
+  "followup-rewrite": "Callback",
+  "ds160-consistency": "Doc check",
 };
 
 function hasPassed(state: ProgressState, quizSlug: string): boolean {
@@ -51,9 +53,13 @@ function hasPassed(state: ProgressState, quizSlug: string): boolean {
   );
 }
 
-/** Lessons a joinee can actually finish - placeholders are not collectable. */
+/**
+ * The day's lessons. Every one is readable and therefore collectable - the
+ * filter here used to drop lessons with no body, which `Lesson.body` being
+ * non-nullable now makes impossible.
+ */
 function readableLessons(dayId: DayId) {
-  return LESSONS.filter((lesson) => lesson.dayId === dayId && lesson.body);
+  return LESSONS.filter((lesson) => lesson.dayId === dayId);
 }
 
 /**
@@ -114,7 +120,7 @@ export function stampsForDay(state: ProgressState, dayId: DayId): Stamp[] {
       kind: "drill",
       label: DRILL_STAMP_LABELS[drillId] ?? "Drill",
       requirement: "Finish the drill",
-      earned: Boolean(result && TERMINAL_DRILL_STATUSES.has(result.status)),
+      earned: isTerminalDrillStatus(result?.status),
     });
   }
 

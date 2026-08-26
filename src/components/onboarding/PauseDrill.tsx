@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { PAUSE_DRILL } from "@/content/onboarding/drills";
 import { PAUSE_COUNTDOWN_ENABLED } from "@/lib/dev-flags";
+import {
+  MAX_DRILL_ATTEMPTS,
+  canReplayDrill,
+  drillAttemptsLeft,
+  drillAttemptsUsed,
+} from "@/lib/progress/attempts";
 import { useProgress } from "@/lib/progress/provider";
 import { speak, stopSpeaking } from "@/lib/speech";
 import { Badge } from "@/components/ui/Badge";
@@ -21,21 +27,28 @@ import { DrillSection } from "./DrillSection";
  * Phases:
  *   intro    → nothing started
  *   waiting  → countdown running, composer locked, Send is a trap
- *   rushed   → they sent early; one retry offered
+ *   rushed   → they sent early; a replay is offered while plays remain
  *   unlocked → they waited; the real fear appears and they can reply
  *   done     → reply submitted, model answer revealed
  */
 type Phase = "intro" | "waiting" | "rushed" | "unlocked" | "done";
 
 export function PauseDrill() {
-  const { state, setDrillResult, saveExercise } = useProgress();
+  const { state, setDrillResult, saveExercise, beginDrillAttempt } =
+    useProgress();
   const [phase, setPhase] = useState<Phase>("intro");
   const [secondsLeft, setSecondsLeft] = useState(PAUSE_DRILL.waitSeconds);
-  const [retryUsed, setRetryUsed] = useState(false);
   const [reply, setReply] = useState("");
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
   const storedResult = state.drills["pause-10s"];
+  // The replay cap is read from stored progress rather than local state: this
+  // drill used to allow exactly one retry via a `retryUsed` flag, which reset
+  // itself every time the component remounted and disagreed with the cap the
+  // day gate and the voucher already enforce. `attempts.ts` is the one source
+  // of truth for how many goes are left.
+  const attemptsUsed = drillAttemptsUsed(state, "pause-10s");
+  const attemptsLeft = drillAttemptsLeft(state, "pause-10s");
 
   // Countdown. Driven off a wall-clock deadline so a backgrounded tab that
   // throttles timers still unlocks at the right moment rather than late.
@@ -95,7 +108,13 @@ export function PauseDrill() {
   }
 
   function retry() {
-    setRetryUsed(true);
+    // Spend the play before anything local moves, and spend it unconditionally:
+    // the reducer only charges an attempt when the STORED status is already
+    // terminal, so a mid-play restart stays free and this handler does not need
+    // to know the difference. Note `start()` is also reachable from the intro
+    // control, which is the first play rather than a replay - so the count is
+    // spent here and not inside `start`.
+    beginDrillAttempt("pause-10s");
     start();
   }
 
@@ -170,13 +189,22 @@ export function PauseDrill() {
             . Accurate, and beside the point. What they were actually about to
             tell you never got said.
           </p>
-          {!retryUsed ? (
+          {/* No button once the plays are gone. A disabled one would invite
+              clicking, and the house rule (see `MentorPanel`) is that a
+              permanently dead control is removed rather than greyed out. */}
+          {canReplayDrill(state, "pause-10s") ? (
             <Button className="mt-4" onClick={retry}>
               Try once more
+              {attemptsUsed > 0 && (
+                <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+                  {attemptsLeft} left
+                </span>
+              )}
             </Button>
           ) : (
             <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
-              Retry used. Bring this one to your sync with Shovan
+              All {MAX_DRILL_ATTEMPTS} plays used. The recorded score stands -
+              bring this one to your sync with your team leader
             </p>
           )}
         </div>

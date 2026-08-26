@@ -1,0 +1,96 @@
+DAY 1 · THE ROLE AND THE DESK - QUIZ
+13 questions | 70% to pass | unlimited retries
+
+Name: ______________________________     Date: ______________
+
+
+1.  A customer with a Schengen trip six weeks out keeps circling back to "but will it be fine?". What are you actually there to do?
+
+    1)  Tell them the profile looks strong, then move to payment while they are still confident
+    2)  Answer the factual questions accurately and leave them to decide how worried to be
+    3)  Get the application filed quickly, because the waiting is what makes people anxious
+    4)  Make the visa the predictable part of the trip: a committed date, a published policy, a route that can be filed
+
+2.  A customer wants a UK visa in five weeks. Which question do most agents forget to ask?
+
+    1)  Whether they have compared our price with a local agent's
+    2)  Whether they have applied for this destination before
+    3)  Whether anyone else is travelling on the same dates
+    4)  Whether they have ever been refused a visa, anywhere
+
+3.  A customer is furious by the time their case is with ops. Where was the damage almost certainly done?
+
+    1)  At the consulate, when the decision went against a file that looked strong
+    2)  At the handover, when ops picked up a file with a gap nobody had flagged
+    3)  Pre-checkout, in writing: a timeline, a refund figure or a route that could not be delivered
+    4)  In ops, when the committed date slipped and nobody told the customer
+
+4.  Payment has landed and the file is with ops. The customer messages you: "Should I add my wife to this application or file separately?" Whose question is it?
+
+    1)  Yours. It is a whether-and-what question, and payment landing does not transfer it
+    2)  Whoever gets to it first. After checkout the pre/post split stops mattering
+    3)  Ops'. The case is live now, and one owner per live case is the point of the split
+    4)  Yours to acknowledge, then pass to ops with the context so they can answer it
+
+5.  A customer's bank balance is thin and they ask whether the statement could be "adjusted" before submission. What do you do?
+
+    1)  File what they send, noting that the statement was supplied by the customer
+    2)  Exit and flag it. A request to fabricate a document is not a negotiation
+    3)  Explain the risk of a mismatch and leave the decision with them. It is their document
+    4)  Refuse the edit, then ask what else exists in their name and carry on with the file
+
+6.  A customer wants to file for a destination where their timeline genuinely does not work. They are willing to pay today. What is the correct move?
+
+    1)  Take the payment but write the risk clearly into the chat, so the record shows they were warned
+    2)  Take it. They are an adult who has been told the risk, and refusing the money is not your call
+    3)  Disqualify openly. Selling to the unqualified is negative margin once refunds and reviews are counted
+    4)  Take it and ask Ops to prioritise the case so the timeline has a chance of holding
+
+7.  Your month shows strong gross conversions. Why is that not automatically evidence you did well?
+
+    1)  Campaigns run treatment against control, so what counts is the lift you created, not conversions that would have happened anyway
+    2)  Conversions are shared across the team rather than attributed individually
+    3)  Volume matters less than the fee size of each application sold
+    4)  Gross conversions are only counted once the customer travels
+
+8.  You have put a guest on hold to check something, and it has run to three minutes. What does the standard require?
+
+    1)  Come back, apologise, and transfer them to whoever can answer it
+    2)  Stay off the line until you have the complete answer, so you only interrupt them once
+    3)  Come back on the line, buy more time, and thank them on return: a hold is capped at two minutes before you check in
+    4)  Nothing. Three minutes is within a normal hold
+
+9.  A guest picks up your outbound call. What are the first words out of your mouth?
+
+    1)  “Hi, am I speaking with [Name]? I'm calling from Atlys about your visa enquiry.”
+    2)  “Good morning / afternoon / evening, this is [Name] from Atlys Guest Delight, how may I help you with your visa request today?”
+    3)  “Hello! This is [Name] from Atlys. Is now a good time?”
+    4)  Whatever matches the guest's tone, since a scripted opening sounds robotic
+
+10.  A guest asks something you cannot resolve without another team. Which reply meets the standard?
+
+    1)  “That's not my department, but someone will call you.”
+    2)  “I'll try my best to sort this out for you today.”
+    3)  “I'm raising this with Ops now and I will update you by 4 PM today.”
+    4)  “Let me check with someone and we'll get back to you.”
+
+11.  Which team owns visa processing, timelines and exceptions?
+
+    1)  Product
+    2)  Growth/Design
+    3)  Pre-checkout Sales
+    4)  Ops
+
+12.  You have found what looks like a bug in the checkout flow. Who do you take it to?
+
+    1)  Nobody. Work around it in the chat
+    2)  Product
+    3)  Ops
+    4)  The customer's own bank
+
+13.  Why is comp blended across conversion, downstream quality and QA rather than paid on conversion alone?
+
+    1)  To keep payouts predictable month to month across the team
+    2)  Because conversion is too hard to attribute to an individual advisor
+    3)  Because QA scores are the metric managers can measure most easily
+    4)  So honesty is the winning strategy for you personally, not only the safe one for the company

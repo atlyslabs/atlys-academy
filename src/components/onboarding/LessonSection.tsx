@@ -11,9 +11,11 @@ import { useProgress } from "@/lib/progress/provider";
 /**
  * The day's teaching content, one `<details>` page per lesson.
  *
- * Lessons whose body is still with Shovan render an honest placeholder and no
- * "mark as read" button. There are no points for reading nothing, and a fake
- * lesson taught here gets repeated to a paying guest.
+ * Every lesson listed has a body, so every page here can be read and marked.
+ * There used to be a second branch that rendered an "it is being written"
+ * placeholder card, with no "mark as read" button, for lessons whose content had
+ * not arrived. `Lesson.body` is no longer nullable, so that branch is gone: a
+ * lesson with nothing to teach is not listed rather than shown empty.
  *
  * This is the one screen in the app somebody actually *reads*, several
  * paragraphs at a time, so it does not inherit the 12px mono the rest of the
@@ -106,100 +108,78 @@ function LessonCard({
         {/* Perforation, not a container edge: the body is a torn-off stub of the
             same document rather than a nested card. */}
         <div className="border-t border-dashed border-hairline-lit p-4 pt-4 sm:px-5">
-          {lesson.body === null ? (
-            <div className="max-w-[80ch] rounded-lg border border-dashed border-hairline-lit p-4 text-[15px] leading-relaxed text-ink-dim">
-              <p>
-                Being written. This page arrives with {lesson.ref} of the
-                content request to Shovan. Nothing shown here is invented in the
-                meantime.
-              </p>
-
-              {/* A gap with a name against it is a gap someone can close. */}
-              {lesson.pendingWith && (
-                <div className="mt-3 border-t border-dashed border-hairline-lit pt-3">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.12em]">
-                    Who to ask
-                  </p>
-                  <p className="mt-1">{lesson.pendingWith}</p>
-                </div>
-              )}
+          {/* The page uses the window's full width: paragraphs run in the
+              main column and the annotations sit in a margin rail beside
+              them, the way a textbook keeps its notes - so a lesson is
+              read across the window rather than scrolled down half of it.
+              Every lesson carries at least one annotation, so the rail is
+              never an empty gutter; below lg the rail folds back under
+              the paragraphs. */}
+          <div
+            className={
+              lesson.example || lesson.commonMistake
+                ? "grid gap-x-10 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]"
+                : ""
+            }
+          >
+            <div
+              className={`space-y-4 text-[15px] leading-[1.75] text-ink-secondary sm:text-base ${
+                lesson.example || lesson.commonMistake
+                  ? "max-w-none"
+                  : "max-w-[100ch]"
+              }`}
+            >
+              {lesson.body.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
             </div>
-          ) : (
-            <>
-              {/* The page uses the window's full width: paragraphs run in the
-                  main column and the annotations sit in a margin rail beside
-                  them, the way a textbook keeps its notes - so a lesson is
-                  read across the window rather than scrolled down half of it.
-                  Every lesson carries at least one annotation, so the rail is
-                  never an empty gutter; below lg the rail folds back under
-                  the paragraphs. */}
-              <div
-                className={
-                  lesson.example || lesson.commonMistake
-                    ? "grid gap-x-10 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]"
-                    : ""
-                }
+
+            {(lesson.example || lesson.commonMistake) && (
+              <aside className="space-y-5 lg:pt-1">
+                {lesson.example && (
+                  <div className="border-l-2 border-brand-text/40 pl-4">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-brand-text">
+                      In practice
+                    </p>
+                    <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
+                      {lesson.example}
+                    </p>
+                  </div>
+                )}
+
+                {lesson.commonMistake && (
+                  <div className="rounded-lg border border-badge-coral/30 bg-badge-coral-soft/60 p-4">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-badge-coral">
+                      What new joiners get wrong
+                    </p>
+                    <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
+                      {lesson.commonMistake}
+                    </p>
+                  </div>
+                )}
+              </aside>
+            )}
+          </div>
+
+          {/* aria-live so the swap between the two buttons is announced. */}
+          <div aria-live="polite" className="mt-6">
+            {read ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleItem(lesson.itemKey, false)}
               >
-                <div
-                  className={`space-y-4 text-[15px] leading-[1.75] text-ink-secondary sm:text-base ${
-                    lesson.example || lesson.commonMistake
-                      ? "max-w-none"
-                      : "max-w-[100ch]"
-                  }`}
-                >
-                  {lesson.body.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                </div>
-
-                {(lesson.example || lesson.commonMistake) && (
-                  <aside className="space-y-5 lg:pt-1">
-                    {lesson.example && (
-                      <div className="border-l-2 border-brand-text/40 pl-4">
-                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-brand-text">
-                          In practice
-                        </p>
-                        <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
-                          {lesson.example}
-                        </p>
-                      </div>
-                    )}
-
-                    {lesson.commonMistake && (
-                      <div className="rounded-lg border border-badge-coral/30 bg-badge-coral-soft/60 p-4">
-                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-badge-coral">
-                          What new joiners get wrong
-                        </p>
-                        <p className="mt-1.5 text-[14px] leading-[1.7] text-ink-secondary">
-                          {lesson.commonMistake}
-                        </p>
-                      </div>
-                    )}
-                  </aside>
-                )}
-              </div>
-
-              {/* aria-live so the swap between the two buttons is announced. */}
-              <div aria-live="polite" className="mt-6">
-                {read ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleItem(lesson.itemKey, false)}
-                  >
-                    Read ✓
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => toggleItem(lesson.itemKey, true)}
-                  >
-                    Mark as read (+{POINT_WEIGHTS.lessonRead} pts)
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
+                Read ✓
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => toggleItem(lesson.itemKey, true)}
+              >
+                Mark as read (+{POINT_WEIGHTS.lessonRead} pts)
+              </Button>
+            )}
+          </div>
         </div>
       </details>
     </li>

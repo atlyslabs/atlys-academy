@@ -23,15 +23,15 @@ compatibility_date = "2026-08-04"
 # Cron numbers the week from Sunday, so a plain `2-0` range does not exist and
 # Sunday has to be listed on its own.
 #
-# DISABLED until launch. An empty list is not the same as deleting this block: on
-# deploy, `crons = []` clears any schedule already registered on the Worker,
-# whereas omitting [triggers] leaves it running. Keep the empty list until the
-# report should actually go out.
+# ENABLED 2026-08-26. Setting this line does NOT start anything on its own - a
+# cron trigger is only registered on the Worker by `npm run deploy`, and a
+# deployed run still needs both secrets (REPORT_TOKEN, SLACK_WEBHOOK_URL) and an
+# APP_URL that is not localhost. See README.md § Go live for the order.
 #
-# To go live:  crons = ["30 3 * * 0,2-6"]
-# Full checklist in README.md § Go live.
+# To switch it back off: set `crons = []` and deploy again. An empty list clears
+# the registered schedule; DELETING this [triggers] block leaves it running.
 [triggers]
-crons = []
+crons = ["30 3 * * 0,2-6"]
 
 [vars]
 # The deployed app. Not a secret. Override per environment.

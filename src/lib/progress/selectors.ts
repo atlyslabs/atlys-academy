@@ -1,5 +1,5 @@
 import { DAYS } from "@/content/onboarding/days";
-import type { Day, DayId, QuizSlug } from "@/content/onboarding/types";
+import type { Day, DayId, DrillId, QuizSlug } from "@/content/onboarding/types";
 import { toLocalDateKey, unlockInstantAfter } from "@/lib/dates";
 import { odpacExerciseKey } from "@/content/onboarding/odpac";
 import {
@@ -8,7 +8,8 @@ import {
   ODPAC_GATE_ENABLED,
   STAMP_GATE_ENABLED,
 } from "@/lib/dev-flags";
-import { dayStampsComplete } from "./stamps";
+import { drillSettled, quizSettled } from "./attempts";
+import { stampSheet } from "./stamps";
 import type { ProgressState, QuizAttemptRecord } from "./types";
 
 /** The highest-scoring submitted attempt for a quiz, or `undefined`. */
@@ -34,23 +35,42 @@ export function hasPassedQuiz(
   );
 }
 
-/** Local date (`YYYY-MM-DD`) the quiz was *first* passed, or undefined. */
-function firstPassDateKey(
+/**
+ * Local date (`YYYY-MM-DD`) the quiz stopped being open to the joinee: the day
+ * they first passed it, or - if they never did - the day they used their last
+ * attempt. Undefined while goes remain and none has passed.
+ *
+ * The calendar gate counts its "next morning" from this. Using the first PASS
+ * would leave a joinee who exhausted three attempts with no date to count from,
+ * so `dayUnlockInstant` would return null and the next day would never open.
+ */
+function quizSettledDateKey(
   state: ProgressState,
   quizSlug: QuizSlug,
 ): string | undefined {
+  const mine = state.attempts
+    .filter((attempt) => attempt.quizSlug === quizSlug)
+    .map((attempt) => attempt.submittedAt)
+    .sort();
   const passed = state.attempts
     .filter((attempt) => attempt.quizSlug === quizSlug && attempt.passed)
     .map((attempt) => attempt.submittedAt)
     .sort();
-  return passed[0] ? toLocalDateKey(passed[0]) : undefined;
+  if (passed[0]) return toLocalDateKey(passed[0]);
+  if (!quizSettled(state, quizSlug)) return undefined;
+  // Exhausted without passing: the last submission is when it closed.
+  const last = mine[mine.length - 1];
+  return last ? toLocalDateKey(last) : undefined;
 }
 
 /**
- * Day 1 is always open. Every later day needs the previous day finished -
- * its quiz passed at the required mark, and (when the stamp gate is on) its
- * whole passport page collected - and, when the calendar gate is on, only
- * from **10:30 the next morning**.
+ * Day 1 is always open. Every later day needs the previous day finished - its
+ * quiz settled (passed, or all three attempts used), and (when the stamp gate is
+ * on) its work finished - and, when the calendar gate is on, only from
+ * **10:30 the next morning**.
+ *
+ * "Settled" rather than "passed" throughout, since attempts became finite: see
+ * `quizSettled` in `attempts.ts` for why gating on a pass would trap people.
  *
  * `gateKeyStr` is passed in rather than read from the clock so the selector
  * stays pure; components get it from `gateDayKey()` in `lib/dates`, whose
@@ -66,12 +86,47 @@ export function isDayUnlocked(
   if (!DAY_GATE_ENABLED) return true;
   if (dayId === 1) return true;
   const previous = DAYS.find((day) => day.id === dayId - 1);
-  if (!previous || !hasPassedQuiz(state, previous.slug)) return false;
-  if (STAMP_GATE_ENABLED && !dayStampsComplete(state, previous.id)) return false;
+  if (!previous) return false;
+  // `quizSettled`, not `hasPassedQuiz`. With three attempts and no more, gating
+  // on a pass would wall a joinee in permanently - see `attempts.ts`.
+  if (!quizSettled(state, previous.slug)) return false;
+  if (STAMP_GATE_ENABLED && !dayWorkFinished(state, previous.id)) return false;
   if (ODPAC_GATE_ENABLED && !hasFiledOdpac(state, previous.id)) return false;
   if (!CALENDAR_GATE_ENABLED || !gateKeyStr) return true;
-  const passedOn = firstPassDateKey(state, previous.slug);
-  return passedOn !== undefined && passedOn < gateKeyStr;
+  const settledOn = quizSettledDateKey(state, previous.slug);
+  return settledOn !== undefined && settledOn < gateKeyStr;
+}
+
+/**
+ * The day's work is finished with - every stamp either earned, or its
+ * underlying thing out of attempts.
+ *
+ * This is the stamp gate's question, and it is deliberately weaker than
+ * `dayStampsComplete`. That one asks "is the passport page full", which is the
+ * right question for a souvenir and the wrong one for a gate: a joinee who
+ * rushed the pause drill three times, or missed 70% three times, has an
+ * unearnable stamp and would be held on that day forever.
+ *
+ * Reading, the checklist, the travel kit and the report have no attempt limit,
+ * so they must still actually be done. Only the drill and quiz stamps - the two
+ * capped things - are allowed to be settled-but-unearned.
+ */
+export function dayWorkFinished(state: ProgressState, dayId: DayId): boolean {
+  const day = DAYS.find((candidate) => candidate.id === dayId);
+  if (!day) return false;
+  const sheet = stampSheet(state, dayId);
+  if (sheet.stamps.length === 0) return false;
+  for (const stamp of sheet.stamps) {
+    if (stamp.earned) continue;
+    if (stamp.kind === "quiz" && quizSettled(state, day.slug)) continue;
+    if (stamp.kind === "drill") {
+      // Stamp ids are `${slug}.drill.${drillId}` - see `stamps.ts`.
+      const drillId = stamp.id.slice(`${day.slug}.drill.`.length) as DrillId;
+      if (drillSettled(state, drillId)) continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -85,8 +140,8 @@ export function dayUnlockInstant(
 ): Date | null {
   const previous = DAYS.find((day) => day.id === dayId - 1);
   if (!previous) return null;
-  const passedOn = firstPassDateKey(state, previous.slug);
-  return passedOn ? unlockInstantAfter(passedOn) : null;
+  const settledOn = quizSettledDateKey(state, previous.slug);
+  return settledOn ? unlockInstantAfter(settledOn) : null;
 }
 
 /**
@@ -100,8 +155,10 @@ export function dayLockReason(
 ): "quiz" | "stamps" | "odpac" | "tomorrow" | null {
   if (isDayUnlocked(state, dayId, gateKeyStr)) return null;
   const previous = DAYS.find((day) => day.id === dayId - 1);
-  if (!previous || !hasPassedQuiz(state, previous.slug)) return "quiz";
-  if (STAMP_GATE_ENABLED && !dayStampsComplete(state, previous.id)) {
+  // Mirrors `isDayUnlocked` exactly, in the same order, so the padlock never
+  // names a reason the gate is not actually blocking on.
+  if (!previous || !quizSettled(state, previous.slug)) return "quiz";
+  if (STAMP_GATE_ENABLED && !dayWorkFinished(state, previous.id)) {
     return "stamps";
   }
   if (ODPAC_GATE_ENABLED && !hasFiledOdpac(state, previous.id)) return "odpac";

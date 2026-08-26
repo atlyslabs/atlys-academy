@@ -29,7 +29,18 @@ const worker = {
     const forDate = istReportDate(controller);
     try {
       const report = await fetchReport(env, forDate);
+
       const blocks = report.slackBlocks ?? [];
+
+      // What a quiet day is worth saying is the app's decision, not this
+      // worker's - a day with nobody mid-course reduces to a single line, and a
+      // day where a live cohort all went idle names them, which is the case
+      // worth waking up for. Both are worth posting, so the only thing left to
+      // guard here is a 200 that carried no blocks at all.
+      if (blocks.length === 0) {
+        console.log(`no blocks returned for ${report.date}; nothing posted`);
+        return;
+      }
 
       for (const chunk of chunked(blocks, MAX_BLOCKS)) {
         await postToSlack(env, { blocks: chunk });

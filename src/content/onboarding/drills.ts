@@ -11,8 +11,8 @@ import type {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The centrepiece drill. The exchange is verbatim from the source doc's
- * "Interrupting = you're solving the WRONG problem" example.
+ * The centrepiece drill. The exchange is verbatim from lesson 2.5's IN PRACTICE
+ * example - the one where answering fast solves the wrong problem efficiently.
  */
 export const PAUSE_DRILL: PauseDrillContent = {
   openingMessage: "Is approval guaranteed?",
@@ -113,10 +113,9 @@ export const SORTER_STATEMENTS: readonly SorterStatement[] = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * The customer message and model answer are the "Why is there an Atlys fee on
- * top of the embassy fee?" script from Cluster A. The bad reply is written as a
- * foil - it violates several of the doc's Don'ts at once - and is not a real
- * transcript.
+ * The customer message and model answer are lesson 2.8's price answer. The bad
+ * reply is written as a foil - it violates several stated rules at once - and is
+ * not a real transcript.
  *
  * TODO(content): replace with a real sanitised Freshchat/Lime Chat transcript
  * once access is granted. See the access questions in the project brief.
@@ -146,10 +145,20 @@ export const REWRITE_EXERCISE: RewriteExercise = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Day 2 · Cluster A objection library (reference, not a graded drill)         */
+/* Day 2 · Objection scripts (lessons 2.8-2.11)                                */
 /* -------------------------------------------------------------------------- */
 
-/** Verbatim from the Cluster A section of the source doc. */
+/**
+ * The Address step, and only the Address step.
+ *
+ * Lesson 2.6 is explicit about what these are: "The scripts in the lessons that
+ * follow are the Address step — they are what goes here once Probe has told you
+ * which conversation you are actually in." They used to be a standalone
+ * hold-to-reveal reference tab, which meant the busiest day in the academy read
+ * the answers without ever running the loop that decides which answer applies.
+ * They are now the third slot of the `apac-loop` drill; `apacRoundFor` in
+ * `apac.ts` maps each one to the round it answers.
+ */
 export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
   {
     id: "obj.what_am_i_paying_for",
@@ -164,7 +173,12 @@ export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
     objection: "My local agent charges half of this.",
     subtext:
       "Usually true, and irrelevant. Don't attack the agent. The customer often knows him personally, and attacking him makes the agent's word more credible, not less.",
-    say: "He might be great. Two questions worth asking him though: what happens to your money if it's refused, and does he review the file before submitting or just fill and forward? He gets paid either way. We don't, on recovery. And where the route is under AtlysProtect, a refusal returns your service fee.",
+    // Both halves of the refund sentence, in the same breath, as 3.4 requires:
+    // "Not the total, and not the government fee". This script in particular
+    // cannot say only the first half - its own `then` line puts the government
+    // fee on the table, so it is the one conversation where the guest is
+    // adding up totals.
+    say: "He might be great. Two questions worth asking him though: what happens to your money if it's refused, and does he review the file before submitting or just fill and forward? He gets paid either way. We don't, on recovery. And where the route is under AtlysProtect, a refusal returns your service fee — the government fee goes to the consulate and doesn't come back.",
     then: "What did he quote, and does that include the government fee? Half the time the comparison is fee-vs-total and the gap disappears.",
   },
   {
@@ -193,13 +207,17 @@ export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/* Day 5 · Mock scenarios                                                      */
+/* Day 2 · Mock scenarios (lessons 2.8-2.11)                                   */
 /* -------------------------------------------------------------------------- */
 
 /**
- * The four scenarios named in the source doc. The "closes" reply in each is the
- * Cluster A script for that objection; the "deepens" replies are foils that
- * each break a specific rule from the Dos/Don'ts list.
+ * One scenario per objection lesson. The "closes" reply in each is that
+ * lesson's own answer; the "deepens" replies are foils that each break a
+ * specific stated rule.
+ *
+ * These run on Day 2 (see `days.ts`), not Day 5 - the academy has been three
+ * days since Aug 2026. The old header said Day 5 and nothing broke, which is
+ * exactly how a content edit lands on the wrong day.
  */
 export const MOCK_SCENARIOS: readonly MockScenario[] = [
   {

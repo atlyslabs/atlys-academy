@@ -15,6 +15,14 @@ import type { Day } from "./types";
  *
  * Wording in `learn` and `activities` is the hiring manager's or the playbook's.
  * Do not add training content here that exists in neither.
+ *
+ * `drills` was rebalanced in Aug 2026 after an audit against the lessons. Day 2
+ * had seven drills for eleven lessons and none of them ran APAC; Day 3 had eight
+ * lessons and two drills, both over the same nine ownership cards. So
+ * `objection-library` (never a drill - hold-to-reveal reading, and 2.6 says its
+ * scripts are APAC's Address step) became `apac-loop`, and `ownership-run`
+ * (a speed round over cards `ownership-sort` had just dealt) gave its slot to
+ * the four Day 3 lessons that had none: 3.8, 3.5, 3.6 and 3.2.
  */
 export const DAYS: readonly Day[] = [
   {
@@ -47,14 +55,12 @@ export const DAYS: readonly Day[] = [
         label: "Read the Company + Product overview",
         detail: "All Things Atlys: Glossary (Notion)",
         href: "https://www.notion.so/goatlys/All-Things-Atlys-Glossary-20bd57ef7388804fbb91f7e1984b7adf",
-        accessNeeded: true,
       },
       {
         key: "day1.request_tool_access",
         label: "Request every tool on the travel kit",
         detail:
-          "Cadence, Freshchat, Walkie Talkie, Notion. Chase these today.",
-        accessNeeded: true,
+          "Cadence, Freshchat, Walkie Talkie, Boomerang, DD, Notion. Chase these today.",
       },
       {
         key: "day1.shadow_chats",
@@ -67,8 +73,11 @@ export const DAYS: readonly Day[] = [
         detail: "Recite both without notes. QA scores the opening verbatim.",
       },
       {
+        // Key kept: progress rows reference it, and renaming one in place
+        // orphans every joinee who has already ticked it. The meeting moved
+        // from Shovan to Komal Rawat in Aug 2026; only the label changes.
         key: "day1.intro_shovan",
-        label: "Intro meeting with Shovan",
+        label: "Intro meeting with Komal Rawat",
         detail: "1 hour",
       },
     ],
@@ -95,13 +104,16 @@ export const DAYS: readonly Day[] = [
         key: "day2.review_faqs",
         label: "Review the top pre-checkout FAQs",
         detail: "Freshchat",
-        accessNeeded: true,
       },
       {
         key: "day2.read_transcripts",
         label: "Read past high-quality chat and call transcripts",
-        detail: "Freshchat / Walkie-Talkie",
-        accessNeeded: true,
+        // Not Walkie Talkie: it is a calling tool, not a dashboard, and nothing
+        // readable is stored there. The old detail said "Freshchat /
+        // Walkie-Talkie", a mechanical rename of the retired "Lime Chat /
+        // Exotel" that missed the distinction 1.10 draws between the two.
+        detail:
+          "Freshchat for chat threads, Cadence for case history and notes. Ask your mentor where call recordings live.",
       },
       {
         key: "day2.shadow_chats",
@@ -119,18 +131,23 @@ export const DAYS: readonly Day[] = [
           "Note down the questions guests ask repeatedly, and the phrases that build trust",
       },
       {
+        // Key kept for the same reason as `day1.intro_shovan`. Day 2's mentor
+        // is the joinee's team leader, so the sync is with them.
         key: "day2.sync_shovan",
-        label: "Sync with Shovan",
+        label: "Sync with your team leader",
         detail: "30 minutes",
       },
     ],
+    // `apac-loop` sits before `mock-scenarios` on purpose: 2.6 is the frame the
+    // four objection lessons plug into, so the loop is run before the scenarios
+    // that are its Address step.
     drills: [
       "pause-10s",
       "dos-donts",
       "anxiety-wall",
       "reframe-deck",
       "rewrite-chat",
-      "objection-library",
+      "apac-loop",
       "mock-scenarios",
     ],
   },
@@ -150,16 +167,17 @@ export const DAYS: readonly Day[] = [
       "What a full day looks like",
       "Edge cases that break the normal flow",
     ],
+    // Two items were removed in Aug 2026 along with Day 3's mentor cards:
+    // `day3.ops_failure_points` ("Ask the Ops team for 5 common failure
+    // points") and `day3.qa_ops_lead` ("Q&A session with the Ops Lead"). Both
+    // sent a joinee to an Ops Lead the academy no longer names or links to, so
+    // they asked for a meeting nobody was set up to give. Stored rows under
+    // those keys are harmless orphans - nothing reads a row for an activity no
+    // longer listed - and Day 3's checklist stamp now needs four ticks, not six.
     activities: [
-      {
-        key: "day3.ops_failure_points",
-        label: "Ask the Ops team for 5 common failure points",
-        detail: "Write them down. They become your best objection answers.",
-      },
       {
         key: "day3.review_applications",
         label: "Review real (sanitised) applications",
-        accessNeeded: true,
       },
       {
         key: "day3.shadow_chats",
@@ -167,24 +185,35 @@ export const DAYS: readonly Day[] = [
         detail: "Today's ODPAC report comes from these.",
       },
       {
+        // Repointed Aug 2026: this used to be the practical half of the
+        // deprecated 1.8. It now runs off "The full stack" (1.9), which is the
+        // lesson that survives, and covers the whole stack rather than one tool
+        // that is expected to be replaced.
         key: "day3.walk_cadence",
-        label: "Walk through Cadence with your mentor",
+        label: "Walk the tool stack with your mentor",
         detail:
-          "Guest history, AI overview, document status, journey status. Note where each lives.",
-        accessNeeded: true,
+          "Open each tool from “The full stack” in Day 1's reading. In Cadence, find guest history, document status and journey status, and note where each lives.",
       },
       {
-        key: "day3.qa_ops_lead",
-        label: "Q&A session with the Ops Lead",
-        detail: "1 hour. Map guest questions against correct explanations.",
-      },
-      {
+        // Key kept: progress rows reference it. The label used to point at a
+        // "fishbone self-audit" that exists in no lesson, no doc and no
+        // component - the only way to complete it was to tick a box for
+        // something never done. Repointed at something reachable that does the
+        // same job.
         key: "day3.fishbone",
-        label: "Identify your weakest bone from the fishbone self-audit",
-        detail: "Raise it with your PM before the academy ends.",
+        label:
+          "Name the “what new joiners get wrong” you are most likely to be",
+        detail:
+          "Pick one from the three days and raise it with your PM before the academy ends.",
       },
     ],
-    drills: ["ownership-sort", "ownership-run"],
+    drills: [
+      "ownership-sort",
+      "edge-cases",
+      "lead-status",
+      "followup-rewrite",
+      "ds160-consistency",
+    ],
   },
 ];
 

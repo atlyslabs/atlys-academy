@@ -12,6 +12,13 @@ import { SORTER_STATEMENTS } from "@/content/onboarding/drills";
 import type { SorterStatement, Verdict } from "@/content/onboarding/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  canReplayDrill,
+  drillAttemptsLeft,
+  drillAttemptsUsed,
+  isTerminalDrillStatus,
+  MAX_DRILL_ATTEMPTS,
+} from "@/lib/progress/attempts";
 import { useProgress } from "@/lib/progress/provider";
 import { seededShuffle } from "@/lib/shuffle";
 import { cn } from "@/lib/utils";
@@ -44,10 +51,17 @@ const HINT_CLASS =
  * fallback rather than decoration.
  */
 export function DosDontsSorter() {
-  const { state, setDrillResult } = useProgress();
+  const { state, ready, setDrillResult, beginDrillAttempt } = useProgress();
   // Bumping the round reshuffles. Seeded so server and client agree - see
   // `seededShuffle`.
   const [round, setRound] = useState(0);
+  /**
+   * Set the moment a play is deliberately started from the recorded result.
+   *
+   * Without it the stored terminal status would still be sitting there and the
+   * fresh deck would be locked away again on the very next render.
+   */
+  const [replaying, setReplaying] = useState(false);
   const [index, setIndex] = useState(0);
   const [sorted, setSorted] = useState<SortedCard[]>([]);
   /** Live drag offset of the top card, px from the pointerdown origin. */
@@ -78,6 +92,43 @@ export function DosDontsSorter() {
   const finished = index >= queue.length;
   const score = sorted.filter((card) => card.correct).length;
   const storedResult = state.drills["dos-donts"];
+  const storedStatus = storedResult?.status;
+  const attemptsUsed = drillAttemptsUsed(state, "dos-donts");
+  const attemptsLeft = drillAttemptsLeft(state, "dos-donts");
+  // Before the stored progress has hydrated there is no result yet, so this
+  // reads as a full set of plays rather than flashing a false "none left" at a
+  // joinee who has only just arrived.
+  const canReplay = canReplayDrill(state, "dos-donts");
+
+  /**
+   * Whether a reload has to be met with the recorded result rather than a deck.
+   *
+   * The three-play cap lives entirely in `beginDrillAttempt`, and that only
+   * fires from the replay control - so handing a finished joinee a fresh
+   * playable deck on mount let them sort the same ten statements again and
+   * again, F5 by F5, without ever spending a play. Reading the stored status
+   * here is what makes the cap mean something.
+   *
+   * `ready` gates it because `state.drills` is empty until the store has been
+   * read, and a drill that is playable for that first tick is the correct
+   * reading of "nothing recorded yet". `finished` keeps a joinee who has just
+   * sorted the deck in THIS session on their own result screen, with their own
+   * answers under it, instead of swapping it for a summary the instant the
+   * write lands.
+   */
+  // The local counterweight is "has this joinee touched the deck in THIS
+  // session", not "have they finished it". That distinction is the whole
+  // correctness of this guard. `ready` starts false and, in remote mode,
+  // `store.load()` is a network round-trip - so a joinee can mount, start
+  // playing, and only then have hydration land. If the counterweight were the
+  // finished signal, that half-played run would be replaced by the recorded
+  // panel mid-play and continuing would cost them a play. Untouched is the only
+  // state it is safe to lock.
+  const lockedToStoredResult =
+    ready &&
+    !replaying &&
+    isTerminalDrillStatus(storedStatus) &&
+    sorted.length === 0;
 
   // A keyboard fling unmounts the focused card - hand focus to its successor
   // so the user is not dumped back to the top of the page.
@@ -128,6 +179,15 @@ export function DosDontsSorter() {
   }
 
   function restart() {
+    // Spend a play before any local state moves, so the count is charged
+    // against the run that just ended rather than the one about to start. The
+    // reducer only bills this when the stored status is already terminal, so a
+    // mid-deck reshuffle stays free and this needs no guard of its own.
+    beginDrillAttempt("dos-donts");
+    // The stored status stays terminal until this new deck is finished, so
+    // without this the run we are about to hand over would be locked away as a
+    // recorded result on the next render.
+    setReplaying(true);
     setRound(round + 1);
     setIndex(0);
     setSorted([]);
@@ -198,7 +258,41 @@ export function DosDontsSorter() {
         ) : null
       }
     >
-      {!finished && current && (
+      {/* Stands in for the whole drill body: the deck only comes back when a
+          play is deliberately spent on it. */}
+      {lockedToStoredResult && (
+        <div className="rounded-[3px] border-2 border-ink/25 bg-surface-soft p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+            Recorded result
+          </p>
+          <p className="mt-2 text-lg font-medium">
+            {storedResult?.score !== undefined
+              ? `${storedResult.score} of ${storedResult.maxScore} sorted correctly.`
+              : `Sorted · ${storedStatus}`}
+          </p>
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+            {attemptsUsed} of {MAX_DRILL_ATTEMPTS} plays used
+          </p>
+          <div className="mt-4">
+            {/* Same reasoning as the end-of-deck control: the button leaves
+                with the last play rather than greying out. */}
+            {canReplay ? (
+              <Button variant="secondary" size="sm" onClick={restart}>
+                Shuffle and go again
+                <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+                  {attemptsLeft} left
+                </span>
+              </Button>
+            ) : (
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                All {MAX_DRILL_ATTEMPTS} plays used · the recorded score stands.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!lockedToStoredResult && !finished && current && (
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
             {index + 1} of {queue.length} · swipe, arrow keys, or the buttons
@@ -303,16 +397,24 @@ export function DosDontsSorter() {
       {/* Screen-reader announcement of each verdict - the visual reveal lands
           below the deck, which a swipe user may not be focused on. */}
       <p className="sr-only" role="status">
-        {finished
-          ? `All sorted. ${score} of ${queue.length} correct.`
-          : lastSorted
-            ? `${lastSorted.correct ? "Correct." : "That one belongs on the other side."} ${lastSorted.statement.because}`
-            : ""}
+        {/* Kept mounted but silent while locked - the live region has nothing
+            to announce when there is no deck in play, and tearing it out and
+            back would risk swallowing the next verdict. */}
+        {lockedToStoredResult
+          ? ""
+          : finished
+            ? `All sorted. ${score} of ${queue.length} correct.`
+            : lastSorted
+              ? `${lastSorted.correct ? "Correct." : "That one belongs on the other side."} ${lastSorted.statement.because}`
+              : ""}
       </p>
 
       {/* The verdict on the last swipe stays put until the next card
           commits, so there is time to read the reasoning. */}
-      {lastSorted && (
+      {/* Guarded as well as the deck: a joinee can sort a card or two in the
+          tick before the store is read, and once the lock lands the panel has
+          to stand alone rather than trailing a half-played run under it. */}
+      {!lockedToStoredResult && lastSorted && (
         <div
           key={lastSorted.statement.id}
           className={cn(
@@ -338,13 +440,27 @@ export function DosDontsSorter() {
           <p className="text-lg font-medium">
             {score} of {queue.length} sorted correctly.
           </p>
-          <Button variant="secondary" size="sm" onClick={restart}>
-            Shuffle and go again
-          </Button>
+          {/* The button goes away with the last play rather than greying out:
+              a disabled control invites clicking, and the note that replaces it
+              says plainly why there is nothing left to click. */}
+          {canReplay ? (
+            <Button variant="secondary" size="sm" onClick={restart}>
+              Shuffle and go again
+              {attemptsUsed > 0 && (
+                <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+                  {attemptsLeft} left
+                </span>
+              )}
+            </Button>
+          ) : (
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+              All {MAX_DRILL_ATTEMPTS} plays used · the recorded score stands.
+            </p>
+          )}
         </div>
       )}
 
-      {sorted.length > 0 && (
+      {!lockedToStoredResult && sorted.length > 0 && (
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <SortedColumn
             heading="✅ Dos"

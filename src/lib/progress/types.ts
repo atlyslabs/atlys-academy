@@ -21,6 +21,15 @@ export interface DrillResult {
   status: string;
   score?: number;
   maxScore?: number;
+  /**
+   * Plays started, for the three-attempt cap (`MAX_DRILL_ATTEMPTS`).
+   *
+   * Optional, and absence means one: rows written before the cap existed carry
+   * no count, and reading those as a single used play leaves the joinee two
+   * more rather than locking them out of a drill they had already done. Always
+   * read it through `drillAttemptsUsed` in `attempts.ts`, never directly.
+   */
+  attempts?: number;
   updatedAt: Timestamp;
 }
 

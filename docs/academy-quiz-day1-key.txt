@@ -1,0 +1,81 @@
+Day 1 · The role and the desk - ANSWER KEY
+Matches academy-quiz-day1-paper.txt. Regenerating both keeps them in step.
+
+ 1.  OPTION 4  -  Make the visa the predictable part of the trip: a committed date, a published policy, a route that can be filed
+
+     WHY: Customers do not come to buy a visa, they come to stop being afraid of one. What removes the fear is the things we can actually be held to (a committed delivery date we are accountable to, a published refund policy, a route that can be filed), not a confident tone. New joiners miss this two ways: treating the conversation as order processing, and reaching for false reassurance, which only moves the fear further down the line.
+
+     ------------------------------------------------------------------
+
+ 2.  OPTION 4  -  Whether they have ever been refused a visa, anywhere
+
+     WHY: Ask every hard-country customer whether they have ever been refused, anywhere. Most agents forget, and rejection recovery is the highest-value work per case by a wide margin, on a fraction of the volume. A prior refusal does not block a new application, but it changes the file, and learning about it after payment is learning about it too late.
+
+     ------------------------------------------------------------------
+
+ 3.  OPTION 3  -  Pre-checkout, in writing: a timeline, a refund figure or a route that could not be delivered
+
+     WHY: Almost every angry Atlys customer was made angry pre-checkout: promised a timeline that could not be met, told a refund covered more than it does, allowed to believe approval was assured, or sold a route that could not be filed. Each one is created by an agent, in writing, before a document reaches ops, and because of the on-time guarantee a bad promise costs the company the entire fee and produces a detractor. You are the last point where a customer can be saved from a bad decision, and the first point where we can inflict one.
+
+     ------------------------------------------------------------------
+
+ 4.  OPTION 1  -  Yours. It is a whether-and-what question, and payment landing does not transfer it
+
+     WHY: The test: if it is about whether and what, it is yours; if it is about where it is and when, it is theirs. Adding a dependant is whether-and-what (category, eligibility, whether the file survives an officer), so deciding it is your job, not something to acknowledge and forward. You stay their named person for a fixed period after checkout. Disappearing at the seam once payment lands is the Day 1 mistake new joiners make most.
+
+     ------------------------------------------------------------------
+
+ 5.  OPTION 2  -  Exit and flag it. A request to fabricate a document is not a negotiation
+
+     WHY: Fabricated documents get customers banned, not just refused, so this is a walk-away with a flag: immediate, and not a negotiation. Asking what else exists in their name is the right move for someone who is *worried* their balance is weak; it is no longer the move once they have asked you to change what a document says. Leaving the decision with them is the same red line with your fingerprints wiped off it.
+
+     ------------------------------------------------------------------
+
+ 6.  OPTION 3  -  Disqualify openly. Selling to the unqualified is negative margin once refunds and reviews are counted
+
+     WHY: Disqualify openly. Selling to someone whose timeline cannot work is negative margin once the refund, the hours and the review are counted, so the walk-away is the commercially correct move, not just the kind one, and you do not need permission to make it. Writing the risk into the chat protects the record and not the customer; you still took money for a filing you expect to fail. "They are an adult" outsources a judgement that is the whole point of an advisory function. And asking Ops to prioritise spends someone else's capacity to rescue a sale that should not have been made.
+
+     ------------------------------------------------------------------
+
+ 7.  OPTION 1  -  Campaigns run treatment against control, so what counts is the lift you created, not conversions that would have happened anyway
+
+     WHY: Campaigns run treatment against control, so what is reported is incremental conversion (the lift you created), not the gross number that closed. Conversions that would have happened without you are not evidence of anything. This is the reason the function is advisory rather than pushy: pressure moves gross numbers and does nothing to lift, so the tactics that look like performance produce none.
+
+     ------------------------------------------------------------------
+
+ 8.  OPTION 3  -  Come back on the line, buy more time, and thank them on return: a hold is capped at two minutes before you check in
+
+     WHY: Two minutes is the cap. Before any hold you state the reason, give a two-minute timeframe and ask permission; if it runs over, you come back, buy more time, and thank them on return. Staying off the line to get the complete answer is the tempting one and it is wrong: the guest cannot tell the difference between you working and you having forgotten them. Transferring turns a hold into a deflection, which is a separate flag. And "three minutes is normal" is the belief the standard exists to correct. Failing to seek permission before a hold is one of the eight QA-flagged behaviours on its own.
+
+     ------------------------------------------------------------------
+
+ 9.  OPTION 2  -  “Good morning / afternoon / evening, this is [Name] from Atlys Guest Delight, how may I help you with your visa request today?”
+
+     WHY: The time-based greeting is scored verbatim, and opening with “Hi” or “Hello” is one of the eight QA-flagged behaviours on its own, however good the rest of the call is. It is not a formality to get past: it is the most audited sentence you will say. And “whatever matches their tone” is the reasoning that produces a different opening every time, which is exactly what a standard exists to prevent.
+
+     ------------------------------------------------------------------
+
+10.  OPTION 3  -  “I'm raising this with Ops now and I will update you by 4 PM today.”
+
+     WHY: Name the team, commit to a specific time, and keep the update yours. The other three are each a separate flag: “let me check with someone” and “that's not my department, but someone will call you” are both deflecting ownership, and “I'll try my best” commits to nothing while sounding cooperative — which is why it is on the never-say list rather than the merely-weak one. Ownership means the guest hears a name, a time, and you.
+
+     ------------------------------------------------------------------
+
+11.  OPTION 4  -  Ops
+
+     WHY: Ops owns visa processing, timelines and exceptions. Product owns feature clarity, bugs and roadmap.
+
+     ------------------------------------------------------------------
+
+12.  OPTION 2  -  Product
+
+     WHY: Bugs are Product: feature clarity, bugs and roadmap are their desk. Ops owns visa processing, timelines and exceptions. Knowing which team owns which decision is the difference between routing a problem and sitting on it.
+
+     ------------------------------------------------------------------
+
+13.  OPTION 4  -  So honesty is the winning strategy for you personally, not only the safe one for the company
+
+     WHY: Blended comp is what makes honesty the associate's own winning strategy rather than only the company's safe one, and that distinction matters most in the month you are behind on target. Paid on conversion alone, the fastest-reporting metric wins: conversion lands today, while refunds, rejections and QA land weeks later, so a bad month looks like a good one right up until it does not. Promise violations per 100 calls is the same idea applied to the Day 1 red lines: they are scored events, not matters of taste.
+
+     ------------------------------------------------------------------
+

@@ -8,16 +8,18 @@ import {
   normalizeRole,
   normalizeTeamLeader,
 } from "@/content/onboarding/team-leaders";
-import { isAdminEmail } from "@/lib/auth/config";
+import { isAdminEmail, isAuthConfigured } from "@/lib/auth/config";
 import { ADMIN_ENABLED } from "@/lib/dev-flags";
 import {
   emptyProgress,
   PROGRESS_VERSION,
   type ProgressState,
 } from "@/lib/progress/types";
+import { hasEarnedVoucher, voucherBlockers } from "@/lib/progress/voucher";
 import { isSupabaseConfigured } from "./db";
 import { gradeQuiz, UnknownQuizError } from "./grade";
 import { buildDailyReport, istToday } from "./report";
+import { voucherCodeFor } from "./voucher";
 import {
   adminOverview,
   cohortLeaderboard,
@@ -74,6 +76,13 @@ const progressSchema = z.object({
       status: z.string().min(1),
       score: z.number().int().min(0).nullish(),
       maxScore: z.number().int().min(1).nullish(),
+      // Plays used, for the three-attempt cap. `nullish` for exactly the same
+      // reason as `score` above and `avatar` below: it round-trips through
+      // Postgres as null for any drill row written before the column existed,
+      // and one null on one field used to reject the ENTIRE upload - taking
+      // that joinee's quiz marks, checklist and reports down with it. A drill
+      // with no recorded count is normal; it must never cost anyone their sync.
+      attempts: z.number().int().min(1).nullish(),
       updatedAt: z.string(),
     }),
   ),
@@ -137,12 +146,44 @@ const routes = app
     c.json({ ok: true, service: "onboarding", sync: isSupabaseConfigured }),
   )
 
-  .post("/quiz/:slug/submit", zValidator("json", submitSchema), (c) => {
+  /**
+   * Grade one quiz submission. The answer key lives on the server and this is
+   * the only thing that reads it.
+   *
+   * Two guards, and the second is the one that matters. `src/middleware.ts`
+   * matches `/onboarding/*` and `/admin/*` but NOT `/api/*`, so without the
+   * session check an anonymous request reaches the grader; and a session check
+   * alone would still hand the whole key to any signed-in joinee who posted an
+   * empty `responses` array, because every joinee has a session. So the key is
+   * released per question, and only for a question that was actually answered.
+   *
+   * The UI cannot notice either guard: the quiz page sits behind the
+   * middleware, and its Submit button stays disabled until every question has
+   * a selection (`allAnswered` in `QuizRunner`), so a legitimate submission
+   * gets a key for every question exactly as before.
+   */
+  .post("/quiz/:slug/submit", zValidator("json", submitSchema), async (c) => {
+    // Gated on `isAuthConfigured` the same way the middleware is, so a local
+    // run with no Google credentials still grades - that is the documented
+    // "app runs with none of these set" behaviour in .env.example.
+    if (isAuthConfigured) {
+      const session = await auth();
+      if (!session?.user?.email) return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const slug = c.req.param("slug");
     const { responses } = c.req.valid("json");
 
     try {
-      return c.json(gradeQuiz(slug, responses));
+      const graded = gradeQuiz(slug, responses);
+      return c.json({
+        ...graded,
+        breakdown: graded.breakdown.map((result) =>
+          result.selected === null
+            ? { ...result, correctOptionId: "", explanation: "" }
+            : result,
+        ),
+      });
     } catch (error) {
       if (error instanceof UnknownQuizError) {
         return c.json({ error: "Unknown quiz" }, 404);
@@ -180,6 +221,31 @@ const routes = app
     };
     await saveProgress(profile.id, state);
     return c.json({ ok: true });
+  })
+
+  /**
+   * The joinee's end-of-academy voucher code, if they have earned it.
+   *
+   * Authorised HERE, not in the component. The client decides whether to *ask*,
+   * but this handler re-derives the answer from the joinee's stored progress, so
+   * editing localStorage into a finished state gets a joinee nothing. The code
+   * itself is derived from `profiles.id`, which never leaves the server - so
+   * there is no code to leak until it has genuinely been earned.
+   *
+   * `earned: false` is a 200, not an error: "you have not finished yet" is a
+   * normal answer the card renders as a checklist of what is left.
+   */
+  .get("/voucher", async (c) => {
+    const profile = await currentProfile();
+    if (!profile) return c.json({ error: "Sync unavailable" }, 503);
+    const state = await loadProgress(profile.id);
+    if (!hasEarnedVoucher(state)) {
+      return c.json({ earned: false as const, blockers: voucherBlockers(state) });
+    }
+    return c.json({
+      earned: true as const,
+      code: voucherCodeFor(profile.id),
+    });
   })
 
   /** Cohort-scoped leaderboard - visible to every joinee in that cohort. */

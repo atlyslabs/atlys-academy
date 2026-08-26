@@ -11,9 +11,7 @@
  * can, exactly as `mentors.ts` already is for the client.
  *
  * `id` is the stable value that gets persisted and must never change once real
- * joinees have picked it; `name` is the label and is free to be edited. The
- * entries below are placeholders - swap them for the real org chart, keeping the
- * `{ id, name }` shape.
+ * joinees have picked it; `name` is the label and is free to be edited.
  */
 
 /**
@@ -36,14 +34,23 @@ export interface TeamLeader {
   name: string;
 }
 
-export const TEAM_LEADERS: readonly TeamLeader[] = [
-  { id: "placeholder_1", name: "Team leader 1" },
-  { id: "placeholder_2", name: "Team leader 2" },
-  { id: "placeholder_3", name: "Team leader 3" },
-  { id: "placeholder_4", name: "Team leader 4" },
-  { id: "placeholder_5", name: "Team leader 5" },
-  { id: "placeholder_6", name: "Team leader 6" },
-] as const;
+/**
+ * The seed roster: **deliberately empty.**
+ *
+ * The live roster is the `team_leaders` table, editable from the admin desk,
+ * and `teamLeaderRoster()` falls back to this list only when the database
+ * cannot answer. It used to hold six entries named "Team leader 1 … 6" with ids
+ * `placeholder_1 …`, and those are exactly the wrong thing to fall back to: a
+ * joinee picks one at sign-in, the fake id lands in `profiles.team_leader`, and
+ * the analytics tab then credits "Team leader 3" for a real team's work.
+ *
+ * Empty is the honest fallback. An unreachable roster shows an empty dropdown -
+ * a visible problem someone fixes - rather than six plausible names that
+ * silently corrupt the data behind the desk.
+ *
+ * Add real leaders on the admin desk, not here.
+ */
+export const TEAM_LEADERS: readonly TeamLeader[] = [] as const;
 
 /** The band a joinee falls under when they have no team leader on file. */
 export const UNASSIGNED_TEAM_LEADER = "Unassigned";

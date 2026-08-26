@@ -1,7 +1,7 @@
 "use client";
 
 import { localProgressStore } from "./local-store";
-import type { ProgressState, ProgressStore } from "./types";
+import type { DrillResult, ProgressState, ProgressStore } from "./types";
 
 /**
  * Supabase-backed store, used when the server reports sync is available
@@ -32,13 +32,58 @@ async function fetchServerState(): Promise<ProgressState | null> {
   }
 }
 
-/** Server wins on shared keys; local-only work is kept. Attempts union by id. */
+/**
+ * Merge one drill result seen on both sides.
+ *
+ * Server-wins is the rule everywhere else in this merge, and for drills it is
+ * not safe on its own. Plays used and the best score are both HIGH-WATER MARKS,
+ * and a server row can legitimately be behind - the client debounces uploads by
+ * 800ms, and work done offline has not been sent at all. Taking the server's
+ * copy wholesale would hand a joinee back plays they had already spent (play
+ * three times offline, reload, and the stale row says one), and could drop a
+ * better score they had earned.
+ *
+ * So: the greater attempt count, the greater score, and the newer timestamp and
+ * status. Nothing here can ever give a joinee fewer plays than they have used.
+ */
+function mergeDrill(
+  server: DrillResult | undefined,
+  local: DrillResult | undefined,
+): DrillResult {
+  // One side is always present: the loop below only visits keys the server has.
+  if (!server) return local as DrillResult;
+  if (!local) return server;
+  const newer = server.updatedAt >= local.updatedAt ? server : local;
+  const attempts = Math.max(server.attempts ?? 1, local.attempts ?? 1);
+  const score =
+    server.score == null
+      ? local.score
+      : local.score == null
+        ? server.score
+        : Math.max(server.score, local.score);
+  return {
+    ...newer,
+    attempts,
+    score,
+    maxScore: server.maxScore ?? local.maxScore,
+  };
+}
+
+/**
+ * Server wins on shared keys; local-only work is kept; quiz attempts union by
+ * id. Drills are the one exception - see `mergeDrill` - because their attempt
+ * count and score are high-water marks that a stale server row must not lower.
+ */
 function merge(server: ProgressState, local: ProgressState): ProgressState {
   const attemptIds = new Set(server.attempts.map((a) => a.id));
+  const drills: ProgressState["drills"] = { ...local.drills };
+  for (const key of Object.keys(server.drills) as (keyof ProgressState["drills"])[]) {
+    drills[key] = mergeDrill(server.drills[key], local.drills[key]);
+  }
   return {
     ...server,
     completedItems: { ...local.completedItems, ...server.completedItems },
-    drills: { ...local.drills, ...server.drills },
+    drills,
     exercises: { ...local.exercises, ...server.exercises },
     attempts: [
       ...server.attempts,

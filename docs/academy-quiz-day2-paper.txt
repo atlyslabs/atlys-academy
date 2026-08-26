@@ -1,0 +1,131 @@
+DAY 2 · THE GUEST AND THE CONVERSATION - QUIZ
+18 questions | 70% to pass | unlimited retries
+
+Name: ______________________________     Date: ______________
+
+
+1.  What is the "Shut up for 10 seconds" rule actually for?
+
+    1)  It gives you time to look up the right answer
+    2)  It makes you sound more senior and considered
+    3)  It keeps your average handling time within the target
+    4)  The guest fills the silence and tells you the real fear behind their question
+
+2.  A guest asks "Is approval guaranteed?" and you reply immediately. What has gone wrong?
+
+    1)  You should have escalated the question to Ops first
+    2)  You answered the question but missed the fear. You are now solving the wrong problem
+    3)  Nothing, as long as the answer is accurate
+    4)  You broke the response-time SLA
+
+3.  Which of these does the doc list as something silence gets you for free?
+
+    1)  A shorter conversation
+    2)  A higher conversion rate on the first message
+    3)  Permission to quote a discount
+    4)  Intel: budget concerns, timeline pressure, past bad experiences, competitor comparisons
+
+4.  Which of these is a Don't?
+
+    1)  Being clear about timelines and next steps
+    2)  Asking clarifying questions before you answer
+    3)  Guessing whether a visa will be approved
+    4)  Acknowledging the concern first
+
+5.  You have a saved reply that roughly fits the question a guest just asked. What do you do?
+
+    1)  Send it. Consistency of wording is the point
+    2)  Send it and add an apology in case it misses
+    3)  Send it, then follow up if they push back
+    4)  Do not send it as-is. A template sent without context proves nobody read them
+
+6.  Ops has told a guest one thing and you believe a different answer is correct. What do you do?
+
+    1)  Give the guest your answer, since you spoke to them last
+    2)  Do not contradict Ops. Resolve it with Ops before you reply to the guest
+    3)  Stop replying and hand the chat to someone else
+    4)  Give the guest both answers and let them choose
+
+7.  What tone are you aiming for?
+
+    1)  Formal and precise
+    2)  Urgent and high-energy
+    3)  Apologetic and accommodating
+    4)  Friendly, calm, confident
+
+8.  How should you reassure a nervous guest?
+
+    1)  By moving the conversation to the price instead
+    2)  With facts
+    3)  With your best estimate of the likely outcome
+    4)  With reassuring language, whatever the facts are
+
+9.  You are the third agent a customer has spoken to this week. All of them answered his questions well. What is the strongest thing you can do differently?
+
+    1)  Match the best offer he has been given so price stops being a reason to keep shopping
+    2)  Answer them more thoroughly and more warmly, so he would rather deal with you
+    3)  Build the relationship first and let the price conversation come once he trusts you
+    4)  Change what he thinks the problem is, rather than answering the same questions better
+
+10.  Every customer who reaches us is a P0. Four are waiting and you can only work one. How do you choose?
+
+    1)  By who sounds most distressed, since they are in the worst state right now
+    2)  By what each case is worth, since revenue is the honest tie-breaker
+    3)  In the order they arrived. Anything else is grading people, which P0 forbids
+    4)  By consequence of delay, and the other three get a time from you, not silence
+
+11.  A customer travelling in seven weeks says our refund policy is what makes it safe to book with us. What do you teach him?
+
+    1)  A refund protects the fee; only time protects the trip, which is why seven weeks is the asset here
+    2)  That the cover is stronger than he thinks, once you walk him through it for his route
+    3)  That the refund is secondary, because a coherent file is what actually decides the outcome
+    4)  Nothing. He has read the product correctly, so confirm it and move on to documents
+
+12.  A guest says "you can't guarantee approval, so what am I paying for?" What is really going on?
+
+    1)  They want a discount and are opening the bargaining
+    2)  They are pricing the outcome. You cannot sell the outcome, so move them to pricing the avoidable failure
+    3)  They do not understand what the embassy fee is
+    4)  They have already decided not to buy
+
+13.  A guest says their local agent charges half. Why should you not attack the agent?
+
+    1)  It is against company policy to name competitors
+    2)  The agent may later become a channel partner
+    3)  You cannot verify what he charges
+    4)  They often know him personally. Attacking him makes his word more credible, not less
+
+14.  What is the most useful question to ask about a competing quote?
+
+    1)  Whether the quoted amount includes the government fee
+    2)  Whether the agent will match our price
+    3)  How long the agent has been in business
+    4)  Whether the agent has an office you can visit
+
+15.  How should you handle the Atlys fee when it is questioned?
+
+    1)  Redirect to the refund policy instead
+    2)  Acknowledge it is high and offer to check for a discount
+    3)  Describe it as a nominal convenience charge
+    4)  State plainly what it buys. Never apologise for it or soften it
+
+16.  A guest says "if I'm rejected I lose the whole trip, not just the fee." What is the right opening move?
+
+    1)  Suggest they book refundable flights and move on
+    2)  Lead with the refund policy on eligible routes
+    3)  Agree with them (do not pretend a fee refund covers a trip), then name what actually protects it
+    4)  Reassure them that rejections are rare
+
+17.  A guest says they will just apply themselves on the VFS portal. What is the strongest response?
+
+    1)  Point out that mistakes on the portal cannot be undone
+    2)  Offer a discount so the price gap closes
+    3)  Explain that the portal is difficult to use correctly
+    4)  Name the two things self-service cannot do (an earlier slot than the portal shows, and an outside reader on their file), then ask how far out their travel is
+
+18.  In the APAC framework, what is the Probe step for?
+
+    1)  Finding the real concern underneath the stated objection, before you answer it
+    2)  Testing whether the guest is a serious buyer
+    3)  Collecting the qualification fields you did not get earlier
+    4)  Buying time while you look up the right answer

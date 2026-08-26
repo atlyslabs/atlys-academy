@@ -1,17 +1,30 @@
 /**
- * Crop boxes into `public/stamps.jpg` - a 1254x1254 sheet of twenty-five
- * bespoke passport stamps on cream, one per collectable stamp in the academy,
- * laid out 5x5 IN PAGE ORDER: cell 1 is Day 1's first stamp, cell 25 is
- * Day 3's quiz. Each face carries its own word (READING, GATE HOLD, ...), so
- * the face is the label - the app's caption only annotates empty slots.
+ * Crop boxes into `public/stamps.jpg` - a 2752x1536 sheet of philately-style
+ * passport stamps on cream, laid out 6 wide x 5 deep, one face per collectable
+ * stamp in the academy. Third sheet (Aug 2026): each face now carries its word
+ * across the TOP and sits well inside its cell, which is what fixed the earlier
+ * sheets' habit of ink crossing the cell line and getting trimmed by the crop.
+ * `stamp-faces.ts` binds faces to stamps by name, so the cell order here is a
+ * description of the sheet, not a contract. The face is the label - the app's
+ * caption only annotates empty slots.
  *
- * Each stamp is rendered as a background-image crop rather than twenty-five
+ * Two cells are decorative spares (a duplicate TRAVEL KIT and a TRAVEL), kept
+ * in the table so the numbering stays a plain walk of the grid but claimed by
+ * nothing. Cell 12's word came back garbled from the generator ("RECFIRED"),
+ * so the CALMED face it was meant to carry was transplanted in from the first
+ * sheet instead - the art the drill launched with. The printed cell numbers on
+ * the sheet itself are unreliable (several repeat); position is what
+ * identifies a cell.
+ *
+ * Each stamp is rendered as a background-image crop rather than thirty
  * separate files: one request, and the sheet is the asset we were given.
  * Boxes are expressed in source pixels and converted to percentages by the
- * renderer, so they stay correct at any display size. They were measured by
- * chroma bounding box (stamp ink is colorful, the sheet's printed cell
- * numbers are neutral, so the numbers fall outside every crop) plus a 6px
- * margin so a rotated stamp never clips its own ink.
+ * renderer, so they stay correct at any display size. They are measured by
+ * `scripts/measure-stamps.mjs` - chroma bounding box per cell (stamp ink is
+ * colorful, the sheet's printed cell numbers are neutral grey, so the numbers
+ * fall outside every crop) plus a 6px margin so a rotated stamp never clips
+ * its own ink. Re-run that script whenever the sheet is redrawn; do not edit
+ * these boxes by hand.
  *
  * The sheet's cream backdrop has no alpha, so anything drawing these must
  * composite with `mix-blend-mode: multiply` over a light surface - the same
@@ -26,58 +39,58 @@ export interface StampSprite {
   box: readonly [number, number, number, number];
 }
 
-export const SHEET_WIDTH = 1254;
-export const SHEET_HEIGHT = 1254;
+export const SHEET_WIDTH = 2752;
+export const SHEET_HEIGHT = 1536;
 
 /**
- * Read off the sheet in cell order, which IS page order (see stamp-faces.ts).
- * Every entry is a distinct face; the wording repeats only where the same
- * stamp kind recurs across days, and those faces differ by the day's motif
- * (Day 1 stamps carry Sydney, Day 2 Johannesburg, Day 3 New York).
+ * Read off the sheet in cell order, rows 1-5 of a 6-wide grid. Duplicated
+ * words (Reading, Checklist, Shadowed, Boarded) recur across days and differ
+ * by ink colour; the day in `place` records which stamp claims which cell.
+ *
+ * `place` is the key that binds this file to `stamp-faces.ts`: change one of
+ * these strings and update `FACE_BY_STAMP` with it. `(spare)` entries are on
+ * the sheet but claimed by nothing.
  */
 export const STAMP_SPRITES: readonly StampSprite[] = [
-  { place: "Day 1 · Reading", box: [38, 46, 210, 204] },
-  { place: "Day 1 · Checklist", box: [299, 40, 190, 208] },
-  { place: "Day 1 · Travel kit", box: [536, 38, 198, 212] },
-  { place: "Day 1 · Baggage", box: [772, 38, 206, 212] },
-  { place: "Day 1 · Red flags", box: [1017, 36, 204, 215] },
-  { place: "Day 1 · Routed", box: [24, 291, 227, 210] },
-  { place: "Day 1 · Shadowed", box: [305, 277, 186, 225] },
-  { place: "Day 1 · Boarded", box: [528, 295, 210, 207] },
-  { place: "Day 2 · Reading", box: [774, 291, 202, 211] },
-  { place: "Day 2 · Checklist", box: [1015, 251, 192, 251] },
-  { place: "Day 2 · Gate hold", box: [38, 536, 208, 214] },
-  // Row 2's three middle crops start 30px below the cell line: the stamps
-  // above them run flush to the boundary and their grunge texture crosses it,
-  // so a crop from the line itself would carry the neighbour's hatching.
-  { place: "Day 2 · Screened", box: [295, 532, 204, 216] },
-  { place: "Day 2 · Calmed", box: [550, 532, 182, 220] },
-  { place: "Day 2 · Reframed", box: [776, 532, 194, 220] },
-  { place: "Day 2 · Rebooked", box: [1015, 542, 206, 204] },
-  { place: "Day 2 · Fare rules", box: [26, 778, 225, 196] },
-  { place: "Day 2 · Counter", box: [279, 768, 222, 212] },
-  { place: "Day 2 · Shadowed", box: [544, 768, 178, 214] },
-  { place: "Day 2 · Boarded", box: [766, 786, 214, 192] },
-  { place: "Day 3 · Reading", box: [1015, 774, 198, 210] },
-  { place: "Day 3 · Checklist", box: [46, 1003, 184, 218] },
-  { place: "Day 3 · Control", box: [293, 1003, 196, 222] },
-  { place: "Day 3 · Fast track", box: [536, 1007, 200, 212] },
-  { place: "Day 3 · Shadowed", box: [788, 1003, 186, 224] },
-  { place: "Day 3 · Boarded", box: [1019, 1009, 200, 212] },
+  // Row 1
+  { place: "Day 1 · Reading", box: [118, 13, 303, 273] },
+  { place: "Day 1 · Checklist", box: [577, 13, 303, 273] },
+  { place: "Day 1 · Travel kit", box: [1035, 13, 303, 273] },
+  { place: "(spare) · Travel kit duplicate", box: [1493, 12, 305, 275] },
+  { place: "(spare) · Travel", box: [1952, 13, 304, 273] },
+  { place: "Day 1 · Baggage", box: [2412, 13, 303, 273] },
+  // Row 2
+  { place: "Day 1 · Red flags", box: [117, 321, 306, 276] },
+  { place: "Day 1 · Routed", box: [577, 322, 303, 274] },
+  { place: "Day 1 · Shadowed", box: [1035, 322, 304, 274] },
+  { place: "Day 1 · Boarded", box: [1494, 323, 303, 272] },
+  { place: "Day 2 · Checklist", box: [1952, 322, 304, 274] },
+  // Transplanted from the first sheet (git d9d8f6d) over the cell whose word
+  // the generator garbled - the original teal shield-and-brick-wall CALMED,
+  // rescaled to this sheet's ink height by scripts in Aug 2026.
+  { place: "Day 2 · Calmed", box: [2419, 346, 208, 244] },
+  // Row 3
+  { place: "Day 2 · Reading", box: [118, 631, 303, 274] },
+  { place: "Day 2 · Gate hold", box: [576, 631, 305, 274] },
+  { place: "Day 2 · Screened", box: [1036, 632, 303, 272] },
+  { place: "Day 2 · Reframed", box: [1493, 631, 304, 273] },
+  { place: "Day 2 · Rebooked", box: [1952, 631, 304, 274] },
+  { place: "Day 2 · Sequenced", box: [2411, 631, 304, 274] },
+  // Row 4
+  { place: "Day 2 · Counter", box: [119, 941, 302, 273] },
+  { place: "Day 2 · Shadowed", box: [576, 940, 304, 274] },
+  { place: "Day 2 · Boarded", box: [1035, 940, 304, 274] },
+  { place: "Day 3 · Reading", box: [1493, 940, 305, 274] },
+  { place: "Day 3 · Checklist", box: [1953, 941, 303, 273] },
+  { place: "Day 3 · Control", box: [2410, 939, 306, 276] },
+  // Row 5
+  { place: "Day 3 · Diverted", box: [118, 1250, 303, 273] },
+  { place: "Day 3 · Manifest", box: [577, 1250, 303, 273] },
+  { place: "Day 3 · Callback", box: [1035, 1250, 304, 273] },
+  { place: "Day 3 · Doc check", box: [1494, 1250, 303, 273] },
+  { place: "Day 3 · Shadowed", box: [1952, 1250, 304, 273] },
+  { place: "Day 3 · Boarded", box: [2411, 1250, 304, 273] },
 ] as const;
-
-/**
- * djb2 → sprite index. The FALLBACK face picker: stable across server and
- * client renders, used only for a stamp id the plan in `stamp-faces.ts` does
- * not know (content grew past the sheet). Two ids CAN hash to the same face.
- */
-export function spriteFor(stampId: string): StampSprite {
-  let hash = 5381;
-  for (let i = 0; i < stampId.length; i++) {
-    hash = ((hash << 5) + hash + stampId.charCodeAt(i)) | 0;
-  }
-  return STAMP_SPRITES[Math.abs(hash) % STAMP_SPRITES.length];
-}
 
 /**
  * CSS for cropping one sprite out of the sheet, sized to fill its box.

@@ -1,5 +1,6 @@
 import { RoomShell } from "@/components/onboarding/journey/RoomShell";
 import { PassportPages } from "@/components/onboarding/StampSheet";
+import { VoucherCard } from "@/components/onboarding/VoucherCard";
 
 export const metadata = {
   title: "Your passport · Atlys Academy",
@@ -28,6 +29,12 @@ export default function PassportPage() {
       </header>
 
       <PassportPages />
+
+      {/* Under the sheets, not above them: the voucher is the last thing the
+          journey produces, so it reads as the end of the passport rather than
+          an offer at the top of it. Before it is earned the card lists what is
+          outstanding, which is why it is mounted unconditionally. */}
+      <VoucherCard className="mt-10" />
     </RoomShell>
   );
 }

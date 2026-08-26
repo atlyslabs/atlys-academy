@@ -16,6 +16,13 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { JoineeAvatar } from "@/components/ui/JoineeAvatar";
+import {
+  MAX_DRILL_ATTEMPTS,
+  canReplayDrill,
+  drillAttemptsLeft,
+  drillAttemptsUsed,
+  isTerminalDrillStatus,
+} from "@/lib/progress/attempts";
 import { useProgress } from "@/lib/progress/provider";
 import { seededShuffle } from "@/lib/shuffle";
 import { playClick } from "@/lib/sound";
@@ -90,16 +97,16 @@ function clamp(value: number, low: number, high: number): number {
 }
 
 /**
- * Day 4 routing drill, staged on an airport floor: one case on the departures
+ * Day 1 routing drill, staged on an airport floor: one case on the departures
  * board at a time, four staffed desks around the hall, and the joinee **picks
  * themselves up and drops themselves at the desk the case belongs to**.
  *
  * Dragging is the interaction. The drill used to be answered by typing 1-4 at a
  * grid of unlabelled pads, which is a keypad, not a terminal - nothing about it
  * suggested what the four destinations were or what moving between them meant.
- * Now the desks carry the signage the source doc already gives them, and the
- * token is grabbed with a pointer, which is how everyone already knows this
- * gesture works.
+ * Now the desks carry the signage the lessons already give them, and the token
+ * is grabbed with a pointer, which is how everyone already knows this gesture
+ * works.
  *
  * Pointer events, not HTML5 drag: HTML5 drag does not exist on touch, and this
  * has to work on a phone. `setPointerCapture` is what keeps a fast drag glued to
@@ -111,7 +118,7 @@ function clamp(value: number, low: number, high: number): number {
  * equivalent of the drag, with no numbers to memorise.
  */
 export function ConnectIslands() {
-  const { state, setDrillResult } = useProgress();
+  const { state, ready, setDrillResult, beginDrillAttempt } = useProgress();
   // Bumping the round reshuffles. Seeded so server and client agree - see
   // `seededShuffle`.
   const [round, setRound] = useState(0);
@@ -127,6 +134,16 @@ export function ConnectIslands() {
   const [over, setOver] = useState<number | null>(null);
   const [selected, setSelected] = useState(0);
   const [checked, setChecked] = useState(false);
+  /**
+   * Set the moment a replay is paid for, and never cleared.
+   *
+   * The stored status is what packs the floor away on load, and it stays
+   * terminal from the previous play right up until this new round is checked -
+   * so without a flag saying "this joinee has already spent a play for the
+   * floor they are standing on", the fresh floor would be taken away again on
+   * the very next render.
+   */
+  const [replaying, setReplaying] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
@@ -196,6 +213,46 @@ export function ConnectIslands() {
       connections[pair.id] !== undefined && connections[pair.id] !== pair.right,
   );
   const storedResult = state.drills["connect-islands"];
+  /**
+   * Plays spent and plays left, both read from the stored result rather than
+   * counted in local state. Reloading the page in the middle of a round throws
+   * every piece of state above away, and a count kept here would hand out a
+   * fourth walk to anyone who refreshed.
+   */
+  const attemptsUsed = drillAttemptsUsed(state, "connect-islands");
+  const attemptsLeft = drillAttemptsLeft(state, "connect-islands");
+  const storedStatus = storedResult?.status;
+  /**
+   * Whether the floor is packed away and only the recorded result is shown.
+   *
+   * A drill that asks local state alone whether it is finished hands a fresh
+   * playable floor to anyone who presses F5: the replay control is never
+   * clicked, so no play is ever charged, and the three-play cap is bypassable
+   * by reloading. Asking stored progress instead is what closes that - a
+   * finished drill comes back as the result it recorded, and the only route to
+   * a new floor is the control that spends a play.
+   *
+   * `ready` gates the whole thing because `state.drills` is empty until the
+   * store has actually been read, and nothing may be locked on a status nobody
+   * has looked up yet. `checked` keeps a joinee who has just finished this
+   * round looking at their own marked-up cases rather than a summary of them,
+   * and `replaying` is what stops hydration re-locking a floor already paid
+   * for.
+   */
+  // The local counterweight is "has this joinee touched the deck in THIS
+  // session", not "have they finished it". That distinction is the whole
+  // correctness of this guard. `ready` starts false and, in remote mode,
+  // `store.load()` is a network round-trip - so a joinee can mount, start
+  // playing, and only then have hydration land. If the counterweight were the
+  // finished signal, that half-played run would be replaced by the recorded
+  // panel mid-play and continuing would cost them a play. Untouched is the only
+  // state it is safe to lock.
+  const lockedToStoredResult =
+    ready &&
+    !replaying &&
+    isTerminalDrillStatus(storedStatus) &&
+    !checked &&
+    Object.keys(connections).length === 0;
   const held = drag !== null;
 
   function clearReturn() {
@@ -289,6 +346,15 @@ export function ConnectIslands() {
   }
 
   function retry() {
+    // Spends a play before anything local is torn down, so the count and the
+    // floor can never disagree. Called unconditionally on purpose: the reducer
+    // only charges for a replay of a drill whose stored status is already
+    // terminal, so clearing a round that was never checked stays free.
+    beginDrillAttempt("connect-islands");
+    // The play has been paid for, so the stored result must stop hiding the
+    // floor - it still reads terminal until this round is checked, and a
+    // mid-session replay would otherwise be locked away the instant it started.
+    setReplaying(true);
     clearReturn();
     holdingRef.current = false;
     setRound(round + 1);
@@ -488,205 +554,256 @@ export function ConnectIslands() {
         {announcement}
       </p>
 
-      {/* The case, on a departures board: the one surface in an airport whose
-          whole job is telling you where something is going next. */}
-      <div className="border-2 border-board-line bg-board">
-        <div className="flex items-center justify-between gap-3 border-b-2 border-board-line px-3 py-1.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-tile-yellow">
-            Now routing
+      {lockedToStoredResult ? (
+        /* Deliberately nothing playable: the result on record, what it cost,
+           and the one control that can buy a floor to walk again. */
+        <div className="rounded-xl border border-hairline bg-white/[0.02] p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+            Recorded result
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-board-muted tabular-nums">
-            {boardLabel} · {routedCount}/{MAX_SCORE} sent
+          <p className="mt-2 text-lg font-medium">
+            {storedResult?.score !== undefined
+              ? `${storedResult.score} of ${storedResult.maxScore} routed right.`
+              : storedStatus}
           </p>
-        </div>
-        <div
-          key={current?.id ?? "cleared"}
-          className="animate-rise-in flex items-stretch gap-3 px-3 py-3"
-        >
-          <span
-            aria-hidden="true"
-            className="grid w-9 shrink-0 place-items-center border-2 border-board-line bg-board-soft font-condensed text-xl leading-none text-tile-yellow"
-          >
-            {current ? currentIndex + 1 : MAX_SCORE}
-          </span>
-          <p className="min-w-0 self-center font-mono text-[13px] leading-snug text-board-ink sm:text-sm">
-            {boardText}
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted tabular-nums">
+            {attemptsUsed} of {MAX_DRILL_ATTEMPTS} plays used
           </p>
-        </div>
-      </div>
-
-      <div
-        ref={floorRef}
-        data-floor
-        role="group"
-        tabIndex={0}
-        aria-label="Terminal routing floor. Four desks. Use the arrow keys to move between them and Enter to send the case to the one you land on, or drag yourself onto a desk."
-        onKeyDown={handleFloorKeyDown}
-        className={cn(
-          // A hall, not a square: at 4/3 a wide window gave the room 830px of
-          // height for four desks and a token, and all of it read as emptiness.
-          // Bounded at both ends as well as proportional - the widest screen
-          // must not stretch the drag distances, and a narrow one must not
-          // squeeze the two rows of desks into the middle of the floor.
-          "relative mt-3 min-h-[34rem] w-full overflow-hidden border-2 border-t-0 border-board-line bg-board",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-bright",
-          "sm:aspect-[2/1] sm:min-h-[26rem] sm:max-h-[34rem]",
-        )}
-      >
-        <FloorScene routed={routedCount} total={MAX_SCORE} dimmed={held} />
-
-        {/* Stand-by pad the joinee starts and returns to. The label is printed
-            *inside* the ring, in the band of pad the token does not cover, so it
-            cannot collide with a desk's docked cases on a narrow floor. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-board-line"
-        >
-          <span className="absolute inset-x-0 bottom-1 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-board-muted">
-            You are here
-          </span>
-        </div>
-
-        {TERMINAL_ZONES.map((zone, index) => (
-          <Desk
-            key={zone.destination}
-            ref={(node) => {
-              deskRefs.current[index] = node;
-            }}
-            zone={zone}
-            fill={ZONE_FILLS[index % ZONE_FILLS.length]}
-            label={deskLabel(zone)}
-            cases={order.filter(
-              (pair) => connections[pair.id] === zone.destination,
-            )}
-            checked={checked}
-            /** Lit while the held token is over it. */
-            targeted={over === index}
-            inviting={held}
-            onFocused={() => setSelected(index)}
-            onRoute={() => routeTo(zone)}
-          />
-        ))}
-
-        {/*
-          The joinee, as a token you can pick up.
-
-          Pointer-only, so it is hidden from assistive technology on purpose: a
-          drag has no keyboard or screen-reader meaning, and every move it makes
-          is available through the four desk buttons and announced in the live
-          region above. `touch-none` is what stops a drag on a phone scrolling
-          the page instead of moving the token.
-        */}
-        <div
-          aria-hidden="true"
-          data-token
-          onPointerDown={handleTokenPointerDown}
-          onPointerMove={handleTokenPointerMove}
-          onPointerUp={handleTokenPointerUp}
-          onPointerCancel={handleTokenRelease}
-          onLostPointerCapture={handleTokenRelease}
-          className={cn(
-            "absolute z-30 -translate-x-1/2 -translate-y-1/2 touch-none select-none",
-            checked
-              ? "cursor-default"
-              : held
-                ? "cursor-grabbing"
-                : "cursor-grab",
-          )}
-          style={{
-            left: `${tokenAt.x}%`,
-            top: `${tokenAt.y}%`,
-            // Never transitioned while held: a token that eases toward the
-            // cursor is a token that feels stuck to treacle.
-            transition:
-              held || reducedMotion
-                ? undefined
-                : `left ${WALK_MS}ms ease-out, top ${WALK_MS}ms ease-out`,
-          }}
-        >
-          {/* Held reads as lifted: a little bigger, ringed in the accent, and
-              standing further off the floor. No blurred shadow - the house style
-              has none, and a black smear on a near-black floor is just a smear. */}
-          <span
-            className={cn(
-              "grid size-14 place-items-center rounded-full border-[3px] border-board-ink bg-board-soft",
-              held
-                ? "scale-110 shadow-[0_8px_0_0_var(--color-board-line)] ring-2 ring-accent-bright"
-                : "shadow-[4px_4px_0_0_var(--color-board-line)]",
-            )}
-          >
-            <JoineeAvatar config={state.avatar} size={38} />
-          </span>
-          {/* Says the gesture out loud, and only until it has been used once.
-              Above the token, because "You are here" is printed below the pad. */}
-          {!checked && !held && routedCount === 0 && (
-            <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap border-2 border-board-ink bg-tile-yellow px-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-board">
-              Drag me
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
-          Drag yourself onto a desk, or tap one
-        </p>
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
-          Keyboard: <Key>←</Key> <Key>→</Key> <Key>↑</Key> <Key>↓</Key> then{" "}
-          <Key>⏎</Key>
-        </p>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        {!checked && (
-          <>
-            <Button onClick={check} disabled={!allRouted}>
-              Check the board
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={undo}
-              disabled={history.length === 0}
-            >
-              Take back last
-            </Button>
-            <p className="text-sm text-ink-muted">
-              {routedCount} of {MAX_SCORE} routed.
-            </p>
-          </>
-        )}
-        {checked && (
-          <div
-            ref={resultsRef}
-            tabIndex={-1}
-            className="animate-rise-in flex flex-wrap items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-          >
-            <p className="text-lg font-medium">
-              {score} of {MAX_SCORE} routed right.
-            </p>
-            {score === MAX_SCORE && <Badge tone="green">Perfect routing</Badge>}
-            <Button variant="secondary" size="sm" onClick={retry}>
-              Walk it again
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {checked && wrong.length > 0 && (
-        <ul className="animate-rise-in mt-4 space-y-3">
-          {wrong.map((pair) => (
-            <li
-              key={pair.id}
-              className="rounded-[3px] border-2 border-badge-coral/40 bg-badge-coral-soft p-3"
-            >
-              <p className="text-sm font-medium text-ink">
-                “{pair.left}” goes to {pair.right}, not {connections[pair.id]}.
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {/* Same rule as the result screen below: the control leaves rather
+                than greying out, and the note that replaces it says why.
+                `retry` is what spends the play and lifts the lock. */}
+            {canReplayDrill(state, "connect-islands") ? (
+              <Button variant="secondary" size="sm" onClick={retry}>
+                Walk it again
+                <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+                  {attemptsLeft} left
+                </span>
+              </Button>
+            ) : (
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted tabular-nums">
+                All {MAX_DRILL_ATTEMPTS} plays used · this score stands
               </p>
-              <p className="mt-1 text-sm text-ink-secondary">{pair.because}</p>
-            </li>
-          ))}
-        </ul>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* The case, on a departures board: the one surface in an airport whose
+              whole job is telling you where something is going next. */}
+          <div className="border-2 border-board-line bg-board">
+            <div className="flex items-center justify-between gap-3 border-b-2 border-board-line px-3 py-1.5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-tile-yellow">
+                Now routing
+              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-board-muted tabular-nums">
+                {boardLabel} · {routedCount}/{MAX_SCORE} sent
+              </p>
+            </div>
+            <div
+              key={current?.id ?? "cleared"}
+              className="animate-rise-in flex items-stretch gap-3 px-3 py-3"
+            >
+              <span
+                aria-hidden="true"
+                className="grid w-9 shrink-0 place-items-center border-2 border-board-line bg-board-soft font-condensed text-xl leading-none text-tile-yellow"
+              >
+                {current ? currentIndex + 1 : MAX_SCORE}
+              </span>
+              <p className="min-w-0 self-center font-mono text-[13px] leading-snug text-board-ink sm:text-sm">
+                {boardText}
+              </p>
+            </div>
+          </div>
+
+          <div
+            ref={floorRef}
+            data-floor
+            role="group"
+            tabIndex={0}
+            aria-label="Terminal routing floor. Four desks. Use the arrow keys to move between them and Enter to send the case to the one you land on, or drag yourself onto a desk."
+            onKeyDown={handleFloorKeyDown}
+            className={cn(
+              // A hall, not a square: at 4/3 a wide window gave the room 830px of
+              // height for four desks and a token, and all of it read as emptiness.
+              // Bounded at both ends as well as proportional - the widest screen
+              // must not stretch the drag distances, and a narrow one must not
+              // squeeze the two rows of desks into the middle of the floor.
+              "relative mt-3 min-h-[34rem] w-full overflow-hidden border-2 border-t-0 border-board-line bg-board",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-bright",
+              "sm:aspect-[2/1] sm:min-h-[26rem] sm:max-h-[34rem]",
+            )}
+          >
+            <FloorScene routed={routedCount} total={MAX_SCORE} dimmed={held} />
+
+            {/* Stand-by pad the joinee starts and returns to. The label is printed
+                *inside* the ring, in the band of pad the token does not cover, so it
+                cannot collide with a desk's docked cases on a narrow floor. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-board-line"
+            >
+              <span className="absolute inset-x-0 bottom-1 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-board-muted">
+                You are here
+              </span>
+            </div>
+
+            {TERMINAL_ZONES.map((zone, index) => (
+              <Desk
+                key={zone.destination}
+                ref={(node) => {
+                  deskRefs.current[index] = node;
+                }}
+                zone={zone}
+                fill={ZONE_FILLS[index % ZONE_FILLS.length]}
+                label={deskLabel(zone)}
+                cases={order.filter(
+                  (pair) => connections[pair.id] === zone.destination,
+                )}
+                checked={checked}
+                /** Lit while the held token is over it. */
+                targeted={over === index}
+                inviting={held}
+                onFocused={() => setSelected(index)}
+                onRoute={() => routeTo(zone)}
+              />
+            ))}
+
+            {/*
+              The joinee, as a token you can pick up.
+
+              Pointer-only, so it is hidden from assistive technology on purpose: a
+              drag has no keyboard or screen-reader meaning, and every move it makes
+              is available through the four desk buttons and announced in the live
+              region above. `touch-none` is what stops a drag on a phone scrolling
+              the page instead of moving the token.
+            */}
+            <div
+              aria-hidden="true"
+              data-token
+              onPointerDown={handleTokenPointerDown}
+              onPointerMove={handleTokenPointerMove}
+              onPointerUp={handleTokenPointerUp}
+              onPointerCancel={handleTokenRelease}
+              onLostPointerCapture={handleTokenRelease}
+              className={cn(
+                "absolute z-30 -translate-x-1/2 -translate-y-1/2 touch-none select-none",
+                checked
+                  ? "cursor-default"
+                  : held
+                    ? "cursor-grabbing"
+                    : "cursor-grab",
+              )}
+              style={{
+                left: `${tokenAt.x}%`,
+                top: `${tokenAt.y}%`,
+                // Never transitioned while held: a token that eases toward the
+                // cursor is a token that feels stuck to treacle.
+                transition:
+                  held || reducedMotion
+                    ? undefined
+                    : `left ${WALK_MS}ms ease-out, top ${WALK_MS}ms ease-out`,
+              }}
+            >
+              {/* Held reads as lifted: a little bigger, ringed in the accent, and
+                  standing further off the floor. No blurred shadow - the house style
+                  has none, and a black smear on a near-black floor is just a smear. */}
+              <span
+                className={cn(
+                  "grid size-14 place-items-center rounded-full border-[3px] border-board-ink bg-board-soft",
+                  held
+                    ? "scale-110 shadow-[0_8px_0_0_var(--color-board-line)] ring-2 ring-accent-bright"
+                    : "shadow-[4px_4px_0_0_var(--color-board-line)]",
+                )}
+              >
+                <JoineeAvatar config={state.avatar} size={38} />
+              </span>
+              {/* Says the gesture out loud, and only until it has been used once.
+                  Above the token, because "You are here" is printed below the pad. */}
+              {!checked && !held && routedCount === 0 && (
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap border-2 border-board-ink bg-tile-yellow px-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-board">
+                  Drag me
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+              Drag yourself onto a desk, or tap one
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+              Keyboard: <Key>←</Key> <Key>→</Key> <Key>↑</Key> <Key>↓</Key> then{" "}
+              <Key>⏎</Key>
+            </p>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {!checked && (
+              <>
+                <Button onClick={check} disabled={!allRouted}>
+                  Check the board
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={undo}
+                  disabled={history.length === 0}
+                >
+                  Take back last
+                </Button>
+                <p className="text-sm text-ink-muted">
+                  {routedCount} of {MAX_SCORE} routed.
+                </p>
+              </>
+            )}
+            {checked && (
+              <div
+                ref={resultsRef}
+                tabIndex={-1}
+                className="animate-rise-in flex flex-wrap items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+              >
+                <p className="text-lg font-medium">
+                  {score} of {MAX_SCORE} routed right.
+                </p>
+                {score === MAX_SCORE && <Badge tone="green">Perfect routing</Badge>}
+                {/* The control goes away once the plays are gone rather than
+                    greying out: a disabled button still invites the click that
+                    cannot do anything, and the note that replaces it says why. */}
+                {canReplayDrill(state, "connect-islands") ? (
+                  <Button variant="secondary" size="sm" onClick={retry}>
+                    Walk it again
+                    {attemptsUsed > 0 && (
+                      <span className="ml-1 font-mono text-[11px] tracking-[0.08em] opacity-70 tabular-nums">
+                        {attemptsLeft} left
+                      </span>
+                    )}
+                  </Button>
+                ) : (
+                  <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted tabular-nums">
+                    All {MAX_DRILL_ATTEMPTS} plays used · this score stands
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {checked && wrong.length > 0 && (
+            <ul className="animate-rise-in mt-4 space-y-3">
+              {wrong.map((pair) => (
+                <li
+                  key={pair.id}
+                  className="rounded-[3px] border-2 border-badge-coral/40 bg-badge-coral-soft p-3"
+                >
+                  <p className="text-sm font-medium text-ink">
+                    “{pair.left}” goes to {pair.right}, not {connections[pair.id]}.
+                  </p>
+                  <p className="mt-1 text-sm text-ink-secondary">{pair.because}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </DrillSection>
   );

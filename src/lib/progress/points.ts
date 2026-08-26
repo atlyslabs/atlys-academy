@@ -1,6 +1,7 @@
 import { DAYS } from "@/content/onboarding/days";
 import { LESSON_KEYS } from "@/content/onboarding/lessons";
 import type { DayId } from "@/content/onboarding/types";
+import { isTerminalDrillStatus } from "./attempts";
 import { bestAttempt, hasFiledOdpac, hasPassedQuiz } from "./selectors";
 import type { ProgressState } from "./types";
 
@@ -50,8 +51,6 @@ export interface PointsSummary {
   perDay: DayPoints[];
 }
 
-/** A drill counts as complete for points when it reaches a terminal status. */
-const TERMINAL_DRILL_STATUSES = new Set(["passed", "complete"]);
 
 export function calculatePoints(state: ProgressState): PointsSummary {
   const perDay = DAYS.map((day) => {
@@ -67,7 +66,7 @@ export function calculatePoints(state: ProgressState): PointsSummary {
     let drills = 0;
     for (const drillId of day.drills) {
       const result = state.drills[drillId];
-      if (!result || !TERMINAL_DRILL_STATUSES.has(result.status)) continue;
+      if (!result || !isTerminalDrillStatus(result.status)) continue;
       drills += POINT_WEIGHTS.drillComplete;
       if (
         result.maxScore != null &&
@@ -78,8 +77,10 @@ export function calculatePoints(state: ProgressState): PointsSummary {
       }
     }
 
-    // Best attempt only - retries are free and unlimited, so points never
-    // punish a retry and never reward grinding the same quiz.
+    // Best attempt only. Retries are capped at three (see `attempts.ts`) but
+    // scoring the best of them is what stops points punishing a retry or
+    // rewarding a grind - and it is why a joinee can use their remaining goes
+    // to improve without risking what they already have.
     const best = bestAttempt(state, day.slug);
     const quiz = (best?.score ?? 0) * POINT_WEIGHTS.correctAnswer;
 

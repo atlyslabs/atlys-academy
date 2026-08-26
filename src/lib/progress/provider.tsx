@@ -36,6 +36,11 @@ interface ProgressContextValue {
     drillId: DrillId,
     result: { status: string; score?: number; maxScore?: number },
   ): void;
+  /**
+   * Spend one of the three plays on a drill. Called by the drill's own replay
+   * control; the first play is counted by `setDrillResult`.
+   */
+  beginDrillAttempt(drillId: DrillId): void;
   saveExercise(exerciseKey: ExerciseKey, body: string): void;
   recordAttempt(attempt: Omit<QuizAttemptRecord, "id" | "submittedAt">): void;
   setLastVisitedDay(dayId: DayId): void;
@@ -103,6 +108,8 @@ export function ProgressProvider({
         drillId: DrillId,
         result: { status: string; score?: number; maxScore?: number },
       ) => dispatch({ type: "setDrill", drillId, ...result, at: nowIso() }),
+      beginDrillAttempt: (drillId: DrillId) =>
+        dispatch({ type: "beginDrillAttempt", drillId, at: nowIso() }),
       saveExercise: (exerciseKey: ExerciseKey, body: string) =>
         dispatch({ type: "saveExercise", exerciseKey, body, at: nowIso() }),
       recordAttempt: (attempt: Omit<QuizAttemptRecord, "id" | "submittedAt">) =>

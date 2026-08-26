@@ -28,3 +28,7 @@ screenshots/
 # Local review harness for the admin desk: hardcoded sample rows, 404s outside
 # development. Useful on disk, never in the repo.
 src/app/x-admin-preview/
+
+# Local review harness for the drills: mounts every drill on the local
+# progress store, 404s outside development. Useful on disk, never in the repo.
+src/app/x-drill-preview/

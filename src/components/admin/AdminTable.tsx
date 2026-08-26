@@ -1193,6 +1193,20 @@ function GroupBody({
                       every other joinee off the screen. The panel keeps its
                       own scrollbar so the table around it stays put. */}
                   <div className="max-h-[26rem] overflow-y-auto overscroll-contain pr-1">
+                    {/* Above the written work, because it is the one thing on
+                        this panel a team leader ACTS on rather than reads.
+                        Null until earned, so it simply is not here for anyone
+                        still mid-academy. */}
+                    {row.voucherCode && (
+                      <div className="mb-4 rounded-lg border border-brand/30 bg-ticket-soft/40 p-3.5">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-brand-text">
+                          Voucher · earned, awaiting redemption
+                        </p>
+                        <p className="mt-1.5 select-all font-condensed text-[22px] leading-none tracking-[0.06em] text-ink">
+                          {row.voucherCode}
+                        </p>
+                      </div>
+                    )}
                     <WrittenWork row={row} />
                   </div>
                 </td>

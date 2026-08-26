@@ -17,11 +17,16 @@
  * `false` = every day open, nothing locked.
  * `true`  = restore the gate.
  *
- * Temporarily `false` (2026-08-17, review pass): every day open so the whole
- * journey can be tested end to end. Flip back to `true` for launch - the
- * 10:30 next-morning rule, stamp gate and seal UI are all wired and waiting.
+ * **`true` since 2026-08-26 — launch behaviour.** A joinee signing in for the
+ * first time sees Day 1 open and Days 2 and 3 sealed.
+ *
+ * With attempts now capped at three, this gate asks `quizSettled` rather than
+ * `quizPassed` - passed OR all three attempts used. Gating on a pass would wall
+ * a joinee in permanently once they ran out of goes, which is the one thing this
+ * gate must never do. See `lib/progress/attempts.ts` and `dayWorkFinished` in
+ * `lib/progress/selectors.ts`.
  */
-export const DAY_GATE_ENABLED = false;
+export const DAY_GATE_ENABLED = true;
 
 /**
  * Whether a full stamp sheet is required to open the next day, on top of
@@ -107,9 +112,11 @@ export const PAUSE_COUNTDOWN_ENABLED = true;
  * `true`  = staff rows are hidden. The launch behaviour.
  * `false` = staff rows are listed like anyone else.
  *
- * Temporarily `false` (2026-08-19): the only account on this deployment is an
- * admin who is also the test joinee, so hiding staff empties the desk and there
- * is nothing to check the dashboards against. Flip back to `true` before
- * launch - see docs/pre-deploy.md.
+ * **`true` since 2026-08-26 — launch behaviour.** Only the role picked at
+ * sign-in is consulted, never the admin-email list: the same person is often
+ * both, and someone on that list who signs in as a presales associate to walk
+ * the journey IS a joinee. Guessing from the email once hid a real joinee's
+ * progress completely, which is far worse than an admin briefly appearing as a
+ * row until they sign in with a role.
  */
-export const HIDE_STAFF_FROM_DESK = false;
+export const HIDE_STAFF_FROM_DESK = true;

@@ -1,0 +1,135 @@
+Day 3 · Visas, money and what you own - ANSWER KEY
+Matches academy-quiz-day3-paper.txt. Regenerating both keeps them in step.
+
+ 1.  OPTION 2  -  The consular officer reviewing the application
+
+     WHY: Approval is the officer's call. Saying anything else makes you the person who lied when it goes the other way.
+
+     ------------------------------------------------------------------
+
+ 2.  OPTION 4  -  Getting the file right and the appointment booked, not influencing the decision
+
+     WHY: What we control is that nothing in the file gives the officer a reason to say no, and that the appointment is booked as early as it can be.
+
+     ------------------------------------------------------------------
+
+ 3.  OPTION 2  -  The avoidable failure (gaps in the file) is the thing you can actually sell against
+
+     WHY: You cannot sell the outcome, so sell against the avoidable failure: the gaps nobody caught before submission.
+
+     ------------------------------------------------------------------
+
+ 4.  OPTION 3  -  Tell them what the slots actually show today, and be explicit that the queue is not something we control
+
+     WHY: Be clear about timelines, and clear about what is outside our control. An average from past applications is an assumption dressed as a fact.
+
+     ------------------------------------------------------------------
+
+ 5.  OPTION 4  -  The service fee comes back and the government fee does not, once you have confirmed this route is under AtlysProtect
+
+     WHY: Under AtlysProtect a refusal returns the service fee. The government fee went to the consulate and does not come back, and no cover changes that. Say both halves in the same breath: what returns and what does not. And the cover only exists where the route is under AtlysProtect, so check the route before the number goes in, which is why "the service fee on any route" is wrong for a different reason than "the total". Our own published pages have disagreed with each other on this, so you check rather than recall. "Full refund" typed into a chat is a written commitment the guest can hold up later, and honouring it costs the company money it never kept.
+
+     ------------------------------------------------------------------
+
+ 6.  OPTION 2  -  We decode why it was refused, build a personalised recovery plan and reapply for them, and they pay only when they are approved
+
+     WHY: Lead with pay-on-approval. We decode why the visa was refused, build a personalised recovery plan and reapply, and the guest pays only when they are approved (https://www.atlys.com/en-IN/rejection-recovery). Someone who has already lost money once cannot hear anything else until that is out of the way, which is why it goes first rather than third. The other three are not lies so much as bad openers: a prior refusal genuinely does not block a new application, but "nothing to worry about" is false reassurance; the refusal reason is the whole input to the plan, not a detail to move past; and whether they can reapply, and how soon, depends on the country, so that is something you check before you agree to any date.
+
+     ------------------------------------------------------------------
+
+ 7.  OPTION 4  -  The number on the country page, and a genuine special case gets revised with Ops rather than by you
+
+     WHY: Commit to the number on the country page. That is the number the company stands behind and the one ops is held to, so it is the only one that belongs in a chat. A buffer of your own invention is still a number you invented, and it becomes the date the guest plans the trip around. An average from the last few applications is an assumption dressed as a fact. Refusing to give any number sounds careful and reads as not knowing your own product. Genuine special cases exist and get revised with Ops: the country page is the default, and improving on it is not your call.
+
+     ------------------------------------------------------------------
+
+ 8.  OPTION 3  -  None. The only thing they have to fill is the DS-160, and it is worth checking whether they already have
+
+     WHY: For the US B1/B2 we need no documents from the guest. The only thing that has to be filled is the DS-160, and some guests arrive having already done it, so ask before you send someone off to fill a form twice. All three wrong answers are the same instinct: inventing a document set because a visa surely must need one, whether that is a standard checklist, a bank statement, or a list that supposedly lands after the appointment. Two limits: this is a US B1/B2 answer and not a general one, because on most other destinations assembling the documents is the work; and it means nothing is gated on them sending us a document set, not that documents play no part. They carry bank statements, an employment letter and an itinerary to the interview, and we check the DS-160 against them. So it is not a sentence to send on its own.
+
+     ------------------------------------------------------------------
+
+ 9.  OPTION 2  -  Guide them through it, prefill what we can, and review every section against their passport and supporting documents before submission
+
+     WHY: We guide the guest through the DS-160, prefill what can be prefilled, and review every section against their passport and supporting documents, flagging anything inconsistent before it reaches the embassy. Say that concretely. It is the most tangible thing our fee buys. The guest still fills the form, so "they never have to look at it" is not what we do. "Nothing beyond submitting it" gives away the actual work. And a contact at the consulate is one of the Day 1 red lines: no such person exists, and offering one is a promise that ends in a complaint.
+
+     ------------------------------------------------------------------
+
+10.  OPTION 2  -  Almost everyone aged 14 to 79 attends in person; the officer asks about purpose, duration, funding, ties to India and travel history, and the answers must match the DS-160
+
+     WHY: Almost every applicant between 14 and 79 attends in person. The officer asks about purpose, duration, who is funding the trip, ties to India (job, family, property) and travel history, and the answers have to be consistent with the DS-160, which is why the form review matters beyond tidiness. Guests should carry bank statements, an employment letter and an itinerary, and should also be told the officer may never ask for them. Calling it a formality is a false description of a conversation that can end in a refusal. Carrying everything they own is not the instruction either. And preparing answers together drifts into rehearsing a story, which is the wrong side of the red lines. You describe the shape of the conversation, you do not script it.
+
+     ------------------------------------------------------------------
+
+11.  OPTION 3  -  France, because that is where they spend the most nights
+
+     WHY: Apply to the embassy of the country where the most nights are spent — France, at five against three. The first-entry rule is real but only breaks a tie, so it does not apply here. Slot availability never decides the embassy, and applying to the wrong one gets a refusal on a technicality that had nothing to do with eligibility, which is the most avoidable Schengen failure there is.
+
+     ------------------------------------------------------------------
+
+12.  OPTION 2  -  At least €30,000, valid across the entire Schengen area for the full duration of the trip
+
+     WHY: At least €30,000, valid across the entire Schengen area, for the whole trip. All three parts matter: many off-the-shelf Indian policies miss the threshold, cover limited to the issuing country fails, and under-coverage by even one day of the trip triggers a refusal. This is the single easiest thing to check for a guest before they submit.
+
+     ------------------------------------------------------------------
+
+13.  OPTION 3  -  The visa lets them travel for 10 years; each entry is typically up to six months and the CBP officer at the port decides
+
+     WHY: The 10 years is the visa's validity for travel, not permission to stay. Each entry is typically up to six months, and the length is set by the CBP officer at the port of entry rather than by the visa or the DS-160. Guests conflate validity with duration constantly, and a guest who plans a long stay on that misunderstanding is heading for a problem at the border.
+
+     ------------------------------------------------------------------
+
+14.  OPTION 2  -  It is not a refusal: additional processing after the interview, which needs careful follow-up
+
+     WHY: 221(g) is administrative processing after the interview and it is not a refusal. What it needs is careful follow-up, which means the guest should hear the word “not a refusal” early, because they will have read otherwise online. Calling it an appealable refusal, a form re-submission or a reapplication bar all turn a delay into a crisis.
+
+     ------------------------------------------------------------------
+
+15.  OPTION 1  -  Super priority is next working day and priority is five, but check the biometrics appointment before committing to either
+
+     WHY: The three tiers are standard at three weeks, priority at five working days and super priority at next working day. The trap is committing to one before checking the biometrics appointment: biometrics at a UK Visa Application Centre are a genuine bottleneck, and next-working-day processing is worthless if the biometrics slot is two weeks out. So the honest answer names the options and the dependency in the same breath.
+
+     ------------------------------------------------------------------
+
+16.  OPTION 1  -  Nationality: citizens of visa-exempt countries need an eTA, everyone else needs a TRV
+
+     WHY: Nationality decides it. Citizens of visa-exempt countries need an eTA, approved in minutes; everyone else needs a Temporary Resident Visa. Which is why nationality and country of residence are in the first ninety seconds of qualification — get this wrong at the start and the entire rest of the conversation is about the wrong product.
+
+     ------------------------------------------------------------------
+
+17.  OPTION 1  -  Sinai needs a separate permit; the eVisa does not cover it
+
+     WHY: Sinai requires a separate permit and the eVisa does not cover it. Guests assume a national visa covers the whole nation, which is reasonable and wrong, and Sharm El Sheikh is exactly where an Egypt trip tends to go. Entry type is a different question and does not solve it.
+
+     ------------------------------------------------------------------
+
+18.  OPTION 4  -  The eVisa, which covers up to 60 days, because the 30-day exemption does not cover the trip and overstay penalties are severe
+
+     WHY: 45 days does not fit the 30-day exemption, so it is the eVisa, which covers up to 60. The tempting answers are all versions of bridging the gap — extending locally, or hopping out and back — and Thailand's overstay penalties are severe enough that improvising is a bad plan to put in writing. One question about trip length changes the whole recommendation, which is why trip length is a qualification field rather than a detail.
+
+     ------------------------------------------------------------------
+
+19.  OPTION 4  -  Intent and urgency
+
+     WHY: Intent and urgency: identifying them is one of the five core responsibilities from Day 1.
+
+     ------------------------------------------------------------------
+
+20.  OPTION 4  -  A clean handover. The next person has the context and the guest is not asked to repeat themselves
+
+     WHY: Follow-ups and handovers are a named part of the day. A guest repeating themselves is the clearest signal a handover was done badly.
+
+     ------------------------------------------------------------------
+
+21.  OPTION 2  -  A structured WhatsApp follow-up within two minutes, then a defined three-touch cadence
+
+     WHY: Close on the call where you can; where you cannot, a structured follow-up goes out within two minutes and then a defined three-touch cadence. Two minutes is the window while they still remember the conversation. At two hours you are a notification. In India most of this does not close on the first call, so the cadence is where the revenue actually lands, which is also why marking the lead cold is the most expensive of these options: leads never contacted are the single biggest source of lost revenue, larger than every objection combined. "Giving them room" sounds respectful and is how a warm lead goes cold, and resending the pricing page adds no new information for them to react to.
+
+     ------------------------------------------------------------------
+
+22.  OPTION 2  -  Escalate to the Emergency Helpline immediately, stay on the line until handover is confirmed, and never hold them longer than 60 seconds
+
+     WHY: This is an emergency, not a process. Escalate to the Emergency Helpline, who own it, stay on the line until the handover is confirmed, and never hold a distressed guest for more than 60 seconds. Everything that feels responsible here is wrong: holding to check Cadence, promising a two-hour callback, or sending them to the airline. Ownership in this case means making sure they are covered by the right team fast, not being the person who fixes it.
+
+     ------------------------------------------------------------------
+

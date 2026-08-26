@@ -1,8 +1,17 @@
 # Atlys — Pre-checkout Sales University
 
-A points-based, interactive 5-day onboarding university for the Pre-checkout
-Sales function: lessons, drag-and-drop drills, voiced chat scenarios, a
-per-cohort leaderboard, and a manager dashboard.
+A points-based, interactive **3-day** onboarding university for the Pre-checkout
+Sales function: lessons, drag-and-drop drills, voiced chat scenarios, a daily
+shadowing report, a per-cohort leaderboard, and a manager dashboard.
+
+Scoped down from five days in Aug 2026 — see the header comment in
+`src/content/onboarding/days.ts` for what moved to on-the-job learning. As it
+stands: 3 days, 28 lessons, 15 checklist activities, 15 drills, 53 quiz
+questions, 28 passport stamps and a voucher at the end.
+
+Before deploying, read [`docs/pre-deploy.md`](docs/pre-deploy.md) — it carries
+the launch flags, the required `AUTH_URL`, and what has and has not been
+verified.
 
 **Everything degrades gracefully.** With no env vars at all, the whole
 experience runs with browser-local progress. Each capability switches on when
@@ -22,17 +31,27 @@ leaderboard scores with the same function the on-screen tally uses. Weights:
 | Complete a drill | 15 |
 | Perfect drill score | +10 |
 | Correct quiz answer (best attempt) | 10 |
-| Finish a day (all activities + quiz passed) | +25 |
+| File the day's ODPAC report | 15 |
+| Finish a day (all activities + ODPAC filed + quiz passed) | +25 |
 
-Quiz retries are free and unlimited; the best attempt counts. 70% passes and
-unlocks the next day.
+**Three attempts** at each day's quiz and **three plays** at each drill; the
+checklist is uncapped, because ticking a box is not an attempt at anything. The
+best attempt counts in both cases — a worse replay never lowers a score. 70%
+passes. A perfect run across all three days scores **1184**.
+
+Running out is not a dead end. After three attempts the best score stands and
+the day opens anyway: gating on a pass would wall a joinee in permanently, with
+no way back in. The 70% mark still decides whether the *stamp* is earned, so a
+passport shows honestly who cleared the bar — it just never traps anyone. See
+`src/lib/progress/attempts.ts`.
 
 ## Interactive pieces
 
 - **Lessons** — each "What to learn" topic is an expandable card with teaching
-  content, a real example, and "what new joiners get wrong". Topics whose
-  content hasn't arrived from the manager yet show an honest placeholder with
-  the request reference, never invented filler.
+  content, a real example, and "what new joiners get wrong". Every lesson has a
+  body: `Lesson.body` is non-nullable, so the old "being written" placeholder
+  card is not merely unused but unrepresentable. A topic with nothing to teach
+  is not listed rather than shown empty.
 - **Pause drill** — a customer message is read aloud (browser speech synthesis,
   no API keys), the composer locks behind a 10-second countdown ring, and the
   Send button stays live on purpose: rushing is supposed to be possible.
@@ -41,11 +60,31 @@ unlocks the next day.
 - **Tool match** — drag six tools onto the jobs they do.
 - **Whose job is it?** — sort nine statements between Atlys, the consulate and
   the guest. Built strictly from the Cluster A scripts.
-- **Objection library** — the scripted lines hide behind press-and-hold
-  ("think of your line first").
-- **Mock scenarios** — branching conversations with voiced customer messages.
-- **Mentor panel** — who to follow each day, with Slack DM deep links once
-  member IDs arrive (placeholders until then).
+- **Run the loop** — walk one objection through APAC (acknowledge, probe,
+  address, confirm), where the wrong-*step* answer is a good sentence in the
+  wrong slot and is marked differently from a wrong one. Replaced the old
+  press-and-hold objection library, which was reading rather than a drill.
+- **Swipe decks** — one interaction with two configs: what is safe to say
+  (Day 1) and whether a DS-160 contradicts itself (Day 3).
+- **Mock scenarios** — branching conversations with voiced customer messages,
+  and a Day 3 variant for the cases where the playbook is wrong.
+- **ODPAC report** — the daily shadowing write-up, five stages, filed once a
+  day. It is what a mentor actually reads, and it is what the Slack digest
+  carries.
+- **The voucher** — issued at the end of the academy once the final day's
+  checklist is filed, its ODPAC report is in, and its quiz is settled. Copyable,
+  redeemed in a conversation with the team leader. The code is *derived* on the
+  server from the joinee's profile id rather than stored, so it is stable
+  everywhere, unguessable, and never travels through the progress upload; the
+  endpoint re-checks the earning conditions, so a doctored local state gets
+  nothing. It reaches the admin desk and the daily Slack report only once
+  earned.
+- **Mentor panel** — who to follow each day, with a Slack DM deep link where
+  there is a person to link to. Day 1 is Komal Rawat plus the joinee's own team
+  leader, Day 2 is the team leader, and Day 3 has no panel at all — the stop is
+  skipped when a day lists nobody. Cut back from eleven entries in Aug 2026:
+  most had no Slack ID and rendered a disabled "ID pending" button, so the panel
+  was mostly a list of people a joinee could read about and not reach.
 
 ## Leaderboard and cohorts
 
@@ -69,11 +108,12 @@ to today in IST, because an Indian working evening straddles two UTC dates.
 
 The cron that posts it lives in [`worker/`](worker/README.md) — a Cloudflare
 scheduled worker that pulls this endpoint and posts the blocks to a Slack
-webhook. It fires at **09:00 IST and reports the previous day**, so Day 1's
-report is in the channel before Day 2 unlocks at 10:30. It is separate from the
-app because a request-driven app has no timer, and because it keeps the Slack
-credential out of the public web app. The schedule currently ships disabled —
-`worker/README.md` has the one-line go-live step.
+webhook. It fires at **09:00 IST and reports the previous day**, every day but
+Monday (the office is Mon–Sat), so Day 1's report is in the channel before Day 2
+unlocks at 10:30. It is separate from the app because a request-driven app has no
+timer, and because it keeps the Slack credential out of the public web app. The
+schedule currently ships disabled — `worker/README.md` has the one-line go-live
+step.
 
 ## Database
 
@@ -242,23 +282,30 @@ Both are deliberate; neither changes the spec's intent.
 
 ## Known content gaps
 
-Marked `TODO(content)` in the source. Each needs access this project does not
-have yet:
+All 29 lessons now have bodies — the placeholder lessons are gone. Two gaps
+remain, both marked `TODO(content)` in the source, and both need access this
+project does not have:
 
-- **Day 3** names its visa topics but contains no visa facts (DS-160 specifics,
-  document lists, booking logic). Its quiz tests process framing only and should
-  be rewritten once the US Visa process doc is available.
-- **Day 1 and Day 4** quizzes are thin for the same reason — the source doc is
-  mostly activity lists there.
 - **The rewrite drill's "bad reply"** is written as a foil, not a real
-  transcript. Replace it with a sanitised Freshchat/Lime Chat example when one
-  can be obtained.
+  transcript. Replace it with a sanitised Freshchat example when one can be
+  obtained (`src/content/onboarding/drills.ts`).
+- **Appointment booking logic** (§2.6) is the last B1/B2 fact the Day 3 quiz
+  cannot test (`src/content/onboarding/quiz.ts`).
 
-## Not built yet (Phases 4–5)
+Six checklist activities are flagged `accessNeeded`, which renders a visible
+"access needed" note rather than pretending the resource is there.
 
-The database, persistence of attempts and exercise submissions, and the
-mentor-facing query path. See `PRD.md` §17 and §19.
+## Built since the PRD
 
-Auth has moved to Google OAuth, so the PRD's email-OTP flow and its
-`auth_otp` table are no longer needed — nor is an email provider. What remains
-open is where joinee data lives once it needs to outlive a browser profile.
+The PRD's Phases 4–5 are done: Supabase persistence of progress, quiz attempts,
+drill results and written submissions; the per-cohort leaderboard; the admin
+desk; and the scheduled Slack digest in `worker/`. See `docs/pre-deploy.md` §0
+for what has been verified against the live database.
+
+Auth moved to Google OAuth, so the PRD's email-OTP flow and its `auth_otp`
+table are not needed — nor is an email provider.
+
+Still open by design, not oversight: scoring authority stays on the client (the
+server stores the state it is handed), and cohorts are "whoever first signed in
+that day" rather than a managed unit. Both are written up in
+`docs/pre-deploy.md`.

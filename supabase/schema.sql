@@ -64,6 +64,7 @@ create table if not exists public.app_state (
 
 
 alter table public.app_state add column if not exists avatar jsonb;
+alter table public.drill_results add column if not exists attempts integer;
 alter table public.profiles add column if not exists team_leader text;
 alter table public.profiles add column if not exists role text;
 alter table public.team_leaders enable row level security;

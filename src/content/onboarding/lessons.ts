@@ -3,26 +3,24 @@ import type { DayId, ItemKey } from "./types";
 export interface Lesson {
   itemKey: ItemKey;
   dayId: DayId;
-  /** Where the content comes from - a manual section, or the pending question. */
+  /** Where the content came from - the manual or playbook section. Not rendered. */
   ref: string;
   title: string;
-  /** Paragraphs. `null` = pending from Shovan; UI shows a placeholder. */
-  body: string[] | null;
-  pendingWith?: string;
+  /**
+   * The teaching, in paragraphs. Required.
+   *
+   * This was `string[] | null` until Aug 2026, and a null rendered an "it is
+   * being written" placeholder card with no "mark as read" button. Every lesson
+   * now has a body, so the type says so - which is what makes the placeholder
+   * unrepresentable rather than merely unused. A lesson with nothing to teach
+   * should not be listed at all.
+   */
+  body: string[];
   /** A real, sanitised situation where this mattered. */
   example?: string;
   /** What new joiners get wrong - becomes the tempting quiz distractor. */
   commonMistake?: string;
 }
-
-/**
- * All four Day 4 collaboration topics came back as "read the Notion doc" - a
- * source rather than an answer, and the link has not arrived. Recorded once so
- * the four placeholders say the same thing, and so it is obvious that Day 4 is
- * blocked on one document rather than four separate gaps.
- */
-const DAY4_NOTION_DOC =
-  "Shovan pointed this at an internal Notion doc rather than answering it, and the link has not arrived. Nobody is named on it, so ask your Day 4 mentor for the doc first. The same one document unblocks all four of these lessons.";
 
 export const LESSONS: readonly Lesson[] = [
   /* ---------------------------------- Day 1 --------------------------------- */
@@ -119,7 +117,7 @@ export const LESSONS: readonly Lesson[] = [
       "Two, specific over vague. Every commitment carries a time, every recommendation carries a reason. “I'll get back to you shortly” is not acceptable; “I will send you the document checklist by 3 PM today” is. Specificity builds trust and vagueness destroys it, and there is no middle setting.",
       "Three, discover before recommending. Never recommend a visa product before you understand the situation: destination, travel date, traveller count, prior visa history, purpose of travel. Every one of those changes the recommendation, so an assumption is not a shortcut, it is wrong advice.",
       "Four, empathy before efficiency. When someone is anxious, frustrated or confused, acknowledge the feeling before you solve the problem. A guest who feels heard is three times more likely to proceed; a guest who feels processed leaves at the first friction point.",
-      "Five, every interaction is a data point. Log every call, outcome and objection in Cadence. Today's log is tomorrow's coaching material and the pipeline visibility leadership works from, so an incomplete log is not admin debt, it is a failure of the first principle.",
+      "Five, every interaction is a data point. Log every call, outcome and objection in the CRM, which today is Cadence. Today's log is tomorrow's coaching material and the pipeline visibility leadership works from, so an incomplete log is not admin debt, it is a failure of the first principle.",
     ],
     commonMistake:
       "Reading “empathy before efficiency” as “be warm”. It is a sequencing instruction: the acknowledgement comes first in time, before the solution, and swapping the order is what makes a competent answer land badly.",
@@ -211,7 +209,7 @@ export const LESSONS: readonly Lesson[] = [
       "They go into structured fields, not free-text notes. A note is unreadable by anyone but you, unsearchable the day someone asks how many refused applicants we spoke to last month, and gone entirely when the case moves to Ops. The field is the deliverable, not the memory of the conversation.",
       "This looks like it contradicts the pause rule on the next page. It does not, and getting the relationship right is most of the skill. You qualify on facts and you pause on fear. The six fields establish what is true (dates, documents, eligibility) and none of them tell you what the customer is afraid of. The silence does that. Run the checklist over the top of someone's fear and you will have a complete record of a conversation you lost.",
       "Then recommend rather than push: the right country, the right visa class, the right timeline. And disqualify openly when the timeline or the documents do not work. That is not a softer, kinder option. Selling to the unqualified is negative margin once refunds and reviews are counted, so the walk-away is the commercially correct move as well as the honest one. You do not need permission to make it.",
-      "Most of this does not close on the first call in India. That is normal, it is not failure, and the cadence on Day 4 is where the money actually lands.",
+      "Most of this does not close on the first call in India. That is normal, it is not failure, and the follow-up cadence on Day 3 is where the money actually lands.",
     ],
     example:
       "The disqualification sentence already exists on the previous page: “Three weeks is not enough. I am not going to take your money pretending otherwise.” What is new is why it is allowed: not because we are being nice, but because the alternative books revenue that comes back as a refund and a review.",
@@ -256,12 +254,11 @@ export const LESSONS: readonly Lesson[] = [
       "Carrying confidence across a border. Knowing one route well makes you feel like you know visas, and a guest cannot tell the difference between an answer you knew and an answer you assumed. On this day the honest answer is usually “let me confirm that”.",
   },
   // "High-level application stages" and "Where delays typically happen" used to
-  // sit here as empty placeholders. Both are now taught by a mentor and on the
-  // job rather than in the app, so the cards are gone rather than waiting on
-  // §2.3 and §9.1 forever. Day 3's remaining four lessons are all written.
-  // Who to ask about the pieces that never landed - appointment booking with
-  // Sahil, resubmission rules with Mukul, the five failure points from Ops - is
-  // on the Day 3 mentor panel, which is where a joinee would look for a person.
+  // sit here as empty placeholders. Both are taught by a mentor and on the job
+  // rather than in the app, so the cards are gone rather than waiting on §2.3
+  // and §9.1 forever. Deleting them beat leaving them: an empty card teaches a
+  // joinee that the academy is unfinished, and it cost a reading stamp nobody
+  // could earn. Every lesson still listed on Day 3 is written.
   {
     itemKey: "lesson.day3.ds160",
     dayId: 3,
@@ -321,48 +318,33 @@ export const LESSONS: readonly Lesson[] = [
 
 
     {
-    itemKey: "lesson.day4.dashboard",
-    dayId: 1,
-    ref: "Manager + Playbook, Aug 2026",
-    title: "Chat/call dashboard overview",
-    body: [
-      "The dashboard this day means is Cadence. Everything about a guest sits there in one place: their history with us, the AI overview of the case, document status, journey status. When you need to know what is actually true about an application, that is the screen.",
-      "Two tools get mistaken for it, and the second catches almost everybody. Freshchat is inbound chat, so that is where the conversation lives, not where the case does. And Walkie Talkie (WT) is how you call someone: it is a calling tool, not a dashboard. If you have heard WT described as the place you look up an application, unlearn it now, because that belief sends you to the wrong screen at the exact moment accuracy matters.",
-      "So the habit is: look it up in Cadence rather than reconstruct it from what the guest remembers. A guest's account of their own application is a fine starting point and a poor source, and the gap between the two is where a confidently wrong status comes from.",
-      "Logging is the other half of Cadence, and it is not administrative overhead. Every interaction goes in within 15 minutes of the call ending, the lead status is updated after every touchpoint, and the notes carry what the guest said, what they need, and what you committed to. An unlogged call is an interaction nobody else in the company can see, including whoever picks the case up next.",
-      "The screen-by-screen tour is not written down yet, so take it live with your mentor and note where you found each thing as you go. On access: WT comes from Devesh and is on your Day 1 list, but who grants Cadence is not recorded anywhere yet. Ask on Day 1 rather than discovering on Day 4 that you cannot open the tool this whole day is built on.",
-    ],
-    commonMistake:
-      "Answering out of the chat thread because it is already open. The thread is what the guest told us; Cadence is what actually happened.",
-  },
-  {
     itemKey: "lesson.day4.lead_status",
     dayId: 3,
-    ref: "Playbook, Aug 2026 · §6.1 (intent signals, pending)",
+    ref: "Playbook, Aug 2026 · §6.1",
     title: "Understanding lead status & intent",
     body: [
       "Five statuses, in the order a lead moves through them: New, Contacted, Qualified, Application Started, then either Converted or Lost. It updates after every touchpoint, not at the end of the day and not when you remember.",
       "Qualified is the one that carries weight, because it is the status that says you ran the six fields from Day 2 and the case is genuinely sellable. Moving a lead to Qualified on a good feeling rather than on a travel date, a destination and a funds answer is how an unsellable case gets counted as pipeline and then reappears as a refund.",
       "Lost is not an admission of failure and should not be avoided. A lead parked at Contacted forever is worse than one honestly marked Lost: it inflates the pipeline, it hides from re-engagement lists, and it means nobody knows whether you have capacity. Disqualified openly on Day 2 becomes Lost here, with the reason in the notes.",
       "The status is also what someone else reads when the case is not yours. Paired with notes carrying what the guest said, what they need and what you committed to, the status is the handover. Without them it is a row in a table.",
-      "What is still missing from this lesson is the intent half: which signals mark a lead hot rather than cold. Day 4 asks you to sort leads that way and nobody has yet written down the three or four signals for each. Until they do, use the Day 2 fields as your proxy: a fixed travel date close enough to force a decision, non-refundable bookings already made, and a hard destination are the three that most reliably mean now rather than someday.",
+      "Status is only half of it. The other half is intent - whether this lead is a today problem or a someday one - and you read that from the Day 2 fields: a fixed travel date close enough to force a decision, non-refundable bookings already made, and a hard destination. Those three most reliably mean now. Two leads can sit at the same status with completely different urgency, so let the fields, not the status, decide who you call first.",
     ],
     example:
-      "A guest who says “I fly on the 20th and the flights are booked” and a guest who says “sometime next year, just researching” can both sit at Contacted. One of them is a today problem. The status alone does not tell you which, which is exactly why the intent signals are worth chasing.",
+      "A guest who says “I fly on the 20th and the flights are booked” and a guest who says “sometime next year, just researching” can both sit at Contacted. One of them is a today problem. The status alone does not tell you which — the travel date and the bookings do.",
     commonMistake:
       "Treating the statuses as reporting rather than working memory. They are how the next person, and future you, know what this lead is without reading the whole thread.",
   },
   {
     itemKey: "lesson.day4.handovers",
     dayId: 3,
-    ref: "Aug 2026 (follow-ups) · §4.3 (handovers, pending)",
+    ref: "Aug 2026 (follow-ups) · §4.3",
     title: "Follow-ups & handovers",
     body: [
       "Close on the call where you can. Where you cannot, a structured WhatsApp follow-up goes out within two minutes, and then a defined three-touch cadence.",
       "Two minutes is not a politeness target, it is the window while they still remember the conversation. At two minutes you are the person they were just speaking to; at two hours you are a notification. The message is structured rather than “just following up”: what was discussed, what you recommended, what happens next, and one thing for them to do.",
       "Then the cadence, and this is the part new joiners under-rate hardest. In India most of this does not close on the first call. That is the normal shape of the business, not a personal failure, and the follow-up sequence is where the revenue actually lands. An agent who is excellent on calls and casual about the cadence will be beaten by someone mediocre on calls who works it, which is also why leads never contacted are the single biggest source of lost revenue, larger than every objection combined.",
       "So follow-up is not admin you do after the selling. On most cases it is the selling.",
-      "The handover half of this day (what a good handover actually contains when a conversation moves to someone else) has not been written down yet. Until it is, work from the Day 1 seam: the next person needs the context, and the guest must never be asked to repeat themselves. A guest repeating themselves is the clearest signal a handover was done badly.",
+      "A handover is the same discipline pointed at a colleague instead of a guest. Whoever picks the case up needs what the guest said, what they need, what you recommended and what you committed to - in the Cadence notes, not in your head. The test is simple: the guest must never be asked to repeat themselves. A guest repeating themselves is the clearest signal a handover was done badly.",
     ],
     example:
       "The two-minute message is short: “As discussed: B1/B2, you fly on the 20th, we file this week. I need your DS-160 if you have already started one. I will check back Thursday.” Discussed, recommended, next step, one thing for them to do.",
@@ -392,7 +374,7 @@ export const LESSONS: readonly Lesson[] = [
     ref: "Playbook §6.1",
     title: "The full stack, and what each tool is for",
     body: [
-      "Six tools, and an associate who uses them wrong is invisible to the team rather than merely disorganised. Cadence for the case and the pipeline. Freshchat for live chat. Walkie Talkie for calls. Boomerang for your own numbers. DD, the Daily Dashboard, for the team's. Notion for the glossary and the process docs.",
+      "Six tools today, and an associate who uses them wrong is invisible to the team rather than merely disorganised. Cadence for the case and the pipeline. Freshchat for live chat. Walkie Talkie for calls. Boomerang for your own numbers. DD, the Daily Dashboard, for the team's. Notion for the glossary and the process docs.",
       "Cadence: log every interaction within 15 minutes of the call ending, update lead status after every touchpoint, and use the notes for what the guest said, what they need and what you committed to. Follow-up tasks get specific dates and times, not vague reminders. Review the pipeline every morning before taking calls, so you know who you are calling today and why.",
       "Freshchat: real time, with a response target under two minutes. Use the message templates for common queries but personalise them with the name and the situation, because an unedited template is the thing that proves nobody read them. And if a query needs more than three back-and-forths, move it to a call. Every chat is logged in Cadence as a lead, converted or not.",
       "Walkie Talkie: this is how you call a guest, and the rules are short. Never use a personal phone for guest communication, ever. If a call drops, call back within 60 seconds, and if you cannot reconnect, message on Freshchat immediately. Then log the call in Cadence like any other interaction.",
@@ -415,7 +397,7 @@ export const LESSONS: readonly Lesson[] = [
       "Core hours split two ways. Inbound: handle calls and chats in real time, log within 15 minutes, update lead status. Outbound: work your list, ten meaningful outreach actions a day minimum once you are at full autonomy, and log the outcomes.",
       "Mid-shift: clear anything waiting on you, answer chats inside the two-minute target, and check for escalations.",
       "End of shift: update all Cadence notes, set tomorrow's follow-up tasks, and write a post-mortem on one difficult call — one thing you would do differently. Weekly: calibration, QA feedback, update your personal knowledge system, contribute something to the team knowledge base.",
-      "The shape to notice is that the day opens and closes with the same tool. Cadence is where you find out what to do and where you record what you did, and everything in between is the work itself.",
+      "The shape to notice is that the day opens and closes in the same place: you find out what to do there and you record what you did there, and everything in between is the work itself. Cadence is that place today. Learn the shape rather than the screen — the tool is expected to change, and none of the habits above change with it.",
     ],
     commonMistake:
       "Taking inbound first because it feels more urgent. Inbound is louder, not more valuable, and a day that never reaches the follow-up list is a day spent on whoever happened to call.",

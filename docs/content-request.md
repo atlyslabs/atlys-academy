@@ -146,11 +146,15 @@ from us and pushes to Slack.
 
 Still needed:
 
-- ✅ **When should it fire?** **09:00 IST, covering the previous day** (decided
-  21 Aug 2026). Day 1's report lands on Day 2 morning, 90 minutes before the
-  10:30 unlock, so a mentor can act on it before the joinee starts the next day.
-  Still one message covering all active joinees, not one per joinee. The cron
-  itself ships disabled — see `worker/README.md` § Go live.
+- ✅ **When should it fire?** **09:00 IST, covering the previous day**, every day
+  except Monday (decided 21 Aug 2026). Day 1's report lands on Day 2 morning, 90
+  minutes before the 10:30 unlock, so a mentor can act on it before the joinee
+  starts the next day. The office is Mon–Sat, so only the Monday run — which
+  would report a closed Sunday — is skipped; every working day gets a report, so
+  a joinee starting mid-week is covered from their first day. Still one message
+  covering all active joinees, not one per joinee, and each card now names that
+  joinee's team leader. The cron itself ships disabled — see `worker/README.md`
+  § Go live.
 - **Which channel?** A private one, because the report carries joinees' verbatim
   writing. A DM to Shovan instead would need a bot token and a real scope grant
   rather than a webhook, and nobody else could find the history. → ______
