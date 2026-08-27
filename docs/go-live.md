@@ -20,7 +20,7 @@ Written 26 Aug 2026. The reasoning behind each item is in
 | Attempts | 3 per quiz, 3 plays per drill. Running out never blocks progress. |
 | Voucher | Issued at the end of Day 3, visible on the passport and the Day 3 board, verifiable on the admin desk and in the Slack report. |
 | Database | **Emptied 26 Aug 2026.** Zero profiles, zero progress. The next sign-in creates the first real row — but see 6.0 first: a stale signed-in browser will restore it. |
-| Team leaders | One real entry (`ashutosh-thakur`). The two test entries are deleted. |
+| Team leaders | **Empty.** Add the real roster on the admin desk — an admin can now remove entries there too. |
 | Slack cron | Schedule set in config. **Not deployed, so nothing posts yet.** |
 
 ---

@@ -8,6 +8,7 @@ import { TEAM_LEADERS } from "@/content/onboarding/team-leaders";
 import { isSupabaseConfigured } from "@/server/onboarding/db";
 import {
   addTeamLeader,
+  removeTeamLeader,
   adminOverview,
   listTeamLeaders,
   teamLeaderRoster,
@@ -21,6 +22,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import {
   TeamLeaderRoster,
   type AddLeaderState,
+  type RemoveLeaderState,
 } from "@/components/admin/TeamLeaderRoster";
 
 export const metadata = {
@@ -95,6 +97,54 @@ export default async function AdminPage() {
   }
 
 
+  /**
+   * Take a leader off the roster.
+   *
+   * Same shape and the same re-checked session as `addLeaderAction` above, for
+   * the same reason: a server action is a public endpoint whatever page it was
+   * rendered from, so the admin check cannot live only in the page that renders
+   * the button.
+   *
+   * It reports how many joinees were pointing at the removed id rather than
+   * refusing to delete. Blocking would leave an admin unable to remove somebody
+   * who has left; naming the consequence lets them decide.
+   */
+  async function removeLeaderAction(
+    _previous: RemoveLeaderState,
+    formData: FormData,
+  ): Promise<RemoveLeaderState> {
+    "use server";
+    if (!(ADMIN_PREVIEW_WITHOUT_AUTH && !isAuthConfigured)) {
+      const actor = await auth();
+      if (!isAdminEmail(actor?.user?.email)) {
+        return { ok: false, message: "Only an admin can change the roster." };
+      }
+    }
+
+    const id = (formData.get("id") ?? "").toString();
+    if (!id) return { ok: false, message: "No leader was selected." };
+
+    const result = await removeTeamLeader(id);
+    if (result.ok) {
+      revalidatePath("/admin");
+      revalidatePath("/signin");
+      return {
+        ok: true,
+        message:
+          result.orphaned > 0
+            ? `${result.name} removed. ${result.orphaned} joinee${result.orphaned === 1 ? "" : "s"} still point at that id and will show it raw until they pick again.`
+            : `${result.name} removed, and gone from the sign-in list.`,
+      };
+    }
+    return {
+      ok: false,
+      message:
+        result.reason === "not-found"
+          ? "That leader is not on the roster any more."
+          : "The roster table is not set up yet. Run supabase/schema.sql.",
+    };
+  }
+
   // Local preview while Google credentials are still missing. Development
   // only - see the flag.
   if (ADMIN_PREVIEW_WITHOUT_AUTH && !isAuthConfigured) {
@@ -117,6 +167,9 @@ export default async function AdminPage() {
           <TeamLeaderRoster
             leaders={previewLeaders}
             action={addLeaderAction}
+            removeAction={
+              previewStored !== null ? removeLeaderAction : undefined
+            }
             stored={previewStored !== null}
           />
           <AdminTable rows={rows ?? []} asOf={asOf} />
@@ -195,6 +248,10 @@ export default async function AdminPage() {
         <TeamLeaderRoster
           leaders={leaders}
           action={addLeaderAction}
+          // Only when the roster is the DATABASE. There is nothing to delete
+          // from the built-in seed list, and offering a control that cannot
+          // work is worse than not offering one.
+          removeAction={storedLeaders !== null ? removeLeaderAction : undefined}
           stored={storedLeaders !== null}
         />
         <AdminTable rows={rows ?? []} asOf={asOf} />

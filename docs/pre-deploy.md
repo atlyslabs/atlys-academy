@@ -84,29 +84,39 @@ see §3.3.
 **No flag is a review switch any more.** The only reason to touch this file is a
 deliberate product change.
 
-### 1.2 The team-leader roster is one real name
+### 1.2 The team-leader roster is empty, on purpose
 
-**Done 26 Aug 2026.** `Test_leader_1` and `Test_Leader_2` were deleted from the
-`team_leaders` table. What remains:
+**Emptied 26 Aug 2026.** The `team_leaders` table has zero rows and the seed
+list `TEAM_LEADERS` in `src/content/onboarding/team-leaders.ts` is empty too.
+The two test entries went first, then the last real one, so production starts
+from nothing.
 
-| id | name |
-|---|---|
-| `ashutosh-thakur` | Ashutosh Thakur |
+That fallback list is empty deliberately. It is only consulted when the database
+cannot answer, and plausible fake names are the worst possible thing to fall
+back to: a joinee picks one, the fake id lands in `profiles.team_leader`, and
+the analytics tab credits "Team leader 3" for a real team's work. An empty
+dropdown is a visible problem; fake names are an invisible one.
 
-The seed list `TEAM_LEADERS` in `src/content/onboarding/team-leaders.ts` is
-**empty**, and deliberately so: it is only a fallback for a database that cannot
-answer, and six plausible fake names is the worst possible thing to fall back to
-— a joinee picks one, the fake id lands in `profiles.team_leader`, and the
-analytics tab credits "Team leader 3" for a real team's work. An empty dropdown
-is a visible problem; fake names are an invisible one.
+**Do, in this order:**
 
-**Do:** add the rest of the real leaders on the admin desk. They appear in the
-sign-in dropdown immediately.
+1. Sign in as an **admin** — the admin sign-in form has no team-leader field, so
+   it works against an empty roster.
+2. Add the real leaders on the desk. They appear in the sign-in dropdown
+   immediately.
+
+Until step 2 the presales sign-in dropdown is empty, and it is a required field
+— so no joinee can finish signing in. That is the one ordering that matters.
+
+**An admin can now remove leaders too** (added 26 Aug). A cross beside each name
+in the roster fold opens a confirmation naming the consequence: the leader
+disappears from the dropdown, and any joinee already pointing at that id keeps
+their progress but shows the raw slug on the desk until they pick again. The
+dialog says so explicitly, and warns separately when the leader being removed is
+the last one.
 
 **Never rename or delete an `id` once a joinee has picked it** — it is what is
-stamped on `profiles.team_leader`, and the desk falls back to printing the raw
-slug when it cannot resolve one. Nothing points at anything right now, because
-the table of profiles is empty, so this is the one moment when the roster can be
+stamped on `profiles.team_leader`. Right now nothing points at anything, because
+the profiles table is empty, so this is the one moment when the roster can be
 reshaped freely.
 
 ### 1.3 `AUTH_URL` must be set on the host

@@ -430,10 +430,24 @@ function isMissingRosterTable(
   if (!error) return false;
   // 42P01 is Postgres "undefined table"; PGRST205 is PostgREST failing to find
   // it in its schema cache.
+  if (error.code === "42P01" || error.code === "PGRST205") return true;
+
+  // The message is only consulted when there is no code to go on, and even then
+  // it has to say the relation is MISSING - not merely mention the table.
+  //
+  // This used to be a bare `message.includes("team_leaders")`, which was too
+  // loose to be right: a unique violation reads "duplicate key value violates
+  // unique constraint \"team_leaders_pkey\"", so adding a leader who was
+  // already on the roster came back as "the roster table is not set up yet.
+  // Run supabase/schema.sql" - sending an admin to the SQL editor to fix a
+  // name they had simply typed twice.
+  if (error.code) return false;
+  const message = (error.message ?? "").toLowerCase();
   return (
-    error.code === "42P01" ||
-    error.code === "PGRST205" ||
-    (error.message ?? "").includes("team_leaders")
+    message.includes("team_leaders") &&
+    (message.includes("does not exist") ||
+      message.includes("could not find") ||
+      message.includes("undefined table"))
   );
 }
 
@@ -523,6 +537,74 @@ export async function addTeamLeader(
     throw error;
   }
   return { ok: true, leader: data as TeamLeader };
+}
+
+export type RemoveTeamLeaderResult =
+  | { ok: true; name: string; orphaned: number }
+  | { ok: false; reason: "unavailable" | "not-found" };
+
+/**
+ * How many joinees currently point at a roster id.
+ *
+ * Read before a delete so the confirmation can say what it will actually cost.
+ * Nothing cascades here - `profiles.team_leader` is a plain text column, not a
+ * foreign key - so removing a leader leaves those rows pointing at an id that
+ * no longer resolves, and the desk falls back to printing the raw slug.
+ */
+export async function countJoineesUnder(id: string): Promise<number> {
+  const db = getDb();
+  if (!db) return 0;
+  const { count, error } = await db
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("team_leader", id);
+  // A database without the column yet cannot have anybody assigned.
+  if (error) return isMissingProfileColumn(error) ? 0 : 0;
+  return count ?? 0;
+}
+
+/**
+ * Take a leader off the roster. Admin-gated by the caller.
+ *
+ * Deliberately NOT blocked when joinees still point at the id. An admin
+ * removing somebody who has left the company is the common case, and refusing
+ * would leave them stuck with a name they cannot get rid of. What the caller
+ * gets instead is `orphaned` - the number of joinees whose stored id will stop
+ * resolving - so the confirmation can state the consequence rather than hide
+ * it. Their progress is untouched either way; only the label changes, to the
+ * raw slug (see `teamLeaderName`).
+ *
+ * The row is read back first so the result can name who was removed. Deleting
+ * something and reporting only "done" is the wrong answer for a destructive
+ * action - the admin should see the name they just took off.
+ */
+export async function removeTeamLeader(
+  id: string,
+): Promise<RemoveTeamLeaderResult> {
+  const db = getDb();
+  if (!db) return { ok: false, reason: "unavailable" };
+
+  const { data: existing, error: lookupError } = await db
+    .from("team_leaders")
+    .select("id, name")
+    .eq("id", id)
+    .maybeSingle();
+  if (lookupError) {
+    if (isMissingRosterTable(lookupError)) {
+      return { ok: false, reason: "unavailable" };
+    }
+    throw lookupError;
+  }
+  if (!existing) return { ok: false, reason: "not-found" };
+
+  const orphaned = await countJoineesUnder(id);
+
+  const { error } = await db.from("team_leaders").delete().eq("id", id);
+  if (error) {
+    if (isMissingRosterTable(error)) return { ok: false, reason: "unavailable" };
+    throw error;
+  }
+  return { ok: true, name: (existing as TeamLeader).name, orphaned };
 }
 
 export interface AdminJoineeRow {

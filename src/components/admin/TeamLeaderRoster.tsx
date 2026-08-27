@@ -1,9 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { TeamLeader } from "@/content/onboarding/team-leaders";
 
 export interface AddLeaderState {
+  ok: boolean;
+  message: string | null;
+}
+
+export interface RemoveLeaderState {
   ok: boolean;
   message: string | null;
 }
@@ -20,6 +25,7 @@ export interface AddLeaderState {
 export function TeamLeaderRoster({
   leaders,
   action,
+  removeAction,
   stored,
 }: {
   leaders: TeamLeader[];
@@ -27,6 +33,14 @@ export function TeamLeaderRoster({
     previous: AddLeaderState,
     formData: FormData,
   ) => Promise<AddLeaderState>;
+  /**
+   * Remove one leader. Optional so the seed-list case, where there is nothing
+   * in a database to delete, simply renders no remove controls.
+   */
+  removeAction?: (
+    previous: RemoveLeaderState,
+    formData: FormData,
+  ) => Promise<RemoveLeaderState>;
   /** False when the roster is the built-in seed list, not the database. */
   stored: boolean;
 }) {
@@ -34,6 +48,7 @@ export function TeamLeaderRoster({
     ok: true,
     message: null,
   });
+  const [pendingRemoval, setPendingRemoval] = useState<TeamLeader | null>(null);
 
   return (
     <section
@@ -99,13 +114,38 @@ export function TeamLeaderRoster({
               {leaders.map((leader) => (
                 <li
                   key={leader.id}
-                  className="flex items-baseline justify-between gap-3 rounded-lg px-2.5 py-1.5"
+                  className="group/row flex items-center justify-between gap-3 rounded-lg px-2.5 py-1.5 hover:bg-white/[0.04]"
                 >
                   <span className="truncate text-[13px] text-ink">
                     {leader.name}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] text-ink-dim">
-                    {leader.id}
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="font-mono text-[10px] text-ink-dim">
+                      {leader.id}
+                    </span>
+                    {/* Removal is a two-step: this only opens the dialog. A
+                        single click that deleted somebody from a hover-revealed
+                        icon is exactly the accident worth designing out. */}
+                    {removeAction && (
+                      <button
+                        type="button"
+                        onClick={() => setPendingRemoval(leader)}
+                        aria-label={`Remove ${leader.name} from the roster`}
+                        className="grid size-5 shrink-0 place-items-center rounded text-ink-dim opacity-0 transition-[opacity,color] hover:text-badge-coral focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-text group-hover/row:opacity-100"
+                      >
+                        <svg
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.8}
+                          strokeLinecap="round"
+                          aria-hidden="true"
+                          className="size-3"
+                        >
+                          <path d="M4 4l8 8M12 4l-8 8" />
+                        </svg>
+                      </button>
+                    )}
                   </span>
                 </li>
               ))}
@@ -113,6 +153,24 @@ export function TeamLeaderRoster({
           </details>
         )}
       </div>
+
+      {/* Mounted only while a removal is pending, and KEYED BY LEADER.
+          Both halves matter. `useActionState` keeps its result for the life of
+          the component, so a long-lived dialog would still be holding the last
+          successful "X removed" the next time it opened - and its own
+          close-on-success effect would read that stale result and slam it shut
+          before the admin saw it. Remounting per leader gives each removal
+          fresh action state, which makes that whole class of bug
+          unrepresentable rather than merely handled. */}
+      {removeAction && pendingRemoval && (
+        <RemoveLeaderDialog
+          key={pendingRemoval.id}
+          leader={pendingRemoval}
+          onClose={() => setPendingRemoval(null)}
+          action={removeAction}
+          isLastLeader={leaders.length === 1}
+        />
+      )}
 
       {(state.message || !stored) && (
         <p
@@ -126,5 +184,132 @@ export function TeamLeaderRoster({
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * Confirm before taking a leader off the roster.
+ *
+ * A native `<dialog>` for the same reason `journey/TrailWindow` uses one: it
+ * carries the focus trap, the top layer, Esc-to-close and the backdrop without
+ * any of it being hand-rolled.
+ *
+ * The copy states consequences rather than asking "are you sure". Two of them
+ * are real and neither is obvious from the button:
+ *
+ * - **Removing the last leader empties the sign-in dropdown.** That field is
+ *   required for a presales joinee, so nobody can complete sign-in until
+ *   another leader is added. Worth saying out loud before it happens, not
+ *   after.
+ * - **Joinees already pointing at the id keep pointing at it.** Nothing
+ *   cascades: their progress is untouched, but the desk falls back to printing
+ *   the raw slug where the name used to be. The action's own reply reports how
+ *   many, because only the server can count them.
+ */
+function RemoveLeaderDialog({
+  leader,
+  onClose,
+  action,
+  isLastLeader,
+}: {
+  /** Always present: the parent only mounts this while a removal is pending. */
+  leader: TeamLeader;
+  onClose: () => void;
+  action: (
+    previous: RemoveLeaderState,
+    formData: FormData,
+  ) => Promise<RemoveLeaderState>;
+  isLastLeader: boolean;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [state, formAction, pending] = useActionState(action, {
+    ok: true,
+    message: null,
+  });
+
+  // Open once, on mount. The parent keys this component by leader id, so a
+  // fresh instance - and fresh action state - exists for every removal.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  // The server action's reply is the signal that the work is done. Closing on
+  // it - rather than on the click - means the dialog stays up if the removal
+  // fails, with the reason still on screen. `state` starts at
+  // `{ ok: true, message: null }`, so the null guard is what stops this firing
+  // before anything has been submitted.
+  useEffect(() => {
+    if (state.message && state.ok) onClose();
+  }, [state, onClose]);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(event) => {
+        // Backdrop click. The <dialog> itself is the backdrop's hit target, so
+        // a click landing on the element and not its contents means outside.
+        if (event.target === dialogRef.current) onClose();
+      }}
+      aria-labelledby="remove-leader-title"
+      className="m-auto w-[min(420px,92vw)] rounded-xl border border-hairline-lit bg-raised p-0 text-ink shadow-[0_24px_70px_rgb(0_0_0/0.6)] backdrop:bg-black/60"
+    >
+      <div className="p-5">
+        <h2
+          id="remove-leader-title"
+          className="font-display text-[19px] italic leading-tight"
+        >
+          Remove {leader.name}?
+        </h2>
+
+        <p className="mt-2.5 text-[13px] leading-relaxed text-ink-secondary">
+          They disappear from the sign-in dropdown straight away. Any joinee
+          already assigned to them keeps their progress, but their team leader
+          will show as{" "}
+          <code className="font-mono text-[11.5px] text-ink-muted">
+            {leader.id}
+          </code>{" "}
+          on the desk until they pick again.
+        </p>
+
+        {isLastLeader && (
+          <p className="mt-3 rounded-lg border border-badge-coral/35 bg-badge-coral-soft/60 p-3 text-[12.5px] leading-relaxed text-badge-coral">
+            This is the last leader on the roster. Remove them and the sign-in
+            dropdown is empty — and because it is a required field, no joinee
+            can finish signing in until you add somebody.
+          </p>
+        )}
+
+        {state.message && !state.ok && (
+          <p
+            aria-live="polite"
+            className="mt-3 text-[12.5px] leading-relaxed text-badge-coral"
+          >
+            {state.message}
+          </p>
+        )}
+
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-9 rounded-lg border border-hairline px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:border-hairline-lit hover:text-ink"
+          >
+            Keep them
+          </button>
+          <form action={formAction}>
+            <input type="hidden" name="id" value={leader.id} />
+            <button
+              type="submit"
+              disabled={pending}
+              className="h-9 rounded-lg border border-badge-coral/45 bg-badge-coral-soft/60 px-3.5 text-[13px] font-medium text-badge-coral transition-colors hover:border-badge-coral/70 disabled:opacity-50"
+            >
+              {pending ? "Removing..." : "Remove"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
   );
 }
