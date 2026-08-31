@@ -172,7 +172,7 @@ export default async function AdminPage() {
             }
             stored={previewStored !== null}
           />
-          <AdminTable rows={rows ?? []} asOf={asOf} />
+          <AdminTable rows={rows ?? []} roster={previewLeaders} asOf={asOf} />
         </div>
       </AdminDesk>
     );
@@ -254,7 +254,7 @@ export default async function AdminPage() {
           removeAction={storedLeaders !== null ? removeLeaderAction : undefined}
           stored={storedLeaders !== null}
         />
-        <AdminTable rows={rows ?? []} asOf={asOf} />
+        <AdminTable rows={rows ?? []} roster={leaders} asOf={asOf} />
       </div>
     </AdminDesk>
   );

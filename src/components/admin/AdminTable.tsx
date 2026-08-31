@@ -15,6 +15,7 @@ import {
 } from "@/content/onboarding/odpac";
 import {
   teamLeaderName,
+  type TeamLeader,
   UNASSIGNED_TEAM_LEADER,
 } from "@/content/onboarding/team-leaders";
 import type { DayId } from "@/content/onboarding/types";
@@ -336,9 +337,19 @@ interface Group {
  */
 export function AdminTable({
   rows,
+  roster,
   asOf,
 }: {
   rows: AdminJoineeRow[];
+  /**
+   * The live team-leader roster, passed down from the server page.
+   *
+   * The leader filter used to be derived from the joinee rows alone, which was
+   * wrong twice over: a leader nobody is assigned to yet never appeared in the
+   * dropdown at all, and their display name was unavailable too, because names
+   * were only harvested from rows. A roster with three people showed two.
+   */
+  roster: TeamLeader[];
   /**
    * The date this data was read, stamped by the server page. Passed in rather
    * than read from a clock here: the analytics tab prints it onto a shareable
@@ -382,13 +393,18 @@ export function AdminTable({
    */
   const leaderNames = useMemo(() => {
     const names = new Map<string, string>();
+    // Roster first, so a leader with no joinees still has a name to show.
+    for (const leader of roster) names.set(leader.id, leader.name);
+    // Rows second: `teamLeaderName` is already resolved server-side against the
+    // live roster, and it also covers a leader who has since been REMOVED from
+    // it while joinees still point at their id.
     for (const row of rows) {
       if (row.teamLeader && row.teamLeaderName) {
         names.set(row.teamLeader, row.teamLeaderName);
       }
     }
     return names;
-  }, [rows]);
+  }, [rows, roster]);
   // Stable across renders so the memos below can depend on it honestly.
   const nameFor = useCallback(
     (id: string) => leaderNames.get(id) ?? teamLeaderName(id),
@@ -403,17 +419,31 @@ export function AdminTable({
     [rows],
   );
 
-  // Leader options come from the unfiltered rows, exactly like `cohorts`: built
-  // from `shown` they would collapse to the one leader just selected. Sorted by
-  // display name, with the unassigned band always last.
+  /**
+   * Every leader worth offering as a filter: the whole roster, plus any id a
+   * joinee still points at.
+   *
+   * The union is the part that matters. The roster alone would drop a leader who
+   * has been removed while joinees remain assigned to them, making those joinees
+   * unreachable by filter; the rows alone drop a leader nobody is assigned to
+   * yet, which is what hid the third name.
+   *
+   * `UNASSIGNED` is deliberately NOT in here. It is not a team leader, and
+   * including it both put a phantom entry in the dropdown and inflated the
+   * count - two real leaders and a null read as "All 3 team leaders". Joinees
+   * with no leader are still shown: `matches` skips the leader test entirely
+   * while the filter is "all", so they appear in the default view like everyone
+   * else. They simply cannot be singled out, which is the right trade for a
+   * state that should not exist.
+   *
+   * Built from the unfiltered rows, like `cohorts`: from `shown` the list would
+   * collapse to whichever leader was just selected.
+   */
   const leaders = useMemo(() => {
-    const ids = new Set(rows.map((row) => row.teamLeader ?? UNASSIGNED));
-    return [...ids].sort((a, b) => {
-      if (a === UNASSIGNED) return 1;
-      if (b === UNASSIGNED) return -1;
-      return nameFor(a).localeCompare(nameFor(b));
-    });
-  }, [rows, nameFor]);
+    const ids = new Set<string>(roster.map((leader) => leader.id));
+    for (const row of rows) if (row.teamLeader) ids.add(row.teamLeader);
+    return [...ids].sort((a, b) => nameFor(a).localeCompare(nameFor(b)));
+  }, [rows, roster, nameFor]);
 
   const shown = useMemo(
     () => facts.filter((fact) => matches(fact, filters)),
@@ -714,12 +744,11 @@ export function AdminTable({
                   }}
                   options={[
                     { value: "all", label: "Every team" },
+                    // No UNASSIGNED entry, for the same reason it is absent
+                    // from `leaders` itself.
                     ...leaders.map((leader) => ({
                       value: leader,
-                      label:
-                        leader === UNASSIGNED
-                          ? "No team leader"
-                          : nameFor(leader),
+                      label: nameFor(leader),
                     })),
                   ]}
                 />
@@ -799,7 +828,7 @@ function FilterBar({
           },
           ...leaders.map((leader) => ({
             value: leader,
-            label: leader === UNASSIGNED ? "Unassigned" : nameFor(leader),
+            label: nameFor(leader),
           })),
         ]
       : [
