@@ -46,7 +46,7 @@ crons = ["30 3 * * SUN,TUE-SAT"]
 
 [vars]
 # The deployed app. Not a secret. Override per environment.
-APP_URL = "http://localhost:3000"
+APP_URL = "https://pre-sales.academy.atlys.com"
 
 # Without this, a failed run is only visible in a live `wrangler tail` session
 # that nobody is watching at 9am.
