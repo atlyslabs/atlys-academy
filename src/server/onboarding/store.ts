@@ -652,6 +652,37 @@ export interface AdminJoineeRow {
    */
   voucherCode: string | null;
   lastActivityAt: string | null;
+  /**
+   * EVERY activity timestamp, oldest first - not just the newest.
+   *
+   * `lastActivityAt` above answers "when were they last seen", which is what
+   * the desk column needs. It cannot answer "did they do anything on the 30th",
+   * and the daily Slack report was using it for exactly that: a joinee who
+   * worked all day Sunday and then touched anything on Monday morning had their
+   * latest timestamp move to Monday, so Sunday's report counted them idle and
+   * announced "nobody did anything on this day". That happened in production on
+   * 30 Aug 2026 to the one joinee who had actually finished the day's work.
+   *
+   * A whole cohort's timestamps is a couple of hundred short strings, so this
+   * is cheap; the report needs the set, not a summary of it.
+   */
+  activityAt: string[];
+  /**
+   * Every quiz attempt with its date, so a report about a past day can describe
+   * that day rather than this moment.
+   *
+   * `quizBest` and `daysCompleted` above are current-state and stay that way -
+   * the desk is a live view. But a report headed "Sun, 30 Aug" saying somebody
+   * is on day 2 because they passed day 1 on the Monday morning is telling the
+   * reader something untrue about the day they are reading about.
+   */
+  attemptsAt: {
+    quizSlug: string;
+    score: number;
+    maxScore: number;
+    passed: boolean;
+    submittedAt: string;
+  }[];
 }
 
 /** Everything the manager sees, one row per joinee, newest cohort first. */
@@ -772,6 +803,14 @@ export async function adminOverview(): Promise<AdminJoineeRow[] | null> {
           ? voucherCodeFor(profile.id)
           : null,
         lastActivityAt: timestamps.at(-1) ?? null,
+        activityAt: timestamps,
+        attemptsAt: state.attempts.map((a) => ({
+          quizSlug: a.quizSlug,
+          score: a.score,
+          maxScore: a.maxScore,
+          passed: a.passed,
+          submittedAt: a.submittedAt,
+        })),
       };
     }),
   );

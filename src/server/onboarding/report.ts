@@ -85,10 +85,68 @@ function within(timestamp: string | null | undefined, start: number, end: number
   return Number.isFinite(at) && at >= start && at < end;
 }
 
+/**
+ * Did this joinee do ANYTHING on the day being reported?
+ *
+ * The whole activity list, not `lastActivityAt`. Asking whether the single most
+ * recent timestamp lands inside the day silently drops anyone who was also
+ * active later - and since this report runs at 09:00 the morning after, "later"
+ * includes the reader's own morning. On 30 Aug 2026 the one joinee who had
+ * passed the day's quiz was reported idle for precisely this reason, under a
+ * headline saying nobody had done anything.
+ */
+function activeOn(row: AdminJoineeRow, start: number, end: number): boolean {
+  return row.activityAt.some((at) => within(at, start, end));
+}
+
+/**
+ * Their progress AS OF the end of the reported day, not right now.
+ *
+ * A report headed "Sun, 30 Aug" has to describe the 30th. Counting a day-1 pass
+ * that happened on the Monday morning as though it had happened on the Sunday
+ * puts joinees a day further along than they were, which is the difference
+ * between "still on day 1 after three days" and "moving fine".
+ */
+function daysCompletedAsOf(row: AdminJoineeRow, end: number): number {
+  return DAYS.filter((day) =>
+    row.attemptsAt.some(
+      (a) =>
+        a.quizSlug === day.slug &&
+        a.passed &&
+        Number.isFinite(Date.parse(a.submittedAt)) &&
+        Date.parse(a.submittedAt) < end,
+    ),
+  ).length;
+}
+
+/** Best mark per quiz among attempts sat by the end of the reported day. */
+function quizBestAsOf(row: AdminJoineeRow, end: number): Record<string, string> {
+  const best: Record<string, string> = {};
+  for (const day of DAYS) {
+    let top: { score: number; maxScore: number } | null = null;
+    for (const a of row.attemptsAt) {
+      if (a.quizSlug !== day.slug) continue;
+      const at = Date.parse(a.submittedAt);
+      if (!Number.isFinite(at) || at >= end) continue;
+      if (!top || a.score > top.score) top = { score: a.score, maxScore: a.maxScore };
+    }
+    if (top) best[day.slug] = `${top.score}/${top.maxScore}`;
+  }
+  return best;
+}
+
+/** Had they started at all by the end of the reported day? */
+function startedBy(row: AdminJoineeRow, end: number): boolean {
+  return row.activityAt.some((at) => {
+    const ms = Date.parse(at);
+    return Number.isFinite(ms) && ms < end;
+  });
+}
+
 export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
   const { start, end } = istDayBounds(forDate);
   const active = rows
-    .filter((row) => within(row.lastActivityAt, start, end))
+    .filter((row) => activeOn(row, start, end))
     // Highest first, so the cohort reads in the same order the leaderboard
     // shows it rather than in database order.
     .sort((a, b) => b.points - a.points);
@@ -164,8 +222,12 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
     // A blank line under the name, and wide separators between the numbers.
     // Both are deliberate: this is the line that was unreadable when it was a
     // single run-on string.
+    // Day count and quiz marks are as-of the reported day, for the same reason
+    // the idle lines are. Points and the activity count are deliberately left
+    // cumulative: they describe the person rather than the day, and a mentor
+    // reading at 9am wants to know where they stand overall.
     const stats =
-      `${row.points} pts   ·   ${row.daysCompleted} of ${DAYS.length} days   ·   ` +
+      `${row.points} pts   ·   ${daysCompletedAsOf(row, end)} of ${DAYS.length} days   ·   ` +
       `${row.activitiesDone} ${row.activitiesDone === 1 ? "activity" : "activities"}`;
     // The leader rides on the name line rather than a line of its own: it is
     // part of who this row is, and one more line per joinee is a whole extra
@@ -176,7 +238,7 @@ export function buildDailyReport(rows: AdminJoineeRow[], forDate: string) {
       stats,
     ];
 
-    const quizzes = quizLine(row);
+    const quizzes = quizLine(row, end);
     if (quizzes) lines.push(`Quizzes:   ${quizzes}`);
 
     // The voucher only appears once it has been earned, and it goes on the
@@ -257,9 +319,12 @@ function emptyReport(
 function expectedOn(rows: AdminJoineeRow[], forDate: string): AdminJoineeRow[] {
   const day = Date.parse(`${forDate}T00:00:00+05:30`);
   if (!Number.isFinite(day)) return [];
+  const end = day + 24 * 60 * 60 * 1000;
 
   return rows.filter((row) => {
-    if (row.daysCompleted >= DAYS.length) return false;
+    // As of that day, not as of now: somebody who finished the course the
+    // following week was still mid-course on the day being reported.
+    if (daysCompletedAsOf(row, end) >= DAYS.length) return false;
     const started = Date.parse(`${row.cohortDate}T00:00:00+05:30`);
     if (!Number.isFinite(started)) return false;
     const elapsed = (day - started) / 86_400_000;
@@ -272,7 +337,8 @@ function expectedOn(rows: AdminJoineeRow[], forDate: string): AdminJoineeRow[] {
  * they have been on the roster, and whether they ever started at all.
  */
 function idleLine(row: AdminJoineeRow, forDate: string): string {
-  const onDay = Math.min(row.daysCompleted + 1, DAYS.length);
+  const end = Date.parse(`${forDate}T00:00:00+05:30`) + 24 * 60 * 60 * 1000;
+  const onDay = Math.min(daysCompletedAsOf(row, end) + 1, DAYS.length);
   const elapsed = daysBetween(row.cohortDate, forDate);
   const joined =
     elapsed === 0
@@ -280,7 +346,7 @@ function idleLine(row: AdminJoineeRow, forDate: string): string {
       : elapsed === 1
         ? "joined the day before"
         : `joined ${elapsed} days earlier`;
-  const started = row.lastActivityAt ? "" : " · *never started*";
+  const started = startedBy(row, end) ? "" : " · *never started*";
   return `•  *${nameOf(row)}* — day ${onDay} of ${DAYS.length}, ${joined}${started}`;
 }
 
@@ -375,10 +441,11 @@ function dayLabel(exerciseKey: string): string {
 }
 
 /** Best score per day, in day order, ticked when it clears the pass mark. */
-function quizLine(row: AdminJoineeRow): string | null {
+function quizLine(row: AdminJoineeRow, end: number): string | null {
   const parts: string[] = [];
+  const bestByDay = quizBestAsOf(row, end);
   for (const day of DAYS) {
-    const best = row.quizBest[day.slug];
+    const best = bestByDay[day.slug];
     if (!best) continue;
     const [score, max] = best.split("/").map(Number);
     const passed =
