@@ -181,7 +181,8 @@ warning naming the column is logged on every read and write.
 
 ### 1.5 The Slack report cron is scheduled, but not yet running
 
-`crons = ["30 3 * * 0,2-6"]` in `worker/wrangler.toml`, set 26 Aug 2026.
+`crons = ["30 3 * * SUN,TUE-SAT"]` in `worker/wrangler.toml`, set 26 Aug 2026,
+day field corrected 31 Aug 2026.
 
 **Setting that line starts nothing.** A cron trigger is only registered on the
 Worker by `npm run deploy`, and a deployed run still needs both secrets and a
@@ -194,12 +195,24 @@ real `APP_URL`. Three things are still outstanding, all in
    Worker.
 3. **The old webhook must be rotated** before the new one is used — see §2.0.
 
-Verified mechanically, since this is the pairing the worker README calls the
-number-one silent failure: `30 3` is 03:30 UTC = **09:00 IST**; the day field
-`0,2-6` is Sun + Tue–Sat, i.e. **every day except Monday**, which is the only run
-that would have reported a closed Sunday; and `istReportDate()` subtracts 24h
-from `scheduledTime`, so each run reports the **previous** IST day. A 9am run
-asking for "today" would report a day 30 minutes old.
+Verified, since this is the pairing the worker README calls the number-one
+silent failure: `30 3` is 03:30 UTC = **09:00 IST**; the day field
+`SUN,TUE-SAT` is Sun + Tue–Sat, i.e. **every day except Monday**, which is the
+only run that would have reported a closed Sunday; and `istReportDate()`
+subtracts 24h from `scheduledTime`, so each run reports the **previous** IST
+day. A 9am run asking for "today" would report a day 30 minutes old.
+
+**The day field was wrong until 31 Aug 2026, and this section previously called
+it verified.** It read `0,2-6`, which is correct in standard cron and invalid on
+Cloudflare, whose week runs `1`=Sunday … `7`=Saturday. The Cloudflare API
+rejected the trigger outright (`invalid cron string [code: 10100]`) and failed
+the worker deploy, so no schedule was ever registered — the run set was never
+actually wrong, it simply did not exist. It is named here because the original
+check reasoned about the intended days and the UTC offset but took standard cron
+numbering for granted, and because the obvious repair is a worse bug than the
+original: `1,2-6` parses cleanly and means Mon–Fri. Named days are now used
+throughout for this reason; in Cloudflare's numbering every day except Monday is
+`1,3-7`.
 
 To switch it back off: set `crons = []` and deploy again. An empty list clears
 the registered schedule; **deleting the `[triggers]` block leaves it running.**

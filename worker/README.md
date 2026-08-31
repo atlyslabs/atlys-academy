@@ -33,7 +33,7 @@ Two things have to agree for that to hold, and they live in different files:
 
 | | Where | Value |
 |---|---|---|
-| When it fires | `crons` in `wrangler.toml` | `30 3 * * 0,2-6` (03:30 UTC = 09:00 IST) |
+| When it fires | `crons` in `wrangler.toml` | `30 3 * * SUN,TUE-SAT` (03:30 UTC = 09:00 IST) |
 | Which day it reports | `istReportDate()` in `src/index.ts` | the IST day before `scheduledTime` |
 
 Change one without the other and the report is silently about the wrong day — a
@@ -58,10 +58,19 @@ the schedule is **every day except Monday** — a Monday run would report Sunday
 | Sun | Sat |
 | — | *(no Monday run; Sunday is not a working day)* |
 
-`0,2-6` is Sunday plus Tuesday–Saturday. Cron numbers the week from Sunday
-(`0`=Sun … `6`=Sat), so a wrapping `2-0` range does not exist and Sunday has to
-be listed separately. Every day is covered, which is the point: a joinee can
-start on any day of the week and their first day still gets a report.
+`SUN,TUE-SAT` is Sunday plus Tuesday–Saturday. Sunday is listed separately
+because the week starts there, so no single range wraps Saturday round to
+Sunday. Every day is covered, which is the point: a joinee can start on any day
+of the week and their first day still gets a report.
+
+**Use the day names, not numbers.** Cloudflare numbers the week `1`=Sunday …
+`7`=Saturday, not the `0`=Sunday that standard cron and almost every example
+online use. This field once read `0,2-6` and the Cloudflare API refused the
+whole deploy — `invalid cron string [code: 10100]` — because `0` is out of
+range. The dangerous repair is the plausible one: `1,2-6` parses fine and means
+Mon–Fri, so the report would run on the one day it must not and miss both
+Sunday and Saturday, silently and forever. In Cloudflare's numbering, every day
+except Monday is `1,3-7`.
 
 Nothing is stored. Slack's channel history is the only durable copy of the
 report; Supabase remains the only copy of the underlying data.
@@ -114,7 +123,7 @@ REPORT_DATE=2026-08-21 REPORT_TOKEN=localtest node scripts/dry-run.mjs --preview
 
 ```
 npm run dev
-curl "http://localhost:8787/__scheduled?cron=30+3+*+*+0,2-6"
+curl "http://localhost:8787/__scheduled?cron=30+3+*+*+SUN,TUE-SAT"
 ```
 
 `--test-scheduled` exposes that endpoint so the cron can be fired on demand
@@ -141,7 +150,7 @@ deploy — the rest of this list is what has to be true first.
 5. In `wrangler.toml`, replace `crons = []` with:
 
    ```toml
-   crons = ["30 3 * * 0,2-6"]
+   crons = ["30 3 * * SUN,TUE-SAT"]
    ```
 
 6. Deploy and watch:
@@ -153,8 +162,8 @@ deploy — the rest of this list is what has to be true first.
 
 7. Confirm the schedule registered: Cloudflare dashboard → Workers & Pages →
    `onboarding-daily-report` → Settings → Trigger Events. It should read
-   `30 3 * * 0,2-6`, and the first post arrives at the next 09:00 IST that is not
-   a Monday — covering the day before it.
+   `30 3 * * SUN,TUE-SAT`, and the first post arrives at the next 09:00 IST that
+   is not a Monday — covering the day before it.
 
 To switch it back off, set `crons = []` and deploy again. An empty list clears
 the registered schedule; **deleting the `[triggers]` block leaves it running.**

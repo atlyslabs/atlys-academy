@@ -17,11 +17,22 @@ compatibility_date = "2026-08-04"
 # the date itself (`istReportDate` in src/index.ts); moving the cron without
 # moving that, or the reverse, silently reports the wrong day.
 #
-# The day field is `0,2-6`: Sunday plus Tuesday-Saturday, i.e. EVERY DAY EXCEPT
-# MONDAY. The office runs Mon-Sat, and each run reports the day before, so the
-# Monday run is the only one with nothing to cover - it would report Sunday.
-# Cron numbers the week from Sunday, so a plain `2-0` range does not exist and
-# Sunday has to be listed on its own.
+# The day field is `SUN,TUE-SAT`: EVERY DAY EXCEPT MONDAY. The office runs
+# Mon-Sat, and each run reports the day before, so the Monday run is the only one
+# with nothing to cover - it would report Sunday. Sunday is listed on its own
+# because the week starts there, so no single range spans Sat->Sun.
+#
+# NAMED DAYS, NOT NUMBERS, AND DO NOT "SIMPLIFY" THEM BACK.
+# Cloudflare numbers the week 1 = Sunday to 7 = Saturday, unlike the 0 = Sunday
+# that most cron implementations (and every example you will find) use. This
+# field first read `0,2-6`, correct in standard cron and rejected outright by the
+# Cloudflare API - `invalid cron string [code: 10100]`, because 0 is out of
+# range. The trap is the near-miss repair: bumping 0 to 1 and leaving `2-6`
+# parses cleanly and means Mon-Fri, which runs on the single day it must not and
+# skips both Sunday and Saturday. Nothing would fail; the report would just
+# cover the wrong days forever. Cloudflare's own docs recommend the
+# abbreviations for exactly this reason. If you ever do need numbers here, every
+# day except Monday is `1,3-7`.
 #
 # ENABLED 2026-08-26. Setting this line does NOT start anything on its own - a
 # cron trigger is only registered on the Worker by `npm run deploy`, and a
@@ -31,7 +42,7 @@ compatibility_date = "2026-08-04"
 # To switch it back off: set `crons = []` and deploy again. An empty list clears
 # the registered schedule; DELETING this [triggers] block leaves it running.
 [triggers]
-crons = ["30 3 * * 0,2-6"]
+crons = ["30 3 * * SUN,TUE-SAT"]
 
 [vars]
 # The deployed app. Not a secret. Override per environment.

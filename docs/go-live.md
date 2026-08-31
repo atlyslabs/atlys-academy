@@ -176,13 +176,19 @@ real values.
 ## 5. Cloudflare Worker — whoever owns the Cloudflare account
 
 The schedule is already set in `worker/wrangler.toml`:
-`crons = ["30 3 * * 0,2-6"]` — 09:00 IST, every day except Monday. **That line
-alone starts nothing**; a trigger is only registered by a deploy.
+`crons = ["30 3 * * SUN,TUE-SAT"]` — 09:00 IST, every day except Monday. **That
+line alone starts nothing**; a trigger is only registered by a deploy.
 
-Verified mechanically: `30 3` is 03:30 UTC = 09:00 IST; `0,2-6` is Sun plus
-Tue–Sat, so the only skipped run is the Monday one that would have reported a
-closed Sunday; and `istReportDate()` subtracts 24h from the scheduled instant,
-so each run reports the previous IST day. Those two must always move together.
+Verified: `30 3` is 03:30 UTC = 09:00 IST; `SUN,TUE-SAT` is Sun plus Tue–Sat, so
+the only skipped run is the Monday one that would have reported a closed Sunday;
+and `istReportDate()` subtracts 24h from the scheduled instant, so each run
+reports the previous IST day. Those two must always move together.
+
+The day field read `0,2-6` until 31 Aug 2026. That is correct in standard cron
+and invalid on Cloudflare, which numbers the week `1`=Sunday … `7`=Saturday, so
+the API refused the trigger and the worker deploy failed. Keep the day **names**:
+the plausible numeric repair, `1,2-6`, parses fine and means Mon–Fri, running on
+the one day it must not and skipping Sunday and Saturday with no error.
 
 ```bash
 cd worker && npm install && npx wrangler login
@@ -222,8 +228,10 @@ cd worker && npm install && npx wrangler login
 
 - [ ] **5.5 Confirm the trigger registered.** Cloudflare dashboard → Workers &
   Pages → `onboarding-daily-report` → Settings → **Trigger Events**. It should
-  read `30 3 * * 0,2-6`. The first post arrives at the next 09:00 IST that is
-  not a Monday.
+  read `30 3 * * SUN,TUE-SAT`. The first post arrives at the next 09:00 IST that
+  is not a Monday. If the deploy reported `invalid cron string [code: 10100]`,
+  the script shipped but **no schedule was registered** — fix the day field and
+  deploy again, then re-check this screen.
 
   To turn it off later: set `crons = []` and deploy again. An empty list clears
   the schedule; **deleting the `[triggers]` block leaves it running.**
