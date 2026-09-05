@@ -8,6 +8,7 @@ import {
   canReplayDrill,
   drillAttemptsLeft,
   drillAttemptsUsed,
+  isTerminalDrillStatus,
 } from "@/lib/progress/attempts";
 import { useProgress } from "@/lib/progress/provider";
 import { speak, stopSpeaking } from "@/lib/speech";
@@ -104,6 +105,22 @@ export function PauseDrill() {
 
   function sendTooEarly() {
     setPhase("rushed");
+    // Never write "rushed" over a run that already finished.
+    //
+    // This is the same guard `ApacLoop` carries, and it is here for a worse
+    // version of the same failure. "rushed" is not terminal, so demoting a
+    // stored "passed" un-earns the Gate hold stamp; `dayWorkFinished` then
+    // fails for Day 2, and Day 3 - which the joinee had already opened - seals
+    // itself again. It is durable, not cosmetic: the write syncs, and
+    // `mergeDrill` takes the newer `updatedAt`, so a reload brings the demotion
+    // back with it.
+    //
+    // Reaching it takes nothing exotic. This drill re-offers "Start the drill"
+    // on every mount, so anyone revisiting a finished Day 2 can rush it again
+    // by accident. Skipping the write matches how `setDrill` already treats
+    // scores - a replay may improve a result, never worsen it - so the local
+    // phase still shows them what they did while the record holds.
+    if (isTerminalDrillStatus(storedResult?.status)) return;
     setDrillResult("pause-10s", { status: "rushed" });
   }
 
