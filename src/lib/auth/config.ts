@@ -75,3 +75,39 @@ export const ADMIN_EMAILS: readonly string[] = (
 export function isAdminEmail(email: unknown): boolean {
   return typeof email === "string" && ADMIN_EMAILS.includes(email.toLowerCase());
 }
+
+/**
+ * People who see all three days open regardless of the gate.
+ *
+ * TEMPORARY, and deliberately an env var rather than a constant so it can be
+ * revoked by clearing one value instead of shipping code. Added 5 Sep 2026 so a
+ * reviewer can walk the whole course - read every page, run every activity,
+ * file each ODPAC and sit each quiz - without first earning their way through
+ * three days of gating one calendar day at a time.
+ *
+ * It ONLY lifts the day lock. It changes nothing about how work is recorded:
+ * whoever is on this list still earns stamps, points, quiz marks and the
+ * voucher exactly as anyone else does, so what they do is a real rehearsal
+ * rather than a special mode with its own bugs.
+ *
+ * Empty by default. With `FULL_ACCESS_EMAILS` unset - which is every
+ * environment until someone sets it - `hasFullDayAccess` is false for
+ * everybody and the app behaves precisely as it did before this existed.
+ *
+ * Server-only, like ADMIN_EMAILS: this module is imported by server files, and
+ * the value is read in the `/onboarding` page. The browser is handed a single
+ * boolean, never the list.
+ */
+export const FULL_ACCESS_EMAILS: readonly string[] = (
+  process.env.FULL_ACCESS_EMAILS || ""
+)
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+export function hasFullDayAccess(email: unknown): boolean {
+  return (
+    typeof email === "string" &&
+    FULL_ACCESS_EMAILS.includes(email.toLowerCase())
+  );
+}

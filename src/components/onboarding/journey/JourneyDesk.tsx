@@ -58,7 +58,19 @@ function dayFromHash(hash: string): DayId | null {
  * quiet skeleton - which is also exactly what the server renders, so
  * hydration never disagrees and the seals never flash open.
  */
-export function JourneyDesk() {
+export function JourneyDesk({
+  openAllDays = false,
+}: {
+  /**
+   * Every day open, gate ignored. Decided on the server from the signed-in
+   * email (`hasFullDayAccess`) and handed down as a bare boolean, so the
+   * allow-list itself never reaches the browser.
+   *
+   * Defaults false: every other joinee takes exactly the path they did before
+   * this prop existed.
+   */
+  openAllDays?: boolean;
+} = {}) {
   const { state, ready, setLastVisitedDay } = useProgress();
   const now = useHalfMinuteClock();
   // Deep links (`#day-N/stop`) open their window on load. Reading the hash in
@@ -77,7 +89,9 @@ export function JourneyDesk() {
 
   const settled = ready && now !== null;
   const gateKey = now ? gateDayKey(now) : undefined;
-  const currentDay: DayId = settled ? resumeDay(state, gateKey) : 1;
+  const currentDay: DayId = settled
+    ? resumeDay(state, gateKey, openAllDays)
+    : 1;
   const shownDay: DayId = pickedDay ?? currentDay;
 
   // Remember where the joinee is, so the landing page resumes here.
@@ -105,7 +119,8 @@ export function JourneyDesk() {
   const points = calculatePoints(state);
   const stamps = stampTotals(state);
   const shown = DAYS.find((day) => day.id === shownDay) ?? DAYS[0];
-  const shownUnlocked = settled && isDayUnlocked(state, shown.id, gateKey);
+  const shownUnlocked =
+    settled && isDayUnlocked(state, shown.id, gateKey, openAllDays);
 
   return (
     <div className="relative min-h-[100dvh] overflow-x-clip bg-page text-ink">
@@ -177,6 +192,7 @@ export function JourneyDesk() {
                 currentDay={currentDay}
                 shownDay={shown.id}
                 onPick={pickDay}
+                openAllDays={openAllDays}
               />
               <div
                 role="tabpanel"
@@ -198,6 +214,7 @@ export function JourneyDesk() {
                     state={state}
                     now={now!}
                     gateKey={gateKey}
+                    openAllDays={openAllDays}
                   />
                 )}
               </div>
@@ -254,12 +271,15 @@ function DayRail({
   currentDay,
   shownDay,
   onPick,
+  openAllDays = false,
 }: {
   state: ReturnType<typeof useProgress>["state"];
   gateKey?: string;
   currentDay: DayId;
   shownDay: DayId;
   onPick: (dayId: DayId) => void;
+  /** Every tab unlocked - see the prop of the same name on `JourneyDesk`. */
+  openAllDays?: boolean;
 }) {
   function onKeyDown(event: React.KeyboardEvent) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -281,7 +301,7 @@ function DayRail({
     >
       {DAYS.map((day) => {
         const shownTab = day.id === shownDay;
-        const unlocked = isDayUnlocked(state, day.id, gateKey);
+        const unlocked = isDayUnlocked(state, day.id, gateKey, openAllDays);
         const cleared = dayStampsComplete(state, day.id);
         return (
           <button

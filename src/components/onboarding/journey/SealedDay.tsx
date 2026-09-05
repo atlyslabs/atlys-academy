@@ -32,16 +32,24 @@ export function SealedDay({
   state,
   now,
   gateKey,
+  openAllDays = false,
 }: {
   day: Day;
   state: ProgressState;
   now: Date;
   gateKey?: string;
+  /**
+   * Passed through for consistency rather than because this component needs
+   * it: with every day open nothing is sealed, so the desk never mounts this.
+   * Threading it anyway means the two cannot drift into disagreeing about what
+   * is locked if the desk's rendering rule ever changes.
+   */
+  openAllDays?: boolean;
 }) {
-  const reason = dayLockReason(state, day.id, gateKey);
+  const reason = dayLockReason(state, day.id, gateKey, openAllDays);
   const previous = DAYS.find((candidate) => candidate.id === day.id - 1);
   const previousOpen = previous
-    ? isDayUnlocked(state, previous.id, gateKey)
+    ? isDayUnlocked(state, previous.id, gateKey, openAllDays)
     : false;
 
   let note: string;
