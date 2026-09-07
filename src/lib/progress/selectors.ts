@@ -82,17 +82,7 @@ export function isDayUnlocked(
   state: ProgressState,
   dayId: DayId,
   gateKeyStr?: string,
-  openAll = false,
 ): boolean {
-  // A reviewer walking the whole course with every day open. Decided on the
-  // server from `FULL_ACCESS_EMAILS` and passed down as a plain boolean - see
-  // `hasFullDayAccess` in lib/auth/config.ts.
-  //
-  // It short-circuits here, at the single place the gate is decided, rather
-  // than at the call sites: `dayLockReason` and `resumeDay` both delegate to
-  // this function, so one check keeps the padlock, the panel and the resume
-  // rule from ever disagreeing about whether a day is open.
-  if (openAll) return true;
   if (!DAY_GATE_ENABLED) return true;
   if (dayId === 1) return true;
   const previous = DAYS.find((day) => day.id === dayId - 1);
@@ -162,9 +152,8 @@ export function dayLockReason(
   state: ProgressState,
   dayId: DayId,
   gateKeyStr?: string,
-  openAll = false,
 ): "quiz" | "stamps" | "odpac" | "tomorrow" | null {
-  if (isDayUnlocked(state, dayId, gateKeyStr, openAll)) return null;
+  if (isDayUnlocked(state, dayId, gateKeyStr)) return null;
   const previous = DAYS.find((day) => day.id === dayId - 1);
   // Mirrors `isDayUnlocked` exactly, in the same order, so the padlock never
   // names a reason the gate is not actually blocking on.
@@ -207,19 +196,13 @@ export function daysCompleted(state: ProgressState): number {
 }
 
 /** The day the joinee should land on when they return. */
-export function resumeDay(
-  state: ProgressState,
-  gateKeyStr?: string,
-  openAll = false,
-): DayId {
+export function resumeDay(state: ProgressState, gateKeyStr?: string): DayId {
   const furthestUnlocked = [...DAYS]
     .reverse()
-    .find((day) => isDayUnlocked(state, day.id, gateKeyStr, openAll));
+    .find((day) => isDayUnlocked(state, day.id, gateKeyStr));
   const furthest = furthestUnlocked?.id ?? 1;
-  // Prefer where they actually were, as long as it is still reachable. With
-  // every day open this always holds, so a reviewer lands back where they left
-  // off rather than being thrown to Day 3.
-  return isDayUnlocked(state, state.lastVisitedDay, gateKeyStr, openAll)
+  // Prefer where they actually were, as long as it is still reachable.
+  return isDayUnlocked(state, state.lastVisitedDay, gateKeyStr)
     ? state.lastVisitedDay
     : furthest;
 }
