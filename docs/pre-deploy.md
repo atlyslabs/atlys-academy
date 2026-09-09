@@ -38,7 +38,7 @@ Everything in this section is a measured result, not a reading of the code.
 | Database | every column `store.ts` selects exists; all five upsert conflict targets update in place rather than inserting duplicates |
 | Sync schema | accepts every payload a real client sends, including all three historical null/timestamp cases; still rejects bad version, non-uuid ids, negative scores, offset-less timestamps |
 | Slack report | endpoint returns 200 on the real token, renders a real joinee card with team leader, points, quiz line and the full five-stage ODPAC body, every block inside Slack's 3000-char limit. **Nothing was posted** |
-| Routes | public pages 200; `/onboarding/*` and `/admin/*` 307 to `/signin?next=…`; unknown page 404; `/api/onboarding/progress` and `/leaderboard` 503 without a session; `/admin/overview` 403 without an admin email |
+| Routes | public pages 200; `/onboarding/*` and `/admin/*` 307 to `/signin?next=…`; unknown page 404; `/api/onboarding/progress` 503 without a session; `/api/onboarding/leaderboard` 404 for everyone (the feature is off - see `LEADERBOARD_ENABLED`); `/admin/overview` 403 without an admin email |
 | Anon DB exposure | this app carries no anon key at all, so the browser has no path to the database |
 | Attempts | quizzes and drills both capped at **3**. Verified through the real reducer: first play counts 1, a mid-play reset is free, a replay after finishing costs one, no 4th is offered, and the best score survives every replay |
 | No dead end | at the harshest flag setting, a joinee who fails every quiz 3× **and** rushes the pause drill 3× still walks Day 1 → 3 and still earns the voucher. The passport stays honest at 7/8 for that day |

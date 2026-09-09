@@ -9,7 +9,7 @@ import {
   normalizeTeamLeader,
 } from "@/content/onboarding/team-leaders";
 import { isAdminEmail, isAuthConfigured } from "@/lib/auth/config";
-import { ADMIN_ENABLED } from "@/lib/dev-flags";
+import { ADMIN_ENABLED, LEADERBOARD_ENABLED } from "@/lib/dev-flags";
 import {
   emptyProgress,
   PROGRESS_VERSION,
@@ -22,7 +22,7 @@ import { buildDailyReport, istToday } from "./report";
 import { voucherCodeFor } from "./voucher";
 import {
   adminOverview,
-  cohortLeaderboard,
+  academyLeaderboard,
   ensureProfile,
   loadProgress,
   saveProgress,
@@ -248,11 +248,20 @@ const routes = app
     });
   })
 
-  /** Cohort-scoped leaderboard - visible to every joinee in that cohort. */
+  /**
+   * The standings - switched off.
+   *
+   * Closing the route and hiding the links is not enough on its own: this
+   * endpoint returns every joinee's name, points and days from one GET, so
+   * while it answered, any signed-in joinee who knew the path could still read
+   * the whole board. It 404s with the page, from the same flag, so the two can
+   * never drift apart.
+   */
   .get("/leaderboard", async (c) => {
+    if (!LEADERBOARD_ENABLED) return c.json({ error: "Not found" }, 404);
     const profile = await currentProfile();
     if (!profile) return c.json({ error: "Sync unavailable" }, 503);
-    const board = await cohortLeaderboard(profile.id);
+    const board = await academyLeaderboard(profile.id);
     if (!board) return c.json({ error: "Sync unavailable" }, 503);
     return c.json(board);
   })

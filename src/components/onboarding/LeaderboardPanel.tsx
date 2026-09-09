@@ -19,14 +19,19 @@ interface LeaderboardRow {
 }
 
 interface LeaderboardData {
-  cohortDate: string;
   rows: LeaderboardRow[];
+  /** Staff are not ranked, so there is no `isYou` row to highlight for them. */
+  viewerIsStaff: boolean;
 }
 
 type Status = "loading" | "ready" | "unavailable";
 
 /**
- * Cohort leaderboard, fetched on mount.
+ * Academy leaderboard, fetched on mount.
+ *
+ * Ranks every joinee in the academy, not a cohort: `cohort_date` is just the
+ * day someone first signed in, which on a rolling intake left people looking
+ * at a board of one. Staff are excluded from the ranking but still see it.
  *
  * The API answers 503 until Google auth and Supabase are both configured, so
  * every non-200 collapses into one honest "not switched on yet" state rather
@@ -64,11 +69,13 @@ export function LeaderboardPanel() {
         <p className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.2em] text-brand-text">
           <span aria-hidden="true" className="h-px w-6 bg-brand-text/50" />
           {status === "ready" && board
-            ? `Your cohort, started ${formatCohortDate(board.cohortDate)}`
+            ? `Everyone in the academy · ${board.rows.length} ${
+                board.rows.length === 1 ? "joinee" : "joinees"
+              }`
             : "The standings"}
         </p>
         <h1 className="mt-3 font-display text-[40px] italic leading-tight tracking-[-0.01em] sm:text-[48px]">
-          Cohort leaderboard
+          Academy leaderboard
         </h1>
       </header>
 
@@ -91,6 +98,21 @@ export function LeaderboardPanel() {
 }
 
 function Board({ board }: { board: LeaderboardData }) {
+  // No joinees at all - every profile so far is staff. Reachable on a fresh
+  // deployment, where the admins configuring it sign in before anyone else, and
+  // an empty <ol> renders as a blank panel that reads like a failed fetch.
+  if (board.rows.length === 0) {
+    return (
+      <Card tone="soft" className="p-6">
+        <p className="max-w-xl text-sm text-ink-secondary">
+          {board.viewerIsStaff
+            ? "No joinees have signed in yet, so there is nothing to rank. Rows appear here as the cohort arrives."
+            : "Nobody is on the board yet. Yours appears as soon as your first points land."}
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <>
       <ol className="space-y-3">
@@ -140,10 +162,15 @@ function Board({ board }: { board: LeaderboardData }) {
         ))}
       </ol>
 
+      {board.viewerIsStaff && (
+        <p className="mt-4 text-sm text-ink-muted">
+          You are signed in as staff, so you are not ranked here.
+        </p>
+      )}
+
       {board.rows.length === 1 && (
         <p className="mt-4 text-sm text-ink-muted">
-          You are the only one in this cohort so far. The board fills as
-          people join.
+          One joinee has signed in so far. The board fills as people join.
         </p>
       )}
     </>
@@ -165,13 +192,3 @@ function SkeletonRows() {
   );
 }
 
-/** Runs only after the client fetch, so a fixed locale cannot mismatch SSR. */
-function formatCohortDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}

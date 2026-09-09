@@ -44,10 +44,12 @@ comment on table public.exercise_submissions is
 
 
 -- ---------------------------------------------------------------------------
--- 2. The index the leaderboard actually needs.
+-- 2. The index the admin desk actually needs.
 --
--- `cohortLeaderboard` filters profiles by cohort_date on every load, and
--- `adminOverview` orders by it. Both are sequential scans today. Harmless at
+-- Was justified by `cohortLeaderboard`, which no longer exists - the leaderboard
+-- is academy-wide and now switched off entirely (see the RESOLVED note below).
+-- Still worth applying: `adminOverview` orders profiles by cohort_date and the
+-- report's expected-window maths reads it. A sequential scan today. Harmless at
 -- four rows, not at four cohorts of twenty.
 
 create index if not exists profiles_cohort_date
@@ -211,6 +213,12 @@ comment on view public.joinee_activity is
 -- * cohort_date still defaults to current_date at first sign-in, so a cohort is
 --   whoever signed in that day and a straggler lands in a cohort of one. Worth
 --   an explicit cohort table if cohorts ever become a real unit of management.
+--   RESOLVED FOR THE LEADERBOARD (9 Sep 2026): this predicted failure happened.
+--   30 profiles were spread over 9 cohort_date values and three people - one a
+--   joinee on her first morning - saw a leaderboard of one. `academyLeaderboard`
+--   no longer groups by it; the column is now only a start date for the admin
+--   desk filter and the report's expected-window maths. The note below still
+--   stands if cohorts are ever to mean anything as a unit.
 --
 -- * No soft deletes and no audit trail. Everything cascades on profile delete,
 --   which is the right default under GDPR-style deletion and the wrong one if

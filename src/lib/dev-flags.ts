@@ -120,3 +120,32 @@ export const PAUSE_COUNTDOWN_ENABLED = true;
  * row until they sign in with a role.
  */
 export const HIDE_STAFF_FROM_DESK = true;
+
+/**
+ * Whether the leaderboard exists at all.
+ *
+ * `false` = removed, not merely hidden. The route answers `notFound()`, the API
+ * answers 404, and no surface links to it - so it cannot be clicked, cannot be
+ * reached by typing the URL, and its data cannot be fetched by a signed-in
+ * joinee who knows the endpoint. Hiding only the links would have left every
+ * joinee's name and points readable at `/api/onboarding/leaderboard`.
+ *
+ * **`false` since 2026-09-09**, at the hiring manager's request: ranking a
+ * rolling intake compares a joinee on their first morning against someone who
+ * finished a week ago, which is a discouraging thing to put in front of someone
+ * on day one and not what the passport is for.
+ *
+ * Turning it back on is this one line and nothing else: every surface is gated
+ * rather than deleted - the route, the API, the room nav, the landing card link
+ * and the desk link - and `academyLeaderboard` and the panel are intact behind
+ * it. The only things NOT restored are two prose edits that stopped promising a
+ * leaderboard (`journey/stops.tsx` final-gate copy, `admin/page.tsx` notice);
+ * reword those by hand if it ever comes back.
+ */
+export const LEADERBOARD_ENABLED: boolean = false;
+// The `: boolean` annotation is load-bearing, not noise. As a bare `= false`
+// the type is the literal `false`, so TypeScript reads the guard in the Hono
+// route as an unconditional return, marks the rest of the handler unreachable
+// and drops the success shape from the inferred RPC type - which quietly turns
+// LeaderboardPanel's `as LeaderboardData` into an unchecked cast. Widening to
+// `boolean` keeps both branches in the type.

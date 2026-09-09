@@ -7,6 +7,7 @@ import { JOURNEY_LEGS, narrationOpener } from "@/content/onboarding/journey";
 import { LESSONS } from "@/content/onboarding/lessons";
 import type { DayId } from "@/content/onboarding/types";
 import { gateDayKey } from "@/lib/dates";
+import { LEADERBOARD_ENABLED } from "@/lib/dev-flags";
 import { romanNumeral } from "@/lib/roman";
 import { localProgressStore } from "@/lib/progress/local-store";
 import { dayChecklistProgress, resumeDay } from "@/lib/progress/selectors";
@@ -261,12 +262,15 @@ export function EditionCover() {
               >
                 Passport
               </Link>
-              <Link
-                href="/onboarding/leaderboard"
-                className="text-ink-muted transition-colors hover:text-ink"
-              >
-                Leaderboard
-              </Link>
+              {/* Gated, not deleted, so the flag restores this link too. */}
+              {LEADERBOARD_ENABLED && (
+                <Link
+                  href="/onboarding/leaderboard"
+                  className="text-ink-muted transition-colors hover:text-ink"
+                >
+                  Leaderboard
+                </Link>
+              )}
               <Link
                 href="/admin"
                 className="text-ink-dim transition-colors hover:text-ink"

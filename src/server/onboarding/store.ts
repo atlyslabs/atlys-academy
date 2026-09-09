@@ -377,27 +377,79 @@ export interface LeaderboardRow {
   isYou: boolean;
 }
 
-/** Everyone in the same cohort, ranked by points. */
-export async function cohortLeaderboard(
+export interface LeaderboardBoard {
+  rows: LeaderboardRow[];
+  /**
+   * True when the viewer is staff, and so is not ranked among the rows.
+   *
+   * An admin signs in to read the desk, not to walk the journey. They still
+   * get to SEE the board - hiding it from them would be worse - but the UI has
+   * to know not to promise them a position in it, because there will not be a
+   * row flagged `isYou`.
+   */
+  viewerIsStaff: boolean;
+}
+
+/**
+ * Everyone in the academy, ranked by points.
+ *
+ * Deliberately NOT scoped to a cohort. `profiles.cohort_date` defaults to
+ * `current_date` at first sign-in, so a "cohort" only ever means "whoever
+ * happened to sign in on the same calendar day". On a rolling intake that
+ * shreds: on 9 Sep 2026 thirty real profiles were spread across nine such
+ * dates, and three people - including a joinee on her first morning - saw a
+ * leaderboard containing nobody but themselves. Grouping by team leader has
+ * the same hole for anyone unassigned. One academy-wide board is the only
+ * grouping that is non-trivial for every viewer, including the next person to
+ * sign in alone on a quiet day.
+ *
+ * Staff are kept out of the rows on the same authority the admin desk uses -
+ * the role picked at sign-in, never the admin-email list. See
+ * `HIDE_STAFF_FROM_DESK`.
+ */
+export async function academyLeaderboard(
   profileId: string,
-): Promise<{ cohortDate: string; rows: LeaderboardRow[] } | null> {
+): Promise<LeaderboardBoard | null> {
   const db = getDb();
   if (!db) return null;
 
-  const { data: me } = await db
-    .from("profiles")
-    .select("cohort_date")
-    .eq("id", profileId)
-    .maybeSingle();
-  if (!me) return null;
+  type ProfileRow = {
+    id: string;
+    email: string;
+    full_name: string | null;
+    role?: string | null;
+  };
 
-  const { data: peers } = await db
+  const withRole = await db
     .from("profiles")
-    .select("id, email, full_name")
-    .eq("cohort_date", me.cohort_date);
+    .select("id, email, full_name, role");
+
+  // Before the migration lands, read without `role` so the board still shows
+  // everyone rather than hard-failing. Staff cannot be told apart in that
+  // window - the same trade the admin desk makes.
+  let profiles: ProfileRow[] | null;
+  if (withRole.error && isMissingProfileColumn(withRole.error)) {
+    console.warn(
+      "[onboarding] profiles.role is missing - run supabase/schema.sql. Staff cannot be excluded from the leaderboard until it is applied.",
+    );
+    const base = await db.from("profiles").select("id, email, full_name");
+    if (base.error) throw base.error;
+    profiles = base.data as ProfileRow[] | null;
+  } else {
+    if (withRole.error) throw withRole.error;
+    profiles = withRole.data as ProfileRow[] | null;
+  }
+
+  const everyone = profiles ?? [];
+  const viewer = everyone.find((profile) => profile.id === profileId);
+  const viewerIsStaff = HIDE_STAFF_FROM_DESK && viewer?.role === "admin";
+
+  const joinees = everyone.filter(
+    (profile) => !HIDE_STAFF_FROM_DESK || profile.role !== "admin",
+  );
 
   const rows = await Promise.all(
-    (peers ?? []).map(async (peer) => {
+    joinees.map(async (peer) => {
       const state = await loadProgress(peer.id);
       return {
         name: peer.full_name || peer.email.split("@")[0],
@@ -409,8 +461,19 @@ export async function cohortLeaderboard(
       };
     }),
   );
-  rows.sort((a, b) => b.points - a.points);
-  return { cohortDate: me.cohort_date, rows };
+
+  // Points, then days, then name. The tail of an academy-wide board is a long
+  // run of joinees on zero, and on points alone their order is whatever the
+  // database happened to return - so the board reshuffles between two loads on
+  // the same morning, and between two screenshots of it.
+  rows.sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.daysCompleted - a.daysCompleted ||
+      a.name.localeCompare(b.name),
+  );
+
+  return { rows, viewerIsStaff };
 }
 
 /* ---------------------------------------------------------------------------

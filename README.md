@@ -2,7 +2,7 @@
 
 A points-based, interactive **3-day** onboarding university for the Pre-checkout
 Sales function: lessons, drag-and-drop drills, voiced chat scenarios, a daily
-shadowing report, a per-cohort leaderboard, and a manager dashboard.
+shadowing report, and a manager dashboard.
 
 Scoped down from five days in Aug 2026 — see the header comment in
 `src/content/onboarding/days.ts` for what moved to on-the-job learning. As it
@@ -86,12 +86,22 @@ passport shows honestly who cleared the bar — it just never traps anyone. See
   most had no Slack ID and rendered a disabled "ID pending" button, so the panel
   was mostly a list of people a joinee could read about and not reach.
 
-## Leaderboard and cohorts
+## Leaderboard — removed
 
-Everyone whose first sign-in lands on the same date shares a cohort, and the
-leaderboard (`/onboarding/leaderboard`) ranks within that cohort only — day-2
-joiners are never compared against day-5 ones. Visible to the cohort and the
-manager. Requires sign-in + database; shows an honest placeholder otherwise.
+There is no leaderboard. `LEADERBOARD_ENABLED` in `src/lib/dev-flags.ts` is
+`false`, so `/onboarding/leaderboard` answers 404, the API endpoint 404s, and
+nothing links to it. It was switched off rather than deleted: every surface is
+gated behind that one flag.
+
+It was previously scoped per cohort, where a cohort meant "everyone whose first
+sign-in landed on the same date". On a rolling intake that fragmented badly —
+30 profiles across 9 dates, and three people looking at a board of one — so the
+ranking was rewritten academy-wide before the feature was switched off. Flipping
+the flag restores that version, not the per-cohort one.
+
+`profiles.cohort_date` still exists and is still meaningful as a start date: the
+admin desk filters on it and the daily report uses it for its expected-window
+maths. It is simply not a grouping key.
 
 ## Admin
 
@@ -298,8 +308,8 @@ Six checklist activities are flagged `accessNeeded`, which renders a visible
 ## Built since the PRD
 
 The PRD's Phases 4–5 are done: Supabase persistence of progress, quiz attempts,
-drill results and written submissions; the per-cohort leaderboard; the admin
-desk; and the scheduled Slack digest in `worker/`. See `docs/pre-deploy.md` §0
+drill results and written submissions; the admin desk; and the scheduled Slack
+digest in `worker/`. See `docs/pre-deploy.md` §0
 for what has been verified against the live database.
 
 Auth moved to Google OAuth, so the PRD's email-OTP flow and its `auth_otp`

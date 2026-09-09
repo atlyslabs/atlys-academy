@@ -413,8 +413,8 @@ function GatePanel({ day, now }: { day: Day; now: Date }) {
 
       {!nextDay && passed && sheetComplete && (
         <p className="mt-5 border-t border-hairline pt-4 text-[13px] leading-relaxed text-ink-dim">
-          That was the final gate. The whole journey is stamped - take the
-          passport for a lap of the leaderboard.
+          That was the final gate. The whole journey is stamped - the passport
+          is yours to keep.
         </p>
       )}
     </div>

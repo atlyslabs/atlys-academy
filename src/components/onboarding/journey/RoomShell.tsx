@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { LEADERBOARD_ENABLED } from "@/lib/dev-flags";
 
 /** Which room is open. The manager's desk shares the shell; the joinee rooms
  *  never advertise it, so `admin` only appears in its own nav. */
@@ -7,11 +8,16 @@ export type Room = "passport" | "leaderboard" | "admin";
 
 const ROOM_LINKS: readonly { room: Room; href: string; label: string }[] = [
   { room: "passport", href: "/onboarding/passport", label: "Passport" },
-  {
-    room: "leaderboard",
-    href: "/onboarding/leaderboard",
-    label: "Leaderboard",
-  },
+  // Filtered rather than deleted, so the room comes back with the flag.
+  ...(LEADERBOARD_ENABLED
+    ? ([
+        {
+          room: "leaderboard",
+          href: "/onboarding/leaderboard",
+          label: "Leaderboard",
+        },
+      ] as const)
+    : []),
   { room: "admin", href: "/admin", label: "Admin desk" },
 ];
 

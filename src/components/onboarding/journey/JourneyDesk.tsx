@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DAYS } from "@/content/onboarding/days";
 import type { Day, DayId } from "@/content/onboarding/types";
 import { gateDayKey } from "@/lib/dates";
+import { LEADERBOARD_ENABLED } from "@/lib/dev-flags";
 import { calculatePoints } from "@/lib/progress/points";
 import { useProgress } from "@/lib/progress/provider";
 import { isDayUnlocked, resumeDay } from "@/lib/progress/selectors";
@@ -156,12 +157,15 @@ export function JourneyDesk() {
             >
               Passport
             </Link>
-            <Link
-              href="/onboarding/leaderboard"
-              className="text-[13px] text-ink-muted transition-colors hover:text-ink"
-            >
-              Leaderboard
-            </Link>
+            {/* Gated, not deleted, so the flag restores this link too. */}
+            {LEADERBOARD_ENABLED && (
+              <Link
+                href="/onboarding/leaderboard"
+                className="text-[13px] text-ink-muted transition-colors hover:text-ink"
+              >
+                Leaderboard
+              </Link>
+            )}
           </nav>
         </header>
 
