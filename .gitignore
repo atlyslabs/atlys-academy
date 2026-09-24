@@ -36,3 +36,7 @@ src/app/x-drill-preview/
 # Generated knowledge graph (graphify). ~3.8 MB of derived output, rebuilt on
 # demand with `/graphify --update`; the manifest makes that incremental.
 graphify-out/
+
+# Guest-facing visa letter templates and design scratch. Not part of the academy;
+# kept locally, never versioned here.
+email-templates/
