@@ -4,8 +4,10 @@
 -- objection drill had shipped under a second acronym. The drill and every
 -- joinee's play of it are kept - only the id changed.
 --
--- At the time of writing this touches 23 rows (21 complete, 2 in-progress)
--- belonging to real joinees. Those plays earn the Day 2 "Sequenced" stamp, and
+-- At the time of writing this touches 24 `apac-loop` rows (22 complete, 2
+-- in-progress) belonging to real joinees, with 2 of those profiles also holding
+-- an `odpac-loop` row. The academy is live, so run step 1 for today's numbers
+-- rather than trusting these. Those plays earn the Day 2 "Sequenced" stamp, and
 -- that stamp is one of the stamps `dayWorkFinished` requires before Day 3
 -- unseals - so losing them would re-seal a day people have already finished.
 --
@@ -28,19 +30,41 @@ order by drill_id;
 
 -- 2. The rename.
 --
--- The table's primary key is (profile_id, drill_id), so a joinee who somehow
--- holds BOTH ids - played it once before the rename and again after - would
--- collide on update. That is why the delete below runs first: it drops the
--- stale `apac-loop` row only for profiles that already have an `odpac-loop`
--- one, keeping the newer play, which is the same rule `migrateDrillIds` uses.
-delete from public.drill_results old
-where old.drill_id = 'apac-loop'
-  and exists (
-    select 1
-    from public.drill_results current
-    where current.profile_id = old.profile_id
-      and current.drill_id = 'odpac-loop'
-  );
+-- The table's primary key is (profile_id, drill_id), so a joinee who holds BOTH
+-- ids - played it once before the rename and again after - would collide on
+-- update. The two deletes below clear that first, and between them they apply
+-- exactly the rule `migrateDrillIds` applies in the app: the LATER play
+-- survives, whichever id it happens to be filed under. A tie keeps the row
+-- already under the canonical id, so the two agree row for row.
+--
+-- The direction matters, and getting it wrong is the one way this file could
+-- destroy someone's work. It is tempting to just drop `apac-loop` whenever an
+-- `odpac-loop` row exists - but a browser tab opened before the rename and
+-- never reloaded still writes the old id, so an `apac-loop` row CAN be the
+-- newer play. Dropping it unconditionally would throw away the better row and
+-- hand the joinee back an older, possibly unfinished, attempt.
+--
+-- `updated_at` is `not null`, so neither comparison can go NULL and leave a
+-- pair intact for the update to collide on.
+
+-- 2a. The old id loses: the canonical row is at least as recent.
+delete from public.drill_results loser
+using public.drill_results keeper
+where loser.profile_id = keeper.profile_id
+  and loser.drill_id = 'apac-loop'
+  and keeper.drill_id = 'odpac-loop'
+  and loser.updated_at <= keeper.updated_at;
+
+-- 2b. The old id wins: it was played more recently, so the canonical row goes
+-- and the update below renames the survivor into its place. Strictly `<`, so
+-- this and 2a are mutually exclusive - exactly one fires per colliding pair,
+-- and a pair can never lose both of its rows.
+delete from public.drill_results loser
+using public.drill_results keeper
+where loser.profile_id = keeper.profile_id
+  and loser.drill_id = 'odpac-loop'
+  and keeper.drill_id = 'apac-loop'
+  and loser.updated_at < keeper.updated_at;
 
 update public.drill_results
 set drill_id = 'odpac-loop'
