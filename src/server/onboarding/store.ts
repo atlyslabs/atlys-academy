@@ -17,6 +17,7 @@ import {
   type ProgressState,
   type QuizAttemptRecord,
 } from "@/lib/progress/types";
+import { migrateDrillIds } from "@/lib/progress/drill-aliases";
 import { getDb } from "./db";
 import { voucherCodeFor } from "./voucher";
 
@@ -245,8 +246,21 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
       submittedAt: row.submitted_at,
     }),
   );
+  // Keyed by the id as STORED, then resolved through `migrateDrillIds`.
+  //
+  // Assigning straight into `state.drills` under the renamed id would make the
+  // last row of an unordered read win: the primary key is
+  // (profile_id, drill_id), so a renamed drill is two rows that can coexist -
+  // the old one, and the one the client writes on its next sync - and this
+  // select has no ORDER BY. A stale `in-progress` row landing after a fresh
+  // `complete` one would un-earn the stamp, re-seal the next day, and drop the
+  // joinee's points on the admin desk and in the Slack report. `migrateDrillIds`
+  // applies the same "later play wins" rule the client merge and the SQL use.
+  const storedDrills: Partial<
+    Record<string, ProgressState["drills"][keyof ProgressState["drills"]]>
+  > = {};
   for (const row of drills.data ?? []) {
-    state.drills[row.drill_id as keyof ProgressState["drills"]] = {
+    storedDrills[row.drill_id] = {
       status: row.status,
       score: row.score ?? undefined,
       maxScore: row.max_score ?? undefined,
@@ -258,6 +272,7 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
       updatedAt: row.updated_at,
     };
   }
+  state.drills = migrateDrillIds(storedDrills) as ProgressState["drills"];
   for (const row of exercises.data ?? []) {
     state.exercises[row.exercise_key] = {
       body: row.body,

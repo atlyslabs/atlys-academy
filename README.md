@@ -60,7 +60,7 @@ passport shows honestly who cleared the bar — it just never traps anyone. See
 - **Tool match** — drag six tools onto the jobs they do.
 - **Whose job is it?** — sort nine statements between Atlys, the consulate and
   the guest. Built strictly from the Cluster A scripts.
-- **Run the loop** — walk one objection through APAC (acknowledge, probe,
+- **Run the loop** — walk one objection through the loop (acknowledge, probe,
   address, confirm), where the wrong-*step* answer is a good sentence in the
   wrong slot and is marked differently from a wrong one. Replaced the old
   press-and-hold objection library, which was reading rather than a drill.

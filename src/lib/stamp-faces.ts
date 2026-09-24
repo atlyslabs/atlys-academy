@@ -7,7 +7,7 @@ import { STAMP_SPRITES, type StampSprite } from "./stamp-sprites";
  * stamp across Day 1 → Day 3 printed the sheet's Nth face - which was true when
  * the sheet was drawn and silently false the moment the drill list changed.
  * Every face carries its own printed word, so a shift of one does not degrade
- * gracefully: adding `apac-loop` in the middle of Day 2 pushed six later stamps
+ * gracefully: adding `odpac-loop` in the middle of Day 2 pushed six later stamps
  * onto their neighbours' art and knocked Day 3's last three off the sheet
  * entirely, so the passport showed FAST TRACK on the edge-cases stamp and two
  * random faces at the end of Day 3.
@@ -26,7 +26,6 @@ const FACE_BY_STAMP: Readonly<Record<string, string>> = {
   /* ---------------------------------- Day 1 -------------------------------- */
   "day1.reading": "Day 1 · Reading",
   "day1.activities": "Day 1 · Checklist",
-  "day1.tools": "Day 1 · Travel kit",
   "day1.drill.tool-match": "Day 1 · Baggage",
   "day1.drill.flag-swipe": "Day 1 · Red flags",
   "day1.drill.connect-islands": "Day 1 · Routed",
@@ -41,7 +40,7 @@ const FACE_BY_STAMP: Readonly<Record<string, string>> = {
   "day2.drill.anxiety-wall": "Day 2 · Calmed",
   "day2.drill.reframe-deck": "Day 2 · Reframed",
   "day2.drill.rewrite-chat": "Day 2 · Rebooked",
-  "day2.drill.apac-loop": "Day 2 · Sequenced",
+  "day2.drill.odpac-loop": "Day 2 · Sequenced",
   "day2.drill.mock-scenarios": "Day 2 · Counter",
   "day2.odpac": "Day 2 · Shadowed",
   "day2.quiz": "Day 2 · Boarded",
@@ -49,6 +48,10 @@ const FACE_BY_STAMP: Readonly<Record<string, string>> = {
   /* ---------------------------------- Day 3 -------------------------------- */
   "day3.reading": "Day 3 · Reading",
   "day3.activities": "Day 3 · Checklist",
+  // Follows the checklist it scores. Keyed `day3.tools` since the access
+  // confirmation moved to Day 3 (`TOOLS_DAY_ID`); the crop is the same one,
+  // only its `place` label moved with it.
+  "day3.tools": "Day 3 · Travel kit",
   "day3.drill.ownership-sort": "Day 3 · Control",
   "day3.drill.edge-cases": "Day 3 · Diverted",
   "day3.drill.lead-status": "Day 3 · Manifest",

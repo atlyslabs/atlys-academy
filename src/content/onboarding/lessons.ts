@@ -407,7 +407,7 @@ export const LESSONS: readonly Lesson[] = [
     itemKey: "lesson.day5.apac",
     dayId: 2,
     ref: "Playbook §7.1",
-    title: "APAC: the objection framework",
+    title: "The objection loop",
     body: [
       "An objection is a signal, not a refusal. It means they are still in the conversation, and someone who has decided against you usually goes quiet rather than argues. So the frame is four steps: Acknowledge, Probe, Address, Confirm.",
       "Acknowledge: name the objection and validate it. “I completely understand, that's a really common concern.” This is the step people skip when they are confident about the answer, and skipping it is what makes a correct answer land as a rebuttal.",

@@ -17,10 +17,10 @@ import type { Day } from "./types";
  * Do not add training content here that exists in neither.
  *
  * `drills` was rebalanced in Aug 2026 after an audit against the lessons. Day 2
- * had seven drills for eleven lessons and none of them ran APAC; Day 3 had eight
+ * had seven drills for eleven lessons and none of them ran the loop; Day 3 had eight
  * lessons and two drills, both over the same nine ownership cards. So
  * `objection-library` (never a drill - hold-to-reveal reading, and 2.6 says its
- * scripts are APAC's Address step) became `apac-loop`, and `ownership-run`
+ * scripts are the loop's Address step) became `odpac-loop`, and `ownership-run`
  * (a speed round over cards `ownership-sort` had just dealt) gave its slot to
  * the four Day 3 lessons that had none: 3.8, 3.5, 3.6 and 3.2.
  */
@@ -57,12 +57,6 @@ export const DAYS: readonly Day[] = [
         href: "https://www.notion.so/goatlys/All-Things-Atlys-Glossary-20bd57ef7388804fbb91f7e1984b7adf",
       },
       {
-        key: "day1.request_tool_access",
-        label: "Request every tool on the travel kit",
-        detail:
-          "Cadence, Freshchat, Walkie Talkie, Boomerang, DD, Notion. Chase these today.",
-      },
-      {
         key: "day1.shadow_chats",
         label: "Shadow 2-3 live chats",
         detail: "Observe only. Do not reply. Your ODPAC report comes from these.",
@@ -95,7 +89,7 @@ export const DAYS: readonly Day[] = [
       "Typical fears & objections",
       "Qualify before you pitch: the first 90 seconds",
       '"Shut up for 10 seconds". The guest will tell you how to sell to them if you shut up long enough',
-      "APAC: the objection framework",
+      "The objection loop",
       "Language for difficult conversations",
       "The four objections you will meet first",
     ],
@@ -138,7 +132,7 @@ export const DAYS: readonly Day[] = [
         detail: "30 minutes",
       },
     ],
-    // `apac-loop` sits before `mock-scenarios` on purpose: 2.6 is the frame the
+    // `odpac-loop` sits before `mock-scenarios` on purpose: 2.6 is the frame the
     // four objection lessons plug into, so the loop is run before the scenarios
     // that are its Address step.
     drills: [
@@ -147,7 +141,7 @@ export const DAYS: readonly Day[] = [
       "anxiety-wall",
       "reframe-deck",
       "rewrite-chat",
-      "apac-loop",
+      "odpac-loop",
       "mock-scenarios",
     ],
   },

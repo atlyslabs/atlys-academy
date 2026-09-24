@@ -1,7 +1,7 @@
 import { DAYS } from "@/content/onboarding/days";
 import { LESSONS } from "@/content/onboarding/lessons";
 import { odpacExerciseKey } from "@/content/onboarding/odpac";
-import { TOOLS } from "@/content/onboarding/tools";
+import { TOOLS, TOOLS_DAY_ID } from "@/content/onboarding/tools";
 import type { DayId, DrillId } from "@/content/onboarding/types";
 import { isTerminalDrillStatus } from "./attempts";
 import type { ProgressState } from "./types";
@@ -33,7 +33,7 @@ const DRILL_STAMP_LABELS: Partial<Record<DrillId, string>> = {
   "pause-10s": "Gate hold",
   "dos-donts": "Screened",
   "rewrite-chat": "Rebooked",
-  "apac-loop": "Sequenced",
+  "odpac-loop": "Sequenced",
   "mock-scenarios": "Counter",
   "tool-match": "Baggage",
   "ownership-sort": "Control",
@@ -100,14 +100,16 @@ export function stampsForDay(state: ProgressState, dayId: DayId): Stamp[] {
     });
   }
 
-  // The travel kit is a Day 1 concern only - tool access is requested once.
-  if (dayId === 1) {
+  // Tool access is confirmed once, on the day it is actually granted - see
+  // `TOOLS_DAY_ID`. Nothing on any checklist asks for it to be requested any
+  // more; lesson 1.10 names the stack on Day 1 and this is where it lands.
+  if (dayId === TOOLS_DAY_ID) {
     stamps.push({
       id: `${day.slug}.tools`,
       dayId,
       kind: "tools",
       label: "Travel kit",
-      requirement: `Request all ${TOOLS.length} tool accesses`,
+      requirement: `Confirm all ${TOOLS.length} tool accesses have landed`,
       earned: TOOLS.every((tool) => tool.key in state.completedItems),
     });
   }

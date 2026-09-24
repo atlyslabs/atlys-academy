@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import {
-  APAC_MAX_SCORE,
-  APAC_ROUNDS,
-  APAC_STEP_LABELS,
-} from "@/content/onboarding/apac";
+  ODPAC_LOOP_MAX_SCORE,
+  ODPAC_LOOP_ROUNDS,
+  ODPAC_LOOP_STEP_LABELS,
+} from "@/content/onboarding/odpac-loop";
 import type {
-  ApacOption,
-  ApacStep,
-  ApacStepId,
-  ApacVerdict,
+  OdpacLoopOption,
+  OdpacLoopStep,
+  OdpacLoopStepId,
+  OdpacLoopVerdict,
 } from "@/content/onboarding/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -31,7 +31,7 @@ import { DrillSection } from "./DrillSection";
 /** One pick at one step, in the order it was made. */
 interface Attempt {
   optionId: string;
-  verdict: ApacVerdict;
+  verdict: OdpacLoopVerdict;
 }
 
 /** Every pick in the run, flat across rounds and keyed by `stepKey`. */
@@ -47,7 +47,7 @@ type Attempts = Record<string, Attempt[]>;
  * the joinee that the round's own correct Address line is a bad line.
  */
 const VERDICTS: Record<
-  ApacVerdict,
+  OdpacLoopVerdict,
   { label: string; ink: string; frame: string }
 > = {
   correct: {
@@ -68,7 +68,7 @@ const VERDICTS: Record<
 };
 
 /** Attempts are stored flat, so the key has to carry the round as well. */
-function stepKey(roundId: string, stepId: ApacStepId): string {
+function stepKey(roundId: string, stepId: OdpacLoopStepId): string {
   return `${roundId}·${stepId}`;
 }
 
@@ -108,13 +108,16 @@ function firstPickScore(attempts: Attempts): number {
  */
 const SECTION = {
   eyebrow: "Drill · sequence",
-  title: "APAC, in order",
+  title: "The loop, in order",
   description:
     "Acknowledge, Probe, Address, Confirm — and the order is the framework. Each slot opens only once the one above it has been played, so there is no skipping the step you are confident about. You are scored on your first pick in each step; a wrong pick tells you why and leaves the step open.",
 } as const;
 
 /**
- * APAC as a loop you run, not four letters you can name (lesson 2.6).
+ * The objection loop as something you run, not four letters you can name
+ * (lesson 2.6). ODPAC is the academy's one named framework and it is the
+ * shadowing report - this drill deliberately does not compete with it for a
+ * name, because its four steps are not ODPAC's five stages.
  *
  * Two rounds, one at a time - the first runs all four slots, the second picks
  * the call up with Acknowledge already sent (`round.opening`) and runs the
@@ -128,7 +131,7 @@ const SECTION = {
  * open, because arriving at the right sequence is the point - the first pick is
  * what gets scored, and the rest is teaching.
  */
-export function ApacLoop() {
+export function OdpacLoop() {
   const { state, ready, setDrillResult, beginDrillAttempt } = useProgress();
   const [roundIndex, setRoundIndex] = useState(0);
   const [attempts, setAttempts] = useState<Attempts>({});
@@ -153,15 +156,15 @@ export function ApacLoop() {
    */
   const [replaying, setReplaying] = useState(false);
 
-  const stored = state.drills["apac-loop"];
+  const stored = state.drills["odpac-loop"];
   // Read from stored progress rather than from `seed`, which counts reshuffles
   // in this session only: the cap is on plays of the drill across the whole
   // academy, so a joinee who comes back tomorrow has to find the same count
   // waiting for them.
-  const playsUsed = drillAttemptsUsed(state, "apac-loop");
-  const playsLeft = drillAttemptsLeft(state, "apac-loop");
-  const round = APAC_ROUNDS[roundIndex];
-  const lastRound = roundIndex === APAC_ROUNDS.length - 1;
+  const playsUsed = drillAttemptsUsed(state, "odpac-loop");
+  const playsLeft = drillAttemptsLeft(state, "odpac-loop");
+  const round = ODPAC_LOOP_ROUNDS[roundIndex];
+  const lastRound = roundIndex === ODPAC_LOOP_ROUNDS.length - 1;
   const score = firstPickScore(attempts);
 
   // The open step is the first one not yet played right; everything below it is
@@ -214,7 +217,7 @@ export function ApacLoop() {
       </Badge>
     ) : null;
 
-  function pick(step: ApacStep, option: ApacOption) {
+  function pick(step: OdpacLoopStep, option: OdpacLoopOption) {
     const key = stepKey(round.id, step.id);
     const list = attempts[key] ?? [];
     // Spent options stay mounted as `aria-disabled` buttons rather than being
@@ -241,12 +244,12 @@ export function ApacLoop() {
     // the joinee mid-session. `SwipeDeck` and `OwnershipSort` sidestep this by
     // only writing on the last card; this drill writes on every pick so the
     // score survives a half-finished run, so it needs the guard instead.
-    const finished = playedCount(next) === APAC_MAX_SCORE;
+    const finished = playedCount(next) === ODPAC_LOOP_MAX_SCORE;
     if (finished || stored?.status !== "complete") {
-      setDrillResult("apac-loop", {
+      setDrillResult("odpac-loop", {
         status: finished ? "complete" : "in-progress",
         score: firstPickScore(next),
-        maxScore: APAC_MAX_SCORE,
+        maxScore: ODPAC_LOOP_MAX_SCORE,
       });
     }
 
@@ -283,7 +286,7 @@ export function ApacLoop() {
     // on purpose: the reducer only charges an attempt when the stored status is
     // already terminal, so a mid-play reshuffle stays free and the rule lives
     // in one place instead of in every drill.
-    beginDrillAttempt("apac-loop");
+    beginDrillAttempt("odpac-loop");
     // The play is paid for, so stored progress has to stop deciding what is on
     // screen: the result it holds stays terminal until this rerun finishes, and
     // that is exactly what `lockedToStoredResult` reads.
@@ -314,7 +317,7 @@ export function ApacLoop() {
         </p>
         {/* Same reversal as the closing card makes: out of plays, out of
             button, with the reason in its place. */}
-        {canReplayDrill(state, "apac-loop") ? (
+        {canReplayDrill(state, "odpac-loop") ? (
           <Button
             className="mt-4"
             variant="secondary"
@@ -342,10 +345,10 @@ export function ApacLoop() {
 
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted tabular-nums">
-          Round {roundIndex + 1} of {APAC_ROUNDS.length}
+          Round {roundIndex + 1} of {ODPAC_LOOP_ROUNDS.length}
         </p>
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-dim tabular-nums">
-          {score}/{APAC_MAX_SCORE} steps played right first time
+          {score}/{ODPAC_LOOP_MAX_SCORE} steps played right first time
         </p>
       </div>
 
@@ -401,7 +404,7 @@ export function ApacLoop() {
                   // different slots the same hand.
                   seed={seed * 1000 + roundIndex * 100 + index}
                   previousLabel={
-                    previous ? APAC_STEP_LABELS[previous.id] : undefined
+                    previous ? ODPAC_LOOP_STEP_LABELS[previous.id] : undefined
                   }
                   // Only read by an unlocked slot, and a slot is unlocked only
                   // once the step above it has been played - so by the time
@@ -435,11 +438,11 @@ export function ApacLoop() {
       {allDone && (
         <div className="animate-rise-in mt-4">
           <p className="max-w-[60ch] font-display text-[20px] italic leading-tight text-ink">
-            Two objections run in order. {score} of {APAC_MAX_SCORE} steps
+            Two objections run in order. {score} of {ODPAC_LOOP_MAX_SCORE} steps
             played right on the first pick.
           </p>
           <ul className="mt-4 space-y-3">
-            {APAC_ROUNDS.map((item) => (
+            {ODPAC_LOOP_ROUNDS.map((item) => (
               <li
                 key={item.id}
                 className="rounded-xl border border-hairline bg-white/[0.02] p-4"
@@ -457,7 +460,7 @@ export function ApacLoop() {
               would read as something broken rather than as a rule, so the
               control is removed and the reason takes its place - the same
               reversal `MentorPanel` made for its ID-less entries. */}
-          {canReplayDrill(state, "apac-loop") ? (
+          {canReplayDrill(state, "odpac-loop") ? (
             <Button
               className="mt-4"
               variant="secondary"
@@ -502,7 +505,7 @@ function StepSlot({
   previousReveal,
   onPick,
 }: {
-  step: ApacStep;
+  step: OdpacLoopStep;
   index: number;
   attempts?: Attempt[];
   locked: boolean;
@@ -510,7 +513,7 @@ function StepSlot({
   previousLabel?: string;
   /** The guest's reply to the step above, where that step had one. */
   previousReveal?: string;
-  onPick: (option: ApacOption) => void;
+  onPick: (option: OdpacLoopOption) => void;
 }) {
   // Seeded rather than random: the options are shuffled during render on both
   // the server and the client, and every step in the content file happens to
@@ -521,7 +524,7 @@ function StepSlot({
     [step.options, seed],
   );
 
-  const label = APAC_STEP_LABELS[step.id];
+  const label = ODPAC_LOOP_STEP_LABELS[step.id];
   const played = playedRight(attempts);
   const firstPick = attempts[0]?.verdict === "correct";
 

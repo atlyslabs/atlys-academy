@@ -11,6 +11,8 @@ import {
   hasPassedQuiz,
 } from "@/lib/progress/selectors";
 import { stampSheet } from "@/lib/progress/stamps";
+import { OdpacNudge } from "./OdpacNudge";
+import { stopsForDay } from "./stops";
 import { romanNumeral } from "@/lib/roman";
 import { JourneyTrail } from "./JourneyTrail";
 import type { TrailStop } from "./stops";
@@ -40,6 +42,14 @@ export function DayDossier({
     >
       <FrameBeam active={isCurrent} />
       <Masthead day={day} />
+      {/* Above the trail, so the reminder is read before the work it is about. */}
+      <OdpacNudge
+        day={day}
+        onOpenReport={(origin) => {
+          const report = stopsForDay(day).find((stop) => stop.key === "odpac");
+          if (report) onOpenStop(day, report, origin);
+        }}
+      />
       <JourneyTrail
         day={day}
         onOpen={(stop, origin) => onOpenStop(day, stop, origin)}

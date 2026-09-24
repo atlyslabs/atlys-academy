@@ -156,8 +156,8 @@ export const REWRITE_EXERCISE: RewriteExercise = {
  * which conversation you are actually in." They used to be a standalone
  * hold-to-reveal reference tab, which meant the busiest day in the academy read
  * the answers without ever running the loop that decides which answer applies.
- * They are now the third slot of the `apac-loop` drill; `apacRoundFor` in
- * `apac.ts` maps each one to the round it answers.
+ * They are now the third slot of the `odpac-loop` drill, whose rounds live in
+ * `odpac-loop.ts`.
  */
 export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
   {

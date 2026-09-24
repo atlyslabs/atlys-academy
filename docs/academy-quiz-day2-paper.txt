@@ -123,7 +123,7 @@ Name: ______________________________     Date: ______________
     3)  Explain that the portal is difficult to use correctly
     4)  Name the two things self-service cannot do (an earlier slot than the portal shows, and an outside reader on their file), then ask how far out their travel is
 
-18.  In the APAC framework, what is the Probe step for?
+18.  In the objection loop, what is the Probe step for?
 
     1)  Finding the real concern underneath the stated objection, before you answer it
     2)  Testing whether the guest is a serious buyer

@@ -6,7 +6,7 @@ import { DAYS, LAST_DAY_ID } from "@/content/onboarding/days";
 import { lessonsForDay } from "@/content/onboarding/lessons";
 import { MENTORS_BY_DAY } from "@/content/onboarding/mentors";
 import { PASS_THRESHOLD } from "@/content/onboarding/quiz";
-import { TOOLS } from "@/content/onboarding/tools";
+import { TOOLS, TOOLS_DAY_ID } from "@/content/onboarding/tools";
 import type { Day } from "@/content/onboarding/types";
 import { UNLOCK_HOUR, UNLOCK_MINUTE } from "@/lib/dates";
 import { DRILL_COMPONENTS, DRILL_LABELS } from "@/lib/drill-registry";
@@ -104,11 +104,11 @@ export function stopsForDay(day: Day): TrailStop[] {
     },
   ];
 
-  if (day.id === 1) {
+  if (day.id === TOOLS_DAY_ID) {
     stops.push({
       key: "kit",
       title: "The travel kit",
-      kicker: "Accounts someone grants you on day one",
+      kicker: "Confirm each access as it lands",
       teaser: (state) => {
         const granted = TOOLS.filter((tool) =>
           isItemDone(state, tool.key),
@@ -119,8 +119,9 @@ export function stopsForDay(day: Day): TrailStop[] {
       render: () => (
         <>
           <p className="mb-4 max-w-[62ch] text-[13.5px] leading-relaxed text-ink-dim">
-            Tick each one off as access lands - chasing these today is what
-            keeps the rest of the week unblocked.
+            Tick each one off as access actually lands - anything still
+            missing is worth chasing with your mentor today, while you have
+            them.
           </p>
           <ToolsChecklist />
         </>

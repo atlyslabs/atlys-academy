@@ -107,7 +107,7 @@ export function PauseDrill() {
     setPhase("rushed");
     // Never write "rushed" over a run that already finished.
     //
-    // This is the same guard `ApacLoop` carries, and it is here for a worse
+    // This is the same guard `OdpacLoop` carries, and it is here for a worse
     // version of the same failure. "rushed" is not terminal, so demoting a
     // stored "passed" un-earns the Gate hold stamp; `dayWorkFinished` then
     // fails for Day 2, and Day 3 - which the joinee had already opened - seals

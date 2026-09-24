@@ -3,7 +3,7 @@
 import type { ComponentType } from "react";
 import type { DrillId } from "@/content/onboarding/types";
 import { AnxietyWall } from "@/components/onboarding/AnxietyWall";
-import { ApacLoop } from "@/components/onboarding/ApacLoop";
+import { OdpacLoop } from "@/components/onboarding/OdpacLoop";
 import { ConnectIslands } from "@/components/onboarding/ConnectIslands";
 import { DosDontsSorter } from "@/components/onboarding/DosDontsSorter";
 import { Ds160Consistency } from "@/components/onboarding/Ds160Consistency";
@@ -38,7 +38,7 @@ export const DRILL_COMPONENTS: Record<DrillId, ComponentType> = {
   "pause-10s": PauseDrill,
   "dos-donts": DosDontsSorter,
   "rewrite-chat": RewriteExercise,
-  "apac-loop": ApacLoop,
+  "odpac-loop": OdpacLoop,
   "mock-scenarios": ScenarioBranch,
   "tool-match": ToolMatchPuzzle,
   "ownership-sort": OwnershipSort,
@@ -64,7 +64,7 @@ export const DRILL_LABELS: Record<DrillId, string> = {
   "pause-10s": "The ten-second pause",
   "dos-donts": "Do and don't",
   "rewrite-chat": "Rewrite the chat",
-  "apac-loop": "Run the loop",
+  "odpac-loop": "Run the loop",
   "mock-scenarios": "Mock scenarios",
   "tool-match": "Match the tool",
   "ownership-sort": "Who owns it",

@@ -1,22 +1,4 @@
 import type { LeadCard, LeadStatus } from "./types";
-
-/**
- * Day 3 · Move the lead (lesson 3.5).
- *
- * A five-column version of the ownership sort, over Cadence notes rather than
- * abstractions. 3.5 makes two claims that only a sorting drill can test:
- *
- *  - Qualified asserts something. "It is the status that says you ran the six
- *    fields from Day 2 and the case is genuinely sellable." So the deck holds
- *    cards that feel Qualified and are not, and the miss is always one of the
- *    six fields - usually prior rejections or funds, "the two that get skipped
- *    when the customer sounds friendly."
- *  - Lost is not a failure. "A lead parked at Contacted forever is worse than
- *    one honestly marked Lost: it inflates the pipeline, it hides from
- *    re-engagement lists, and it means nobody knows whether you have capacity."
- *
- * `closed` covers Converted-or-Lost, which 3.5 treats as one terminal step.
- */
 export const LEAD_STATUS_COLUMNS: Record<LeadStatus, string> = {
   new: "New",
   contacted: "Contacted",

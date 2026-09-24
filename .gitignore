@@ -32,3 +32,7 @@ src/app/x-admin-preview/
 # Local review harness for the drills: mounts every drill on the local
 # progress store, 404s outside development. Useful on disk, never in the repo.
 src/app/x-drill-preview/
+
+# Generated knowledge graph (graphify). ~3.8 MB of derived output, rebuilt on
+# demand with `/graphify --update`; the manifest makes that incremental.
+graphify-out/

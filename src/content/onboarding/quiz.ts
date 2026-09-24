@@ -607,7 +607,7 @@ const day2: Quiz = {
     },
     {
       id: "d5.q7",
-      prompt: "In the APAC framework, what is the Probe step for?",
+      prompt: "In the objection loop, what is the Probe step for?",
       options: [
         {
           id: "a",

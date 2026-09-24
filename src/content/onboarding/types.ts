@@ -24,7 +24,7 @@ export type ExerciseKey = string;
  *
  * `objection-library` and `ownership-run` were retired in Aug 2026. The first
  * was never a drill (hold-to-reveal reading), and lesson 2.6 says its scripts
- * are the Address step of APAC - so they moved into `apac-loop`, which makes a
+ * are the loop's Address step - so they moved into `odpac-loop`, which makes a
  * joinee run the loop that decides which script applies. The second re-ran the
  * same nine cards `ownership-sort` had just sorted, spending half of Day 3's
  * drill capacity on nothing new while seven of that day's eight lessons had no
@@ -37,7 +37,7 @@ export type DrillId =
   | "pause-10s"
   | "dos-donts"
   | "rewrite-chat"
-  | "apac-loop"
+  | "odpac-loop"
   | "mock-scenarios"
   | "tool-match"
   | "ownership-sort"
@@ -133,7 +133,7 @@ export interface RewriteExercise {
   annotations: string[];
 }
 
-/** One objection script - the Address step of APAC, per lessons 2.8-2.11. */
+/** One objection script - the loop's Address step, per lessons 2.8-2.11. */
 export interface ObjectionScript {
   id: string;
   objection: string;
@@ -166,11 +166,11 @@ export interface MockScenario {
 }
 
 /* -------------------------------------------------------------------------- */
-/* APAC (lesson 2.6)                                                           */
+/* The objection loop (lesson 2.6)                                             */
 /* -------------------------------------------------------------------------- */
 
 /** The four steps, in the only order they work in. */
-export type ApacStepId = "acknowledge" | "probe" | "address" | "confirm";
+export type OdpacLoopStepId = "acknowledge" | "probe" | "address" | "confirm";
 
 /**
  * How wrong an option is, which decides what the joinee is told afterwards.
@@ -180,21 +180,21 @@ export type ApacStepId = "acknowledge" | "probe" | "address" | "confirm";
  * diagnosis - "Address on its own is a good answer to a question nobody asked,
  * and Probe without Acknowledge sounds like an interrogation."
  */
-export type ApacVerdict = "correct" | "wrong-step" | "wrong";
+export type OdpacLoopVerdict = "correct" | "wrong-step" | "wrong";
 
-export interface ApacOption {
+export interface OdpacLoopOption {
   id: string;
   text: string;
-  verdict: ApacVerdict;
+  verdict: OdpacLoopVerdict;
   /** The coaching line, shown after the pick. */
   because: string;
 }
 
-export interface ApacStep {
-  id: ApacStepId;
+export interface OdpacLoopStep {
+  id: OdpacLoopStepId;
   /** What this step is for, in one line. Shown above the options. */
   brief: string;
-  options: ApacOption[];
+  options: OdpacLoopOption[];
   /**
    * What the guest says once this step is played correctly.
    *
@@ -204,7 +204,7 @@ export interface ApacStep {
   reveal?: string;
 }
 
-export interface ApacRound {
+export interface OdpacLoopRound {
   id: string;
   /** Short name for the round, e.g. "The price that is not about price". */
   label: string;
@@ -219,7 +219,7 @@ export interface ApacRound {
    * that the step is done, so a shorter round never reads as a skippable one.
    */
   opening?: { text: string; note: string };
-  steps: ApacStep[];
+  steps: OdpacLoopStep[];
   /** Printed after the round closes - what the round was really teaching. */
   lesson: string;
 }

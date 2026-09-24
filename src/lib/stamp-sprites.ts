@@ -55,7 +55,7 @@ export const STAMP_SPRITES: readonly StampSprite[] = [
   // Row 1
   { place: "Day 1 · Reading", box: [118, 13, 303, 273] },
   { place: "Day 1 · Checklist", box: [577, 13, 303, 273] },
-  { place: "Day 1 · Travel kit", box: [1035, 13, 303, 273] },
+  { place: "Day 3 · Travel kit", box: [1035, 13, 303, 273] },
   { place: "(spare) · Travel kit duplicate", box: [1493, 12, 305, 275] },
   { place: "(spare) · Travel", box: [1952, 13, 304, 273] },
   { place: "Day 1 · Baggage", box: [2412, 13, 303, 273] },
