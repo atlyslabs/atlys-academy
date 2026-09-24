@@ -7,10 +7,12 @@ import { STAMP_SPRITES, type StampSprite } from "./stamp-sprites";
  * stamp across Day 1 → Day 3 printed the sheet's Nth face - which was true when
  * the sheet was drawn and silently false the moment the drill list changed.
  * Every face carries its own printed word, so a shift of one does not degrade
- * gracefully: adding `odpac-loop` in the middle of Day 2 pushed six later stamps
+ * gracefully: adding a drill in the middle of Day 2 pushed six later stamps
  * onto their neighbours' art and knocked Day 3's last three off the sheet
  * entirely, so the passport showed FAST TRACK on the edge-cases stamp and two
- * random faces at the end of Day 3.
+ * random faces at the end of Day 3. Retiring one walked the same damage
+ * backwards - which is now a non-event, as removing the objection loop drill
+ * in Sep 2026 proved: its key left this map and no other face moved.
  *
  * An explicit map cannot do that. A stamp either has its own face or has none,
  * and reordering, adding or retiring a stamp leaves every other face alone.
@@ -40,7 +42,6 @@ const FACE_BY_STAMP: Readonly<Record<string, string>> = {
   "day2.drill.anxiety-wall": "Day 2 · Calmed",
   "day2.drill.reframe-deck": "Day 2 · Reframed",
   "day2.drill.rewrite-chat": "Day 2 · Rebooked",
-  "day2.drill.odpac-loop": "Day 2 · Sequenced",
   "day2.drill.mock-scenarios": "Day 2 · Counter",
   "day2.odpac": "Day 2 · Shadowed",
   "day2.quiz": "Day 2 · Boarded",

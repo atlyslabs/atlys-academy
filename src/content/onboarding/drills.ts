@@ -156,8 +156,15 @@ export const REWRITE_EXERCISE: RewriteExercise = {
  * which conversation you are actually in." They used to be a standalone
  * hold-to-reveal reference tab, which meant the busiest day in the academy read
  * the answers without ever running the loop that decides which answer applies.
- * They are now the third slot of the `odpac-loop` drill, whose rounds live in
- * `odpac-loop.ts`.
+ *
+ * UNREFERENCED SINCE SEP 2026, and deliberately kept. They were folded into the
+ * objection loop drill by hand rather than by import - the drill's Address
+ * options were written from these lines, not read from them - so retiring that
+ * drill left this array declared and unused rather than breaking anything. The
+ * writing is still the house answer to the four objections a joinee meets
+ * first, and the four lessons that teach them (2.9-2.12) are where it belongs
+ * if it is ever wired back in. Delete it only on a decision about the content,
+ * not as dead-code tidying.
  */
 export const OBJECTION_SCRIPTS: readonly ObjectionScript[] = [
   {

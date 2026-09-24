@@ -26,8 +26,8 @@ export const MAX_DRILL_ATTEMPTS = 3;
  *
  * `pause-10s` is the reason this is not simply "has a result": it stores
  * `"rushed"` when the joinee sends before the countdown, and rushing is
- * supposed to be a failure you feel. `odpac-loop`, `mock-scenarios` and
- * `edge-cases` store `"in-progress"` until every round is played.
+ * supposed to be a failure you feel. `mock-scenarios` and `edge-cases` store
+ * `"in-progress"` until every round is played.
  */
 export const TERMINAL_DRILL_STATUSES: ReadonlySet<string> = new Set([
   "passed",

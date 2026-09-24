@@ -33,7 +33,6 @@ const DRILL_STAMP_LABELS: Partial<Record<DrillId, string>> = {
   "pause-10s": "Gate hold",
   "dos-donts": "Screened",
   "rewrite-chat": "Rebooked",
-  "odpac-loop": "Sequenced",
   "mock-scenarios": "Counter",
   "tool-match": "Baggage",
   "ownership-sort": "Control",
@@ -65,7 +64,8 @@ function readableLessons(dayId: DayId) {
 /**
  * Every stamp on one day's page, in the order they print.
  *
- * Days differ: only Day 1 issues a travel-kit stamp, drill stamps follow
+ * Days differ: the travel-kit stamp is issued on `TOOLS_DAY_ID` and nowhere
+ * else (Day 3 - do not hardcode it here, see `tools.ts`), drill stamps follow
  * whatever `days.ts` lists, and the reading stamp appears only where lessons
  * have been written.
  */

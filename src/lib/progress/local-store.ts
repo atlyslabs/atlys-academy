@@ -1,4 +1,3 @@
-import { migrateDrillIds } from "./drill-aliases";
 import {
   emptyProgress,
   PROGRESS_VERSION,
@@ -28,10 +27,6 @@ export const localProgressStore: ProgressStore = {
 
       // Spread over a fresh default so a payload missing a newer field still loads.
       const state = { ...emptyProgress(), ...parsed, version: PROGRESS_VERSION };
-      // A browser can hold a drill id that has since been renamed. Heal it on
-      // read, or the next sync writes the stale id straight back and un-earns
-      // the stamp it belongs to - see `drill-aliases`.
-      state.drills = migrateDrillIds(state.drills) as ProgressState["drills"];
       return state;
     } catch {
       return emptyProgress();

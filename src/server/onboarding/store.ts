@@ -17,7 +17,6 @@ import {
   type ProgressState,
   type QuizAttemptRecord,
 } from "@/lib/progress/types";
-import { migrateDrillIds } from "@/lib/progress/drill-aliases";
 import { getDb } from "./db";
 import { voucherCodeFor } from "./voucher";
 
@@ -246,21 +245,17 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
       submittedAt: row.submitted_at,
     }),
   );
-  // Keyed by the id as STORED, then resolved through `migrateDrillIds`.
+  // Keyed by the id as stored, straight in.
   //
-  // Assigning straight into `state.drills` under the renamed id would make the
-  // last row of an unordered read win: the primary key is
-  // (profile_id, drill_id), so a renamed drill is two rows that can coexist -
-  // the old one, and the one the client writes on its next sync - and this
-  // select has no ORDER BY. A stale `in-progress` row landing after a fresh
-  // `complete` one would un-earn the stamp, re-seal the next day, and drop the
-  // joinee's points on the admin desk and in the Slack report. `migrateDrillIds`
-  // applies the same "later play wins" rule the client merge and the SQL use.
-  const storedDrills: Partial<
-    Record<string, ProgressState["drills"][keyof ProgressState["drills"]]>
-  > = {};
+  // This read has no ORDER BY, which was a hazard while a drill id was being
+  // renamed: the primary key is (profile_id, drill_id), so one drill could be
+  // two coexisting rows and the last one back would win. No id is aliased any
+  // more - each row carries a distinct `drill_id` - so two rows can no longer
+  // land on the same key and order cannot decide anything. Rows belonging to
+  // retired drills are read into state and then simply never looked at, since
+  // every consumer iterates `day.drills` rather than this map.
   for (const row of drills.data ?? []) {
-    storedDrills[row.drill_id] = {
+    state.drills[row.drill_id as keyof ProgressState["drills"]] = {
       status: row.status,
       score: row.score ?? undefined,
       maxScore: row.max_score ?? undefined,
@@ -272,7 +267,6 @@ export async function loadProgress(profileId: string): Promise<ProgressState> {
       updatedAt: row.updated_at,
     };
   }
-  state.drills = migrateDrillIds(storedDrills) as ProgressState["drills"];
   for (const row of exercises.data ?? []) {
     state.exercises[row.exercise_key] = {
       body: row.body,

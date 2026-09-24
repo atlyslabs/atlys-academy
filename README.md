@@ -60,10 +60,6 @@ passport shows honestly who cleared the bar — it just never traps anyone. See
 - **Tool match** — drag six tools onto the jobs they do.
 - **Whose job is it?** — sort nine statements between Atlys, the consulate and
   the guest. Built strictly from the Cluster A scripts.
-- **Run the loop** — walk one objection through the loop (acknowledge, probe,
-  address, confirm), where the wrong-*step* answer is a good sentence in the
-  wrong slot and is marked differently from a wrong one. Replaced the old
-  press-and-hold objection library, which was reading rather than a drill.
 - **Swipe decks** — one interaction with two configs: what is safe to say
   (Day 1) and whether a DS-160 contradicts itself (Day 3).
 - **Mock scenarios** — branching conversations with voiced customer messages,

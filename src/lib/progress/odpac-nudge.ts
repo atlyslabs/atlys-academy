@@ -1,4 +1,6 @@
-import type { DayId } from "@/content/onboarding/types";
+import type { DayId, DrillId } from "@/content/onboarding/types";
+import { drillSettled } from "./attempts";
+import { DAYS } from "@/content/onboarding/days";
 import { stampSheet } from "./stamps";
 import type { ProgressState } from "./types";
 
@@ -44,11 +46,27 @@ export function odpacNudge(
   const others = sheet.stamps.filter((stamp) => stamp.kind !== "odpac");
   if (others.length === 0) return null;
 
+  const day = DAYS.find((candidate) => candidate.id === dayId);
+  const slug = day?.slug ?? `day${dayId}`;
+
+  // "Done with" rather than "earned", matching `dayWorkFinished` rather than
+  // `dayStampsComplete`. A joinee who spent all three plays on a drill without
+  // reaching a terminal status - the rushed pause drill is the documented case
+  // - holds a stamp that can never be earned. Testing `earned` here would make
+  // this branch unreachable for them, so the one joinee who most needs to be
+  // told the report is the last thing standing between them and the quiz would
+  // only ever get the vaguer halfway line. The gate already lets them past an
+  // unearnable drill stamp; the nudge has to count it the same way or it is
+  // describing a different day from the one the gate sees.
+  const settled = (stamp: (typeof others)[number]): boolean => {
+    if (stamp.earned) return true;
+    if (stamp.kind !== "drill") return false;
+    // Stamp ids are `${slug}.drill.${drillId}` - see `stamps.ts`.
+    return drillSettled(state, stamp.id.slice(`${slug}.drill.`.length) as DrillId);
+  };
+
   const beforeTheQuiz = others.filter((stamp) => stamp.kind !== "quiz");
-  if (
-    beforeTheQuiz.length > 0 &&
-    beforeTheQuiz.every((stamp) => stamp.earned)
-  ) {
+  if (beforeTheQuiz.length > 0 && beforeTheQuiz.every(settled)) {
     return "only-thing-left";
   }
 

@@ -75,7 +75,6 @@ export const STAMP_SPRITES: readonly StampSprite[] = [
   { place: "Day 2 · Screened", box: [1036, 632, 303, 272] },
   { place: "Day 2 · Reframed", box: [1493, 631, 304, 273] },
   { place: "Day 2 · Rebooked", box: [1952, 631, 304, 274] },
-  { place: "Day 2 · Sequenced", box: [2411, 631, 304, 274] },
   // Row 4
   { place: "Day 2 · Counter", box: [119, 941, 302, 273] },
   { place: "Day 2 · Shadowed", box: [576, 940, 304, 274] },

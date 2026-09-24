@@ -22,7 +22,7 @@ CONTENTS
     2.3  Typical fears & objections
     2.4  Qualify before you pitch: the first 90 seconds
     2.5  “Shut up for 10 seconds”: why it works
-    2.6  APAC: the objection framework
+    2.6  The objection loop
     2.7  Language for difficult conversations
     2.8  Price objection
     2.9  Timeline anxiety
@@ -274,7 +274,7 @@ IN PRACTICE: Customer: “Is approval guaranteed?” → You (too fast): “No v
 
 WHAT NEW JOINERS GET WRONG: Using the pause to compose your answer instead of listening to what fills it.
 
-2.6  APAC: the objection framework
+2.6  The objection loop
 --------------------------------------------------------------------------
 An objection is a signal, not a refusal. It means they are still in the conversation, and someone who has decided against you usually goes quiet rather than argues. So the frame is four steps: Acknowledge, Probe, Address, Confirm.
 

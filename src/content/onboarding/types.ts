@@ -23,21 +23,26 @@ export type ExerciseKey = string;
  * Identifies which interactive drill component a day should render.
  *
  * `objection-library` and `ownership-run` were retired in Aug 2026. The first
- * was never a drill (hold-to-reveal reading), and lesson 2.6 says its scripts
- * are the loop's Address step - so they moved into `odpac-loop`, which makes a
- * joinee run the loop that decides which script applies. The second re-ran the
- * same nine cards `ownership-sort` had just sorted, spending half of Day 3's
- * drill capacity on nothing new while seven of that day's eight lessons had no
- * drill at all.
+ * was never a drill (hold-to-reveal reading); the second re-ran the same nine
+ * cards `ownership-sort` had just sorted, spending half of Day 3's drill
+ * capacity on nothing new while seven of that day's eight lessons had no drill
+ * at all.
+ *
+ * The objection loop drill (`apac-loop`, later `odpac-loop`) followed them in
+ * Sep 2026. It drilled a four-step acronym, and the academy teaches one
+ * framework with five stages: ODPAC. Renaming it had made the mismatch louder
+ * rather than fixing it, so the drill went and ODPAC is taught where it is
+ * actually five stages deep - lesson 2.6 and the daily shadowing report.
  *
  * Stored `drills` rows keyed to the retired ids are harmless orphans; nothing
- * reads a result for a drill that is no longer listed on a day.
+ * reads a result for a drill that is no longer listed on a day. That is why
+ * removing one is safe for joinees who had already played it, and why no
+ * migration is needed to clean them up.
  */
 export type DrillId =
   | "pause-10s"
   | "dos-donts"
   | "rewrite-chat"
-  | "odpac-loop"
   | "mock-scenarios"
   | "tool-match"
   | "ownership-sort"
@@ -163,65 +168,6 @@ export interface MockScenario {
   context: string;
   customerMessage: string;
   replies: ScenarioReply[];
-}
-
-/* -------------------------------------------------------------------------- */
-/* The objection loop (lesson 2.6)                                             */
-/* -------------------------------------------------------------------------- */
-
-/** The four steps, in the only order they work in. */
-export type OdpacLoopStepId = "acknowledge" | "probe" | "address" | "confirm";
-
-/**
- * How wrong an option is, which decides what the joinee is told afterwards.
- *
- * `wrong-step` is the important one and the reason this drill exists: the
- * option is a good sentence sitting in the wrong slot, which is 2.6's own
- * diagnosis - "Address on its own is a good answer to a question nobody asked,
- * and Probe without Acknowledge sounds like an interrogation."
- */
-export type OdpacLoopVerdict = "correct" | "wrong-step" | "wrong";
-
-export interface OdpacLoopOption {
-  id: string;
-  text: string;
-  verdict: OdpacLoopVerdict;
-  /** The coaching line, shown after the pick. */
-  because: string;
-}
-
-export interface OdpacLoopStep {
-  id: OdpacLoopStepId;
-  /** What this step is for, in one line. Shown above the options. */
-  brief: string;
-  options: OdpacLoopOption[];
-  /**
-   * What the guest says once this step is played correctly.
-   *
-   * Only the Probe step sets this, and it is the whole point of the round: the
-   * concern Probe surfaces is what decides which Address option is right.
-   */
-  reveal?: string;
-}
-
-export interface OdpacLoopRound {
-  id: string;
-  /** Short name for the round, e.g. "The price that is not about price". */
-  label: string;
-  context: string;
-  /** The guest's opening objection. */
-  objection: string;
-  /**
-   * A line the agent has already sent when the drill picks the conversation
-   * up, rendered as a sent bubble under the objection. Lets a later round
-   * start mid-loop - the joinee drilled that step in the round before, so
-   * replaying it here would be length without teaching. `note` says out loud
-   * that the step is done, so a shorter round never reads as a skippable one.
-   */
-  opening?: { text: string; note: string };
-  steps: OdpacLoopStep[];
-  /** Printed after the round closes - what the round was really teaching. */
-  lesson: string;
 }
 
 /* -------------------------------------------------------------------------- */

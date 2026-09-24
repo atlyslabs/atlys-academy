@@ -16,13 +16,16 @@ import type { Day } from "./types";
  * Wording in `learn` and `activities` is the hiring manager's or the playbook's.
  * Do not add training content here that exists in neither.
  *
- * `drills` was rebalanced in Aug 2026 after an audit against the lessons. Day 2
- * had seven drills for eleven lessons and none of them ran the loop; Day 3 had eight
- * lessons and two drills, both over the same nine ownership cards. So
- * `objection-library` (never a drill - hold-to-reveal reading, and 2.6 says its
- * scripts are the loop's Address step) became `odpac-loop`, and `ownership-run`
- * (a speed round over cards `ownership-sort` had just dealt) gave its slot to
- * the four Day 3 lessons that had none: 3.8, 3.5, 3.6 and 3.2.
+ * `drills` was rebalanced in Aug 2026 after an audit against the lessons. Day 3
+ * had eight lessons and two drills, both over the same nine ownership cards, so
+ * `ownership-run` (a speed round over cards `ownership-sort` had just dealt)
+ * gave its slot to the four Day 3 lessons that had none: 3.8, 3.5, 3.6 and 3.2.
+ * `objection-library` - never a drill, just hold-to-reveal reading - became an
+ * objection loop drill in the same pass.
+ *
+ * That loop drill was itself retired in Sep 2026: it ran a four-step acronym,
+ * and the academy teaches ODPAC, which has five stages. See the note on Day 2's
+ * `drills` below. Day 2 now has six drills for its eleven lessons.
  */
 export const DAYS: readonly Day[] = [
   {
@@ -132,16 +135,19 @@ export const DAYS: readonly Day[] = [
         detail: "30 minutes",
       },
     ],
-    // `odpac-loop` sits before `mock-scenarios` on purpose: 2.6 is the frame the
-    // four objection lessons plug into, so the loop is run before the scenarios
-    // that are its Address step.
+    // The four-step objection loop drill was retired in Sep 2026. The academy
+    // teaches one conversation framework, ODPAC, and that framework has five
+    // stages - the drill ran a different four-step acronym under a renamed id,
+    // so it taught a shape the rest of the academy no longer uses. ODPAC is
+    // taught where it belongs: lesson 2.6 and the daily shadowing report, which
+    // walks all five stages against real chats. `mock-scenarios` still drills
+    // the objections themselves end to end.
     drills: [
       "pause-10s",
       "dos-donts",
       "anxiety-wall",
       "reframe-deck",
       "rewrite-chat",
-      "odpac-loop",
       "mock-scenarios",
     ],
   },
