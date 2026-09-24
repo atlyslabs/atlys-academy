@@ -92,7 +92,7 @@ export const DAYS: readonly Day[] = [
       "Typical fears & objections",
       "Qualify before you pitch: the first 90 seconds",
       '"Shut up for 10 seconds". The guest will tell you how to sell to them if you shut up long enough',
-      "The objection loop",
+      "ODPAC: the five stages of a conversation",
       "Language for difficult conversations",
       "The four objections you will meet first",
     ],

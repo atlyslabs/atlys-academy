@@ -607,17 +607,18 @@ const day2: Quiz = {
     },
     {
       id: "d5.q7",
-      prompt: "In the objection loop, what is the Probe step for?",
+      prompt:
+        "In ODPAC, what is the Paraphrasing stage for?",
       options: [
         {
           id: "a",
           label:
-            "Finding the real concern underneath the stated objection, before you answer it",
+            "Playing the situation back in your own words so they can correct you — the correction is the real problem arriving",
         },
         { id: "b", label: "Testing whether the guest is a serious buyer" },
         {
           id: "c",
-          label: "Collecting the qualification fields you did not get earlier",
+          label: "Repeating their words back so they feel heard before you quote a price",
         },
         { id: "d", label: "Buying time while you look up the right answer" },
       ],

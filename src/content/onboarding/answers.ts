@@ -171,7 +171,7 @@ export const ANSWERS: Record<QuizSlug, Record<QuestionId, AnswerKey>> = {
     "d5.q7": {
       correct: "a",
       explanation:
-        "Probe finds the real concern under the stated one, before you answer. Price objections are frequently timeline objections and timeline objections are frequently rejection fear, so answering the words you heard is how you give a correct response to a question nobody asked. It is the same instinct as the Day 2 pause rule: silence and a question do the same job.",
+        "Paraphrasing plays the situation back so the guest can correct you, and the correction is the real problem arriving — usually not the one they opened with. It is not repeating their words to make them feel heard; that is agreement, not understanding, and it confirms nothing. Price objections are frequently timeline objections and timeline objections are frequently rejection fear, so answering the words you heard is how you give a correct response to a question nobody asked.",
     },
   },
 

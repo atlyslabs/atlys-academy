@@ -22,7 +22,7 @@ CONTENTS
     2.3  Typical fears & objections
     2.4  Qualify before you pitch: the first 90 seconds
     2.5  “Shut up for 10 seconds”: why it works
-    2.6  The objection loop
+    2.6  ODPAC: the five stages of a conversation
     2.7  Language for difficult conversations
     2.8  Price objection
     2.9  Timeline anxiety
@@ -274,23 +274,25 @@ IN PRACTICE: Customer: “Is approval guaranteed?” → You (too fast): “No v
 
 WHAT NEW JOINERS GET WRONG: Using the pause to compose your answer instead of listening to what fills it.
 
-2.6  The objection loop
+2.6  ODPAC: the five stages of a conversation
 --------------------------------------------------------------------------
-An objection is a signal, not a refusal. It means they are still in the conversation, and someone who has decided against you usually goes quiet rather than argues. So the frame is four steps: Acknowledge, Probe, Address, Confirm.
+Every conversation you run has the same five stages, in the same order: Opening, Development, Paraphrasing, Authentication, Closing. ODPAC. It is the one framework this academy teaches, it is what your mentor reads your daily report against, and it is the shape of a good chat whether or not an objection ever appears.
 
-Acknowledge: name the objection and validate it. “I completely understand, that's a really common concern.” This is the step people skip when they are confident about the answer, and skipping it is what makes a correct answer land as a rebuttal.
+Opening — the first fifteen seconds, and what they tell the guest about who they are dealing with. Use the standard greeting in full, give your name, and use theirs. You are opening a conversation, not starting a transaction, and the guest decides which one this is almost immediately.
 
-Probe: ask a question to find the real concern under the surface one. “Can I ask what's making you hesitate on the timeline specifically?” Price objections are frequently timeline objections, and timeline objections are frequently rejection fear. You cannot address what you have not located.
+Development — where the need gets uncovered. Questions, before any recommendation. The six qualification fields are travel date, nationality and residence, destination and visa type, prior rejections, funds, and who is travelling. Nothing gets recommended before those are answered, because the answer changes what you would have recommended.
 
-Address: respond to the real concern with specific, credible information. An answer, not a pitch. The scripts in the lessons that follow are the Address step — they are what goes here once Probe has told you which conversation you are actually in.
+Paraphrasing — playing the situation back, so both sides know it landed before anyone solves anything. Restate the problem in your own words and let them correct you. A paraphrase that gets corrected is the one that earned its place: the correction is the real problem arriving, and it is usually not the one they opened with.
 
-Confirm: check the concern is resolved. “Does that make sense? Is that helpful?” Then move forward. Without this you do not know whether you answered them or just talked, and the objection returns later as silence.
+Authentication — backing what you say with something checkable, including the money. Every number a guest hears should be broken down, not rounded off: split the total into the Atlys service fee and the government or consulate fee, so they know what goes where. State the refund position precisely — the service fee comes back under AtlysProtect, the government fee does not — rather than saying “you're covered”. Look things up in Cadence before you state them, and never promise what you do not control.
 
-The order carries the value. Address on its own is a good answer to a question nobody asked, and Probe without Acknowledge sounds like an interrogation.
+Closing — leaving the guest with no ambiguity about what happens next, and who owns it. Recap what was discussed, put a specific time on every commitment, ask whether there is anything else, and read the sign-off against their tone rather than delivering it on autopilot.
 
-IN PRACTICE: The pause rule from Day 2 is the honest version of Probe. Silence and a question do the same job, and on a call the silence often works better, because the guest fills it with the objection they had not planned to admit.
+The order carries the value. Authentication on its own is a good answer to a question nobody asked, and Development without an Opening sounds like an interrogation. This is also where objections live: an objection is a signal, not a refusal — someone who has decided against you goes quiet rather than argues — and it gets located in Development and Paraphrasing before it gets answered in Authentication. Price objections are frequently timeline objections, and timeline objections are frequently rejection fear. You cannot answer what you have not located.
 
-WHAT NEW JOINERS GET WRONG: Jumping from Acknowledge to Address because you recognise the objection. Recognising the words is not the same as knowing the concern, and the two most common objections both disguise something else.
+IN PRACTICE: The pause rule from Day 2 is the honest version of Development. Silence and a question do the same job, and on a call the silence often works better, because the guest fills it with the concern they had not planned to admit.
+
+WHAT NEW JOINERS GET WRONG: Jumping from Opening straight to Authentication because you recognise the question. Recognising the words is not the same as knowing the concern, and the two most common objections both disguise something else — which is exactly what Paraphrasing is there to catch.
 
 2.7  Language for difficult conversations
 --------------------------------------------------------------------------
